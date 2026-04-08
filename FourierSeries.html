@@ -82,6 +82,7 @@ main{max-width:1100px;margin:0 auto;padding:24px 20px 72px}
       </div>
       <div class="eq-container">
         <div id="waveEq" class="formula"></div>
+        <p class="small" style="margin-top: 8px; opacity: 0.8;">(Note: The live equations in this demo use normalized time where <em>T</em> = 2π and <em>ω</em> = 1 for simpler reading).</p>
       </div>
     </div>
 
@@ -139,7 +140,7 @@ main{max-width:1100px;margin:0 auto;padding:24px 20px 72px}
   <section class="stack">
     <div class="card full">
       <h2>Vector interpretation of Fourier harmonics</h2>
-      <p>This animation shows the exact same math, but visualized as spinning arrows. Connect them end-to-end, and the vertical position of the final point traces the signal.</p>
+      <p>This animation shows the exact same math, but visualized as spinning arrows. Connect them end-to-end, and the vertical position of the final point traces the Fourier reconstruction of the signal.</p>
       <canvas id="epiCanvas" width="1000" height="360" aria-label="Vector animation"></canvas>
       <div class="eq-container">
         <div id="epiEq" class="formula"></div>
@@ -148,7 +149,7 @@ main{max-width:1100px;margin:0 auto;padding:24px 20px 72px}
       <div class="two" style="margin-top: 24px;">
         <div>
           <h3>The Spinning Vector Idea</h3>
-          <p>Instead of adding separate sine and cosine waves, we can combine them into a single spinning arrow (vector) for each frequency. By linking these arrows end-to-end, their combined rotation draws the exact shape of our wave.</p>
+          <p>Instead of adding separate sine and cosine waves, we can combine them into a single spinning arrow (vector) for each frequency. By linking these arrows end-to-end, their combined rotation draws the reconstructed approximation of the wave.</p>
           <div class="formula">f(t) ≈ a₀ + Σ Rₙ cos(nωt - φₙ)</div>
         </div>
         <div>
@@ -255,7 +256,6 @@ function formatPolarTerm(amp, phi, n, isFirst) {
   if (Math.abs(phi) < 0.01) {
     exp = `${nt}`;
   } else {
-    // If phi is positive, format as nt - phi. If negative, nt + |phi|
     let p = phi > 0 ? " - " + phi.toFixed(2) : " + " + Math.abs(phi).toFixed(2);
     exp = `${nt}${p}`;
   }
@@ -285,7 +285,6 @@ function updateEquations() {
     const c = coeff(type, n);
     let amp = Math.hypot(c.a, c.b);
     if(amp < 1e-6) continue;
-    // Mathematically accurate phi corresponding to R cos(nt - phi)
     let phi = Math.atan2(c.b, c.a); 
     terms.push({n, amp, phi});
   }
@@ -371,7 +370,6 @@ function drawEpicycles(){
     const c=coeff(type,n);
     let amp=Math.hypot(c.a,c.b); 
     if(amp<1e-6) continue;
-    // Accurate phase convention
     let phi = Math.atan2(c.b, c.a);   
     terms.push({n, amp, phi});
   }
@@ -382,12 +380,7 @@ function drawEpicycles(){
     ectx.strokeStyle='rgba(47,125,50,.28)'; ectx.lineWidth=1.2;
     ectx.beginPath(); ectx.arc(x,y,r,0,TAU); ectx.stroke();
 
-    // The math angle: theta = nt - phi
     const math_angle = term.n * tt - term.phi;   
-    
-    // To cleanly map standard mathematical R*cos(theta) to the vertical (inverted)
-    // canvas Y-axis, we shift the drawing angle by -pi/2.
-    // This allows the horizontal displacement in math to drive the vertical wave.
     const visual_angle = math_angle - Math.PI / 2;
 
     const nx = x + r * Math.cos(visual_angle);
