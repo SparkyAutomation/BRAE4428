@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Discrete Fourier Transform (DFT) Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5ef; --surface:#fffdf8; --surface2:#efe9db; --text:#1f2a1f; --muted:#5c6b5c;
+  --primary:#2f7d32; --accent:#c98a2b; --line:#d9d2c2; --blue:#2d6cdf; --red:#b54a3a; --green:#2f7d32;
+}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
+header{padding:56px 20px 28px;background:linear-gradient(180deg,#fbfaf6,#f1ecdf)}
+main{max-width:1100px;margin:0 auto;padding:24px 20px 72px}
+ h1,h2,h3{font-family:"Instrument Serif",serif;line-height:1.05;margin:0 0 12px}
+ h1{font-size:clamp(2.5rem,6vw,5rem);max-width:15ch}
+ h2{font-size:clamp(1.8rem,3vw,3rem);margin-top:0}
+ h3{font-size:1.4rem;margin:0 0 8px}
+ p{max-width:72ch;margin:0 0 12px}
+ .lede{font-size:1.1rem;color:#2b3a2b;max-width:65ch}
+ .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px}
+ .two{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+ .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.04)}
+ .controls{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px 16px;align-items:end; margin-top: 16px;}
+ label{font-size:.92rem;font-weight:600;display:block;margin-bottom:6px}
+ input[type=range], select{width:100%}
+ .small{font-size:.92rem;color:var(--muted)}
+ .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#edf6ee;color:var(--primary);font-weight:700;font-size:.8rem;letter-spacing:.02em;text-transform:uppercase; margin-bottom: 12px;}
+ canvas{width:100%;height:auto;background:#fff;border-radius:14px;border:1px solid #e8e1cf; margin-top: 10px;}
+ .example{padding:14px;border-radius:14px;background:var(--surface2); margin-bottom: 12px;}
+ .formula{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f2eee4;padding:12px 16px;border-radius:12px;display:block;margin:12px 0;word-wrap:break-word;line-height:1.8}
+ ul{padding-left:18px;margin:8px 0} li{margin:8px 0}
+ .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.92rem;color:var(--muted);margin-top:10px}
+ .sw{display:inline-flex;align-items:center;gap:6px}.dot{width:12px;height:12px;border-radius:50%}
+ .full{margin-top:20px}
+ .stat-box { display: flex; justify-content: space-between; background: #f2eee4; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 1.1em; margin-top: 10px;}
+ @media (max-width:900px){.grid,.controls,.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <main style="padding:0 20px;max-width:1100px;">
+    <div class="pill">Signal Processing</div>
+    <h1>Discrete Fourier Transform</h1>
+    <p class="lede">Think of the Discrete Fourier Transform (DFT) like testing your signal against a set of <strong>tuning forks</strong>. You mathematically interact with the signal using different "probe" frequencies to measure which ones resonate and how strongly.</p>
+  </main>
+</header>
+
+<main>
+  <section class="card full">
+    <h2>Part 1: The Core Intuition (Resonance via Correlation)</h2>
+    <p>How does the math actually test a tuning fork? It uses correlation <strong>(which mathematically is a form of inner product)</strong>. We multiply our unknown Target Signal by a known Sine Probe Signal, point by point, and calculate the integral (average) of the result over a time window.</p>
+    <ul>
+      <li>If the frequencies <strong>do not match</strong>, the positive and negative parts continuously cancel out, and the result's average is zero.</li>
+      <li>If the frequencies <strong>match</strong> perfectly, the waves "resonate." The result becomes a constant (a DC component) whose value is proportional to the signal's amplitude.</li>
+    </ul>
+
+    <canvas id="corrCanvas" width="1000" height="300" aria-label="Correlation animation"></canvas>
+    <div class="legend">
+      <span class="sw"><span class="dot" style="background:var(--blue)"></span>Target Signal</span>
+      <span class="sw"><span class="dot" style="background:var(--accent)"></span>Probe Signal (Test)</span>
+      <span class="sw"><span class="dot" style="background:var(--green)"></span>Result (Target &times; Probe)</span>
+      <span class="sw"><span class="dot" style="background:var(--red); border-radius: 0; height: 4px;"></span>Average of Result</span>
+    </div>
+
+    <div class="stat-box">
+      <span>Result Average: <strong id="avgVal">0.00</strong></span>
+    </div>
+
+    <div class="controls" style="background: var(--surface2); padding: 16px; border-radius: 12px;">
+      <div>
+        <label for="targetFreq">Target Frequency: <span id="tFreqVal">3</span> Hz</label>
+        <input id="targetFreq" type="range" min="1" max="10" step="1" value="3" />
+      </div>
+      <div>
+        <label for="probeFreq">Probe Frequency: <span id="pFreqVal">3</span> Hz</label>
+        <input id="probeFreq" type="range" min="1" max="10" step="1" value="3" />
+      </div>
+      <div>
+        <label for="targetPhase">Target Phase Shift: <span id="tPhaseVal">0</span>&deg;</label>
+        <input id="targetPhase" type="range" min="0" max="360" step="15" value="0" />
+      </div>
+    </div>
+
+    <div style="margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--line);">
+      <h3>The Deep Reason: Why does the average perfectly cancel out?</h3>
+      <p>Instead of thinking about multiplying two wavy lines, we can view this geometrically using Euler's formula:</p>
+      <div class="formula">e<sup>j&omega;t</sup> = cos(&omega;t) + j&middot;sin(&omega;t)</div>
+      <p>This equation represents a <strong>unit vector rotating in the complex plane</strong>. When you multiply a target signal (e<sup>j&omega;₁t</sup>) by a probe signal (e<sup>-j&omega;₂t</sup>), the product becomes a single rotating vector spinning at the <em>difference</em> of their frequencies: <strong>&Delta;&omega; = &omega;₁ - &omega;₂</strong>.</p>
+      
+      <div class="two">
+        <div class="example">
+          <p><strong>Case 1: Different Frequencies (&Delta;&omega; &ne; 0)</strong></p>
+          <p style="margin-bottom: 8px;">The vector is spinning. Averaging the signal means integrating (adding up) all the directions of this vector over time:</p>
+          <ul style="margin-top: 0; font-size: 0.95rem;">
+            <li>Right cancels left</li>
+            <li>Up cancels down</li>
+          </ul>
+          <p style="margin-bottom: 8px;">Think of walking 1 step East, 1 North, 1 West, 1 South: <strong>(1,0) + (0,1) + (-1,0) + (0,-1) = 0</strong>.</p>
+          <p style="margin-bottom: 0; font-weight: 600; font-size: 0.9rem;">Assumption: Perfect cancellation ONLY happens if the signal completes an exact, integer number of cycles within our observation window. If we cut it off halfway through a circle, it won't equal exactly zero!</p>
+        </div>
+        <div class="example">
+          <p><strong>Case 2: Matching Frequencies (&Delta;&omega; = 0)</strong></p>
+          <p style="margin-bottom: 8px;">Because &Delta;&omega; = 0, the math becomes <strong>e<sup>j0</sup> = 1</strong>. The vector <em>stops rotating</em> and permanently points in one direction.</p>
+          <p style="margin-bottom: 0;">Now you are just adding: <strong>1 + 1 + 1 + ...</strong> The vector's length accumulates steadily over time. This is how the math logically locks onto a matching frequency without interference.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card full">
+    <h2>Part 2: The Inner Product</h2>
+    <p>There is one catch. Try matching the frequencies in the Part 1 animation, but move the <strong>Phase Shift</strong> slider to exactly 90&deg;. The average drops back to zero! A single probe is "blind" to a signal shifted by 90 degrees.</p>
+    <p>To solve this, Euler's complex math provides <strong>two cameras placed 90 degrees apart</strong> (a cosine sensor and a sine sensor). By capturing both "shadows" and using the Pythagorean theorem, the true amplitude is successfully rebuilt regardless of the starting phase.</p>
+    
+    <div class="grid">
+      <div>
+        <canvas id="cameraCanvas" width="400" height="400"></canvas>
+      </div>
+      <div style="display:flex; flex-direction:column; justify-content:center;">
+        <div class="controls" style="background: var(--surface2); padding: 16px; border-radius: 12px; display:block;">
+          <label for="camPhase">Change the Signal's Starting Phase: <span id="camPhaseVal">45</span>&deg;</label>
+          <input id="camPhase" type="range" min="0" max="360" step="1" value="45" />
+        </div>
+        <div class="formula" style="font-size: 1.1rem; margin-top: 24px;">
+          <strong>Cosine Sensor (X):</strong> <span id="valX">0.71</span><br>
+          <strong>Sine Sensor (Y):</strong> <span id="valY">0.71</span><br><br>
+          Amplitude = &radic;(X² + Y²)<br>
+          Amplitude = &radic;(<span id="valX2">0.50</span> + <span id="valY2">0.50</span>)<br>
+          <strong>Amplitude = <span style="color:var(--primary)">1.00</span></strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card full">
+    <h2>Part 3: The Grand Synthesis</h2>
+    <p>Everything we have done—multiplying by tuning forks, rotating vectors, and using two orthogonal cameras to capture shadows—builds to one unifying mathematical concept.</p>
+    
+    <div class="example">
+      <h3 style="margin-top: 0;">The Core Idea of DFT</h3>
+      <ul style="font-size: 1.05rem; line-height: 1.6; margin-bottom: 0;">
+        <li>Because a digital signal is made of <em>N</em> samples, it can be thought of as existing in an <strong>N-dimensional space</strong>.</li>
+        <li>Each basis frequency acts as a unique, <strong>orthogonal direction</strong> (axis) within that space.</li>
+        <li>The DFT measures exactly <strong>how much of your signal lies in each direction</strong>.</li>
+      </ul>
+    </div>
+
+    <p>This mathematical projection is exactly what we did in Part 1: multiplying the signal by a probe and averaging it over time is computing an <strong>inner product</strong>. Written as one elegant summation, it looks like this:</p>
+    
+    <div class="formula" style="font-size: 1.2rem; text-align: center;">X<sub>k</sub> = &Sigma; x<sub>n</sub> &middot; e<sup>-j(2&pi;kn/N)</sup></div>
+    
+    <div class="example">
+      <p style="margin-bottom: 8px;"><strong>X<sub>k</sub></strong>: The output complex number for frequency bin <em>k</em>. Its <strong>magnitude</strong> tells you how strong that frequency is, and its <strong>angle</strong> tells you the phase (where the wave starts).</p>
+      <p style="margin-bottom: 8px;"><strong>x<sub>n</sub></strong>: Your raw sampled data points over time.</p>
+      <p style="margin-bottom: 0;"><strong>e<sup>-j(...)</sup></strong>: The combined Sine/Cosine orthogonal rotating basis spinning at frequency <em>k</em>.<br>
+      <span style="font-size: 0.95rem; color: var(--muted);"><strong>Why the negative sign?</strong> It forces the mathematical probe to spin <em>backwards</em>. This perfectly "unwinds" the target frequency, freezing the vector at e<sup>0</sup> = 1 so its magnitude can accumulate!</span></p>
+    </div>
+  </section>
+
+  <section class="card full" style="margin-top: 40px;">
+    <h2>Part 4: The Periodic Assumption & Spectral Leakage</h2>
+    
+    <div class="example">
+      Adjust the frequency slider below. If you set the target to exactly <strong>5.0 Hz</strong>, it completes exactly 5 cycles. If you looped this window, the wave would connect perfectly smoothly. It maintains perfect orthogonality.<br><br>
+      But if you set it to <strong>5.5 Hz</strong>, the wave gets cut off mid-cycle! If you looped this window, there would be a sharp, jarring jump at the boundary. Because of this discontinuity, it loses its perfect orthogonality with the other basis frequencies. The inner product projections are no longer zero for the other bins, so the energy "leaks" out, creating a smeared "skirt" effect.
+    </div>
+
+    <div class="grid" style="grid-template-columns: 1fr; gap: 10px; margin-top: 24px;">
+      <div>
+        <h3 style="font-size: 1.1rem; text-align: center; color: var(--muted);">Time Domain (The Observation Window)</h3>
+        <canvas id="timeCanvas" width="1000" height="200"></canvas>
+      </div>
+      <div>
+        <h3 style="font-size: 1.1rem; text-align: center; color: var(--muted);">Frequency Domain (Discrete DFT Bins)</h3>
+        <canvas id="dftCanvas" width="1000" height="250"></canvas>
+      </div>
+    </div>
+
+    <div class="controls" style="background: var(--surface2); padding: 16px; border-radius: 12px;">
+      <div>
+        <label for="dftFreq">Target Signal Frequency: <span id="dftFreqVal">5.0</span> Hz</label>
+        <input id="dftFreq" type="range" min="1" max="15" step="0.1" value="5.0" />
+      </div>
+      <div>
+        <label for="dftSamples">Number of Samples (N): <span id="dftSamplesVal">64</span></label>
+        <select id="dftSamples">
+          <option value="32">32 Samples</option>
+          <option value="64" selected>64 Samples</option>
+          <option value="128">128 Samples</option>
+        </select>
+        <p class="small" style="margin-top: 8px; margin-bottom:0;">Nyquist Limit: <span id="nyquist">32</span> Hz</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+// --- PART 1: CORRELATION ANIMATION ---
+const cCanvas = document.getElementById('corrCanvas');
+const cCtx = cCanvas.getContext('2d');
+const tFreq = document.getElementById('targetFreq');
+const pFreq = document.getElementById('probeFreq');
+const tPhase = document.getElementById('targetPhase');
+const avgVal = document.getElementById('avgVal');
+
+function drawCorrelation() {
+  const w = cCanvas.width;
+  const h = cCanvas.height;
+  const tf = +tFreq.value;
+  const pf = +pFreq.value;
+  const phase = (+tPhase.value * Math.PI) / 180;
+  
+  document.getElementById('tFreqVal').textContent = tf;
+  document.getElementById('pFreqVal').textContent = pf;
+  document.getElementById('tPhaseVal').textContent = tPhase.value;
+
+  cCtx.clearRect(0, 0, w, h);
+  
+  cCtx.strokeStyle = '#d8d0be'; cCtx.lineWidth = 1;
+  cCtx.beginPath(); cCtx.moveTo(0, h/2); cCtx.lineTo(w, h/2); cCtx.stroke();
+  
+  const points = 500;
+  let sum = 0;
+  const targetArr = [];
+  const probeArr = [];
+  const resultArr = [];
+
+  for(let i=0; i<=points; i++) {
+    const t = i / points; 
+    const targetY = Math.sin(2 * Math.PI * tf * t + phase);
+    const probeY = Math.sin(2 * Math.PI * pf * t);
+    const resultY = targetY * probeY;
+    
+    targetArr.push(targetY);
+    probeArr.push(probeY);
+    resultArr.push(resultY);
+    sum += resultY;
+  }
+  
+  const avg = sum / points;
+  avgVal.textContent = avg.toFixed(3);
+  
+  const scaleY = h * 0.4;
+  const centerY = h/2;
+
+  function drawLine(arr, color, width) {
+    cCtx.strokeStyle = color;
+    cCtx.lineWidth = width;
+    cCtx.beginPath();
+    for(let i=0; i<arr.length; i++) {
+      const x = (i / points) * w;
+      const y = centerY - arr[i] * scaleY;
+      if(i===0) cCtx.moveTo(x,y); else cCtx.lineTo(x,y);
+    }
+    cCtx.stroke();
+  }
+
+  drawLine(targetArr, 'rgba(45,108,223,0.6)', 2); 
+  drawLine(probeArr, 'rgba(201,138,43,0.6)', 2); 
+  drawLine(resultArr, 'rgba(47,125,50,0.9)', 3);  
+
+  cCtx.strokeStyle = '#b54a3a';
+  cCtx.lineWidth = 3;
+  cCtx.setLineDash([10, 5]);
+  cCtx.beginPath();
+  cCtx.moveTo(0, centerY - avg * scaleY);
+  cCtx.lineTo(w, centerY - avg * scaleY);
+  cCtx.stroke();
+  cCtx.setLineDash([]);
+}
+
+[tFreq, pFreq, tPhase].forEach(el => el.addEventListener('input', drawCorrelation));
+
+
+// --- PART 2: SHADOWS & CAMERAS (PHASE BLINDSPOT) ---
+const camCanvas = document.getElementById('cameraCanvas');
+const camCtx = camCanvas.getContext('2d');
+const camPhase = document.getElementById('camPhase');
+
+function drawCamera() {
+  const phaseDeg = +camPhase.value;
+  document.getElementById('camPhaseVal').textContent = phaseDeg;
+  
+  const rad = phaseDeg * Math.PI / 180;
+  const w = camCanvas.width;
+  const h = camCanvas.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  const R = 120; 
+  
+  camCtx.clearRect(0, 0, w, h);
+  
+  camCtx.strokeStyle = '#d8d0be';
+  camCtx.lineWidth = 1;
+  camCtx.beginPath();
+  camCtx.moveTo(40, cy); camCtx.lineTo(w-40, cy);
+  camCtx.moveTo(cx, 40); camCtx.lineTo(cx, h-40);
+  camCtx.stroke();
+  
+  camCtx.strokeStyle = 'rgba(45,108,223,0.2)';
+  camCtx.lineWidth = 2;
+  camCtx.beginPath();
+  camCtx.arc(cx, cy, R, 0, Math.PI * 2);
+  camCtx.stroke();
+
+  const px = cx + R * Math.cos(rad);
+  const py = cy - R * Math.sin(rad); 
+  
+  const valX = Math.cos(rad);
+  const valY = Math.sin(rad);
+  
+  document.getElementById('valX').textContent = valX.toFixed(2);
+  document.getElementById('valY').textContent = valY.toFixed(2);
+  document.getElementById('valX2').textContent = (valX*valX).toFixed(2);
+  document.getElementById('valY2').textContent = (valY*valY).toFixed(2);
+
+  camCtx.strokeStyle = '#b54a3a';
+  camCtx.setLineDash([5, 5]);
+  camCtx.beginPath();
+  camCtx.moveTo(px, py); camCtx.lineTo(px, cy); 
+  camCtx.moveTo(px, py); camCtx.lineTo(cx, py); 
+  camCtx.stroke();
+  camCtx.setLineDash([]);
+  
+  camCtx.strokeStyle = '#c98a2b'; 
+  camCtx.lineWidth = 6;
+  camCtx.beginPath();
+  camCtx.moveTo(cx, cy); camCtx.lineTo(px, cy);
+  camCtx.stroke();
+  
+  camCtx.strokeStyle = '#2f7d32'; 
+  camCtx.beginPath();
+  camCtx.moveTo(cx, cy); camCtx.lineTo(cx, py);
+  camCtx.stroke();
+
+  camCtx.strokeStyle = '#2d6cdf';
+  camCtx.lineWidth = 3;
+  camCtx.beginPath();
+  camCtx.moveTo(cx, cy); camCtx.lineTo(px, py);
+  camCtx.stroke();
+
+  camCtx.fillStyle = '#1f2a1f';
+  camCtx.beginPath();
+  camCtx.arc(px, py, 6, 0, Math.PI*2);
+  camCtx.fill();
+  
+  camCtx.font = "14px Inter";
+  camCtx.fillStyle = '#c98a2b';
+  camCtx.fillText("Cosine Sensor", w - 110, cy - 10);
+  camCtx.fillStyle = '#2f7d32';
+  camCtx.fillText("Sine Sensor", cx + 10, 30);
+}
+camPhase.addEventListener('input', drawCamera);
+
+
+// --- PART 4: FORMAL DFT & LEAKAGE ---
+const tCanvas = document.getElementById('timeCanvas');
+const tCtx = tCanvas.getContext('2d');
+const fCanvas = document.getElementById('dftCanvas');
+const fCtx = fCanvas.getContext('2d');
+const dftFreq = document.getElementById('dftFreq');
+const dftSamples = document.getElementById('dftSamples');
+
+function drawDFT() {
+  const N = +dftSamples.value;
+  const freq = +dftFreq.value;
+  
+  document.getElementById('dftFreqVal').textContent = freq.toFixed(1);
+  document.getElementById('dftSamplesVal').textContent = N;
+  document.getElementById('nyquist').textContent = N/2;
+
+  const tw = tCanvas.width;
+  const th = tCanvas.height;
+  tCtx.clearRect(0,0,tw,th);
+  tCtx.strokeStyle = '#d8d0be';
+  tCtx.beginPath(); tCtx.moveTo(0, th/2); tCtx.lineTo(tw, th/2); tCtx.stroke();
+
+  const data = [];
+  tCtx.strokeStyle = 'rgba(45,108,223,0.4)';
+  tCtx.lineWidth = 1;
+  tCtx.beginPath();
+  for(let i=0; i<=500; i++) {
+    const t = i/500;
+    const y = Math.cos(2 * Math.PI * freq * t);
+    const px = t * tw;
+    const py = th/2 - y * (th*0.4);
+    if(i===0) tCtx.moveTo(px, py); else tCtx.lineTo(px, py);
+  }
+  tCtx.stroke();
+
+  tCtx.fillStyle = '#b54a3a';
+  for(let n=0; n<N; n++) {
+    const t = n/N; 
+    const y = Math.cos(2 * Math.PI * freq * t);
+    data.push(y);
+    
+    tCtx.beginPath();
+    tCtx.arc(t * tw, th/2 - y*(th*0.4), 4, 0, Math.PI*2);
+    tCtx.fill();
+  }
+
+  const magnitudes = [];
+  let maxMag = 0;
+  const nyquist = N/2;
+  
+  for(let k=0; k<=nyquist; k++) {
+    let sumReal = 0;
+    let sumImag = 0;
+    for(let n=0; n<N; n++) {
+      const angle = (2 * Math.PI * k * n) / N;
+      sumReal += data[n] * Math.cos(angle);
+      sumImag -= data[n] * Math.sin(angle); 
+    }
+    let mag = Math.sqrt(sumReal*sumReal + sumImag*sumImag) / (N/2);
+    if (k === 0 || k === nyquist) mag = mag / 2; 
+    magnitudes.push(mag);
+    if(mag > maxMag) maxMag = mag;
+  }
+
+  const fw = fCanvas.width;
+  const fh = fCanvas.height;
+  fCtx.clearRect(0,0,fw,fh);
+  fCtx.strokeStyle = '#d8d0be';
+  fCtx.beginPath(); fCtx.moveTo(0, fh-20); fCtx.lineTo(fw, fh-20); fCtx.stroke();
+
+  const barWidth = fw / nyquist;
+  
+  fCtx.textAlign = 'center';
+  fCtx.fillStyle = '#5c6b5c';
+  fCtx.font = '12px Inter';
+
+  for(let k=0; k<=nyquist; k++) {
+    const mag = magnitudes[k];
+    const x = k * barWidth;
+    const barHeight = (mag / 1.1) * (fh - 40); 
+    
+    fCtx.strokeStyle = '#2f7d32';
+    fCtx.lineWidth = 4;
+    fCtx.beginPath();
+    fCtx.moveTo(x + barWidth/2, fh-20);
+    fCtx.lineTo(x + barWidth/2, fh-20 - barHeight);
+    fCtx.stroke();
+
+    fCtx.fillStyle = '#2f7d32';
+    fCtx.beginPath();
+    fCtx.arc(x + barWidth/2, fh-20 - barHeight, 4, 0, Math.PI*2);
+    fCtx.fill();
+
+    if (k % 2 === 0 && k < 20) {
+      fCtx.fillStyle = '#5c6b5c';
+      fCtx.fillText(k, x + barWidth/2, fh - 5);
+    }
+  }
+}
+
+[dftFreq, dftSamples].forEach(el => el.addEventListener('input', drawDFT));
+
+// Initialize all canvases
+drawCorrelation();
+drawCamera();
+drawDFT();
+</script>
+</body>
+</html>
