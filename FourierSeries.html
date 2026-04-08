@@ -65,7 +65,7 @@ main{max-width:1100px;margin:0 auto;padding:24px 20px 72px}
     <div class="card">
       <h2>How to interpret the terms</h2>
       <div class="example">
-        <p><strong>1. Average term:</strong> sets the vertical center of the signal.</p>
+        <p><strong>1. Average term (a₀):</strong> sets the vertical center of the signal. <span class="small" style="display:block; margin-top:4px; opacity:0.8;">(Note: Many textbooks write this as <strong>a₀/2</strong> to unify the integration formulas, but the concept is identical).</span></p>
         <p><strong>2. First few harmonics:</strong> capture the broad overall shape.</p>
         <p><strong>3. Higher harmonics:</strong> add corners, ripples, and fine structure.</p>
       </div>
@@ -87,19 +87,19 @@ main{max-width:1100px;margin:0 auto;padding:24px 20px 72px}
 
     <div class="card full">
       <h2>The Math of Phase Shifts: Combining Sine and Cosine</h2>
-      <p>In the trigonometric formula above, every frequency <em>n</em> has two separate components: a cosine wave (<strong>aₙ</strong>) and a sine wave (<strong>bₙ</strong>). However, in the epicycle animation below, you don't see two separate circles for every frequency. You only see <strong>one circle per frequency</strong>. This is because a sine wave and a cosine wave of the same frequency can be mathematically combined into a single, shifted wave.</p>
+      <p>In the trigonometric formula above, every frequency <em>n</em> has two separate components: a cosine wave (<strong>aₙ</strong>) and a sine wave (<strong>bₙ</strong>). However, in the vector animation below, you don't see two separate circles for every frequency. You only see <strong>one circle per frequency</strong>. This is because a sine wave and a cosine wave of the same frequency can be mathematically combined into a single, shifted wave: <strong>R cos(nt - φ)</strong>.</p>
       <div class="two">
         <div class="example">
           <p><strong>1. The Radius (Amplitude)</strong></p>
-          <p>Think of aₙ and bₙ as the legs of a right triangle. The radius of the epicycle is the hypotenuse, found using the Pythagorean theorem:</p>
+          <p>Think of aₙ and bₙ as the legs of a right triangle. The radius of the combined wave is the hypotenuse, found using the Pythagorean theorem:</p>
           <div class="formula">R = &radic;(aₙ² + bₙ²)</div>
           <p class="small">This explains why a harmonic with strong sine and cosine terms results in a large circle.</p>
         </div>
         <div class="example">
           <p><strong>2. The Starting Angle (Phase Shift)</strong></p>
-          <p>The ratio of aₙ to bₙ dictates the "head start" the circle needs to trace the correct wave. This angle, φ, is found using the inverse tangent:</p>
-          <div class="formula">φ = arctan(bₙ / aₙ)</div>
-          <p class="small">If a harmonic is pure cosine, the circle starts at 0°. If it is pure sine, it starts at 90°. A mix of both drags the wave to align perfectly.</p>
+          <p>The ratio of aₙ to bₙ dictates the "head start" the circle needs to trace the correct wave. This angle, φ, is found using the quadrant-aware arctangent:</p>
+          <div class="formula">φ = atan2(bₙ, aₙ)</div>
+          <p class="small">Using the <em>R cos(nt - φ)</em> convention, a pure cosine yields φ = 0. A pure sine yields φ = 90° (or π/2). A mix of both drags the wave to align perfectly.</p>
         </div>
       </div>
     </div>
@@ -138,27 +138,26 @@ main{max-width:1100px;margin:0 auto;padding:24px 20px 72px}
 
   <section class="stack">
     <div class="card full">
-      <h2>Epicycle animation (Complex/Euler)</h2>
-      <p>This second animation shows the exact same math, but translated through Euler's formula. Each rotating circle is one harmonic vector. Add their tip-to-tail motion, and the final point traces the reconstructed signal.</p>
-      <canvas id="epiCanvas" width="1000" height="360" aria-label="Epicycle animation"></canvas>
+      <h2>Vector interpretation of Fourier harmonics</h2>
+      <p>This animation shows the exact same math, but visualized as spinning arrows. Connect them end-to-end, and the vertical position of the final point traces the signal.</p>
+      <canvas id="epiCanvas" width="1000" height="360" aria-label="Vector animation"></canvas>
       <div class="eq-container">
         <div id="epiEq" class="formula"></div>
       </div>
 
       <div class="two" style="margin-top: 24px;">
         <div>
-          <h3>Euler Core Idea</h3>
-          <p>The complex (Euler) form of the Fourier series treats a repeating signal as the horizontal motion of a chain of spinning vectors (arrows) connected tip-to-tail. By combining pairs of vectors that spin in opposite directions—one clockwise, one counter-clockwise—their vertical (imaginary) movements cancel each other out perfectly, leaving behind only the real, physical waveform.</p>
-          <div class="formula">f(t) = Σ cₙ e<sup>inωt</sup></div>
+          <h3>The Spinning Vector Idea</h3>
+          <p>Instead of adding separate sine and cosine waves, we can combine them into a single spinning arrow (vector) for each frequency. By linking these arrows end-to-end, their combined rotation draws the exact shape of our wave.</p>
+          <div class="formula">f(t) ≈ a₀ + Σ Rₙ cos(nωt - φₙ)</div>
         </div>
         <div>
-          <h3>How to interpret the complex terms</h3>
+          <h3>What the terms mean</h3>
           <div class="example">
-            <p><strong>Σ (The Summation):</strong> Represents the "tip-to-tail" attachment of all circles. It counts from negative infinity to positive infinity.</p>
-            <p><strong>c₀ (The Anchor):</strong> The stationary center point of the very first circle. It represents the overall average vertical level.</p>
-            <p><strong>cₙ (The Blueprint):</strong> A single complex number that defines the <strong>radius</strong> (amplitude) and <strong>phase shift</strong> (starting angle at t=0) for the n-th circle.</p>
-            <p><strong>e<sup>inωt</sup> (The Engine):</strong> The mathematical motor that causes the circle to spin as time (t) moves forward.</p>
-            <p><strong>n (The Speed & Direction):</strong> The frequency multiplier. Positive n spins counter-clockwise; negative n spins clockwise.</p>
+            <p><strong>Σ (The Chain):</strong> Linking all the spinning arrows end-to-end.</p>
+            <p><strong>Rₙ (The Length):</strong> The size of the arrow (the amplitude of that frequency).</p>
+            <p><strong>φₙ (The Start Angle):</strong> Where the arrow points at the very beginning (time = 0).</p>
+            <p><strong>n (The Speed):</strong> How fast the arrow spins.</p>
           </div>
         </div>
       </div>
@@ -248,7 +247,7 @@ function formatTrigTerm(val, func, n, isFirst) {
   return `${sign}${num}${func}(${nx})`;
 }
 
-function formatComplexTerm(amp, phi, n, isFirst) {
+function formatPolarTerm(amp, phi, n, isFirst) {
   let sign = isFirst ? "" : " + ";
   let r = amp.toFixed(2);
   let nt = n === 1 ? "t" : n + "t";
@@ -256,10 +255,11 @@ function formatComplexTerm(amp, phi, n, isFirst) {
   if (Math.abs(phi) < 0.01) {
     exp = `${nt}`;
   } else {
-    let p = phi > 0 ? phi.toFixed(2) : "- " + Math.abs(phi).toFixed(2);
-    exp = `${p} + ${nt}`;
+    // If phi is positive, format as nt - phi. If negative, nt + |phi|
+    let p = phi > 0 ? " - " + phi.toFixed(2) : " + " + Math.abs(phi).toFixed(2);
+    exp = `${nt}${p}`;
   }
-  return `${sign}${r}e<sup>i(${exp})</sup>`;
+  return `${sign}${r}cos(${exp})`;
 }
 
 function updateEquations() {
@@ -267,7 +267,6 @@ function updateEquations() {
   const type = signalType.value;
   const hs = activeHarmonics(type, N);
 
-  // 1. Build Trigonometric Equation (No limits)
   let trigStr = "";
   let tCount = 0;
   for(const n of hs) {
@@ -279,24 +278,25 @@ function updateEquations() {
   }
   waveEq.innerHTML = `f(t) &approx; ${trigStr || "0"}`;
 
-  // 2. Build Complex (Euler) Equation (No limits)
-  let eulerStr = "";
+  let polarStr = "";
   let eCount = 0;
   const terms = [];
   for(const n of hs) {
     const c = coeff(type, n);
     let amp = Math.hypot(c.a, c.b);
     if(amp < 1e-6) continue;
-    let phi = Math.atan2(-c.a, c.b); 
+    // Mathematically accurate phi corresponding to R cos(nt - phi)
+    let phi = Math.atan2(c.b, c.a); 
     terms.push({n, amp, phi});
   }
   terms.sort((p,q) => q.amp - p.amp);
 
   for(const term of terms) {
-    eulerStr += formatComplexTerm(term.amp, term.phi, term.n, eCount === 0);
+    polarStr += formatPolarTerm(term.amp, term.phi, term.n, eCount === 0);
     eCount++;
   }
-  epiEq.innerHTML = `f(t) &approx; ${eulerStr || "0"}`;
+  
+  epiEq.innerHTML = `f(t) &approx; ${polarStr || "0"}`;
 }
 
 function drawAxes(ctx, w, h){
@@ -371,7 +371,8 @@ function drawEpicycles(){
     const c=coeff(type,n);
     let amp=Math.hypot(c.a,c.b); 
     if(amp<1e-6) continue;
-    let phi = Math.atan2(-c.a, c.b);   
+    // Accurate phase convention
+    let phi = Math.atan2(c.b, c.a);   
     terms.push({n, amp, phi});
   }
   terms.sort((p,q)=>q.amp-p.amp);
@@ -381,9 +382,16 @@ function drawEpicycles(){
     ectx.strokeStyle='rgba(47,125,50,.28)'; ectx.lineWidth=1.2;
     ectx.beginPath(); ectx.arc(x,y,r,0,TAU); ectx.stroke();
 
-    const angle = -term.n * tt + term.phi;   
-    const nx = x + r * Math.cos(angle);
-    const ny = y + r * Math.sin(angle);
+    // The math angle: theta = nt - phi
+    const math_angle = term.n * tt - term.phi;   
+    
+    // To cleanly map standard mathematical R*cos(theta) to the vertical (inverted)
+    // canvas Y-axis, we shift the drawing angle by -pi/2.
+    // This allows the horizontal displacement in math to drive the vertical wave.
+    const visual_angle = math_angle - Math.PI / 2;
+
+    const nx = x + r * Math.cos(visual_angle);
+    const ny = y + r * Math.sin(visual_angle);
 
     ectx.strokeStyle='#476247';
     ectx.beginPath(); ectx.moveTo(x,y); ectx.lineTo(nx,ny); ectx.stroke();
@@ -431,7 +439,7 @@ function tick(){
 
 [signalType, harmonics, speed, showTerms].forEach(el => 
   el.addEventListener('input', () => {
-    if(signalType.value !== 'season') window.trace = [];
+    window.trace = [];
   })
 );
 
