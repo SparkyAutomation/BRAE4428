@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Image Processing Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5ef;--surface:#fffdf8;--surface2:#ede8dc;--text:#1a2318;--muted:#5c6b5a;
+  --primary:#2f7d32;--accent:#c98a2b;--line:#d9d2c2;--blue:#2d5fd4;--red:#b54a3a;
+  --purple:#6b3fa0;--teal:#0f7a6e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+h1,h2,h3{font-family:"Instrument Serif",serif}
+h1{font-size:clamp(2rem,4vw,3.5rem);margin-bottom:6px}
+h2{font-size:1.3rem;margin-bottom:10px}
+h3{font-size:1rem;margin-bottom:6px}
+
+header{padding:32px 24px 20px;background:linear-gradient(180deg,#fbfaf6,#f0ead9);border-bottom:1px solid var(--line)}
+.pill{display:inline-block;padding:4px 12px;border-radius:999px;background:#edf6ee;color:var(--primary);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+
+main{max-width:1500px;margin:0 auto;padding:20px 20px 80px}
+
+.tab-bar{display:flex;gap:3px;background:var(--line);padding:3px;border-radius:14px;margin-bottom:20px;overflow-x:auto}
+.tab{flex:1;min-width:120px;text-align:center;padding:10px 8px;cursor:pointer;border-radius:10px;font-weight:600;font-size:.8rem;color:var(--muted);transition:.2s;white-space:nowrap}
+.tab.active{background:var(--surface);color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+
+.tab-content{display:none;grid-template-columns:340px 1fr;gap:20px}
+.tab-content.active{display:grid}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,.04);margin-bottom:14px}
+.card:last-child{margin-bottom:0}
+
+label,lbl{font-size:.76rem;font-weight:700;display:block;margin-bottom:5px;color:var(--primary);text-transform:uppercase;letter-spacing:.04em}
+select,input[type=number]{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);font-family:Inter,sans-serif;font-size:.85rem;color:var(--text);margin-bottom:10px;outline:none}
+input[type=range]{width:100%;margin-bottom:8px;accent-color:var(--primary)}
+input[type=file]{width:100%;font-size:.8rem;margin-bottom:10px}
+button{width:100%;background:var(--primary);color:#fff;border:none;padding:10px;border-radius:8px;font-weight:600;font-size:.82rem;cursor:pointer;margin-bottom:6px;transition:.15s}
+button:hover{filter:brightness(1.12)}
+button.sec{background:var(--surface2);color:var(--text);border:1px solid var(--line)}
+button.sec:hover{background:var(--line)}
+button.accent{background:var(--accent)}
+button.blue{background:var(--blue)}
+button.purple{background:var(--purple)}
+button.teal{background:var(--teal)}
+
+canvas{width:100%;height:auto;background:#000;border-radius:12px;border:1px solid #ddd5bc;display:block}
+.hist-wrap{height:100px;margin-top:8px;background:#fff;border-radius:8px;border:1px solid var(--line);overflow:hidden}
+
+.matrix-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:10px}
+.mi{width:100%;text-align:center;padding:7px;border-radius:6px;border:1px solid var(--line);font-family:monospace;font-size:.85rem;background:var(--surface2);color:var(--text)}
+
+.inspector{font-family:monospace;font-size:.8rem;color:var(--accent);font-weight:700}
+.flex-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.range-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;margin-bottom:4px}
+.range-val{font-family:monospace;font-size:.8rem;color:var(--accent);font-weight:700;min-width:36px;text-align:right}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:700}
+.badge.green{background:#e5f4e6;color:#1a6b1e}
+.badge.amber{background:#fdf3de;color:#915d08}
+.badge.blue{background:#e3edfb;color:#1b4db5}
+.badge.red{background:#faeae8;color:#8c2a1d}
+.badge.purple{background:#f0e8f7;color:#5a2d8c}
+
+.formula{font-family:monospace;font-size:.78rem;background:var(--surface2);border-radius:6px;padding:8px;margin-top:6px;line-height:1.6;color:var(--muted)}
+
+.info-box{background:#edf6ee;border-left:3px solid var(--primary);border-radius:0 8px 8px 0;padding:10px 12px;margin-top:10px;font-size:.8rem;line-height:1.6;color:#2a4f2b}
+
+.channel-preview{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}
+.ch-canvas{border-radius:8px;width:100%;height:auto}
+
+.hist-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px}
+.hist-mini{height:60px;border-radius:6px;border:1px solid var(--line);background:#fff;overflow:hidden}
+
+.curve-container{position:relative;height:180px;background:#fff;border-radius:8px;border:1px solid var(--line);margin-top:8px;cursor:crosshair;overflow:hidden}
+
+@media(max-width:1000px){.tab-content{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="max-width:1500px;margin:0 auto">
+    <div class="pill">Signal Processing</div>
+    <h1>Image Processig Demo</h1>
+    <p style="color:var(--muted);max-width:70ch;font-size:.92rem">Digital Image Processing Demonstration: pixel fundamentals, color spaces & isolation masking, spatial convolution, structural morphology, and tone curves.</p>
+  </div>
+</header>
+
+<main>
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab(event,'basics')">1. Pixel Fundamentals</div>
+    <div class="tab" onclick="switchTab(event,'brightness')">2. Brightness & Contrast</div>
+    <div class="tab" onclick="switchTab(event,'color')">3. Color Spaces</div>
+    <div class="tab" onclick="switchTab(event,'spatial')">4. Spatial Filters</div>
+    <div class="tab" onclick="switchTab(event,'morph')">5. Morphology</div>
+    <div class="tab" onclick="switchTab(event,'channels')">6. Channel Analysis</div>
+  </div>
+
+  <!-- TAB 1: PIXEL FUNDAMENTALS -->
+  <div id="basics" class="tab-content active">
+    <aside>
+      <div class="card">
+        <label>Image Source</label>
+        <input type="file" id="fileInput" accept="image/*">
+        <select id="demoImgSelect" onchange="loadDemoImg()">
+          <option value="nature">Demo Image</option>
+        </select>
+        <button class="sec" onclick="resetToActive()">Reload Current Demo</button>
+      </div>
+      <div class="card">
+        <label>Pixel Operations</label>
+        <button onclick="runBasic('flipH')">Mirror Horizontal</button>
+        <button onclick="runBasic('flipV')">Mirror Vertical</button>
+        <button onclick="runBasic('rot90')">Rotate 90° CW</button>
+        <button onclick="runBasic('gray')">Luma Grayscale (ITU-R BT.601)</button>
+        <button onclick="runBasic('grayAvg')">Average Grayscale</button>
+        <button onclick="runBasic('bw')">Binary Threshold (>128)</button>
+        <button onclick="runBasic('invert')">Bitwise Invert</button>
+        <button onclick="runBasic('sepia')">Sepia Tone</button>
+        <button onclick="runBasic('posterize')">Posterize (4 levels)</button>
+        <button onclick="runBasic('solarize')">Solarize</button>
+        <button class="sec" onclick="runBasic(null)">Reset to Original</button>
+        <div class="formula">
+          Luma = 0.299R + 0.587G + 0.114B<br>
+          BT.601 weights match human eye sensitivity
+        </div>
+      </div>
+      <div class="card">
+        <label>Intensity Histogram</label>
+        <div class="hist-wrap"><canvas id="histBasics"></canvas></div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:6px">Updates live with each operation. X = gray value (0–255), Y = pixel count.</div>
+      </div>
+      <div class="card">
+        <label>Pixel Inspector</label>
+        <div id="pxInfo" class="inspector">Hover over image to inspect</div>
+        <div id="pxSwatch" style="width:100%;height:32px;border-radius:6px;border:1px solid var(--line);margin-top:8px;background:#888;transition:background .1s"></div>
+        <div id="pxHSV" style="font-size:.75rem;color:var(--muted);margin-top:6px"></div>
+      </div>
+    </aside>
+    <section>
+      <div class="card">
+        <div class="flex-row">
+          <h2>Live Workspace</h2>
+          <div style="display:flex;gap:6px">
+            <span class="badge green" id="imgSize">—</span>
+            <button class="sec" style="width:auto;padding:6px 14px;font-size:.75rem" onclick="downloadCanvas('canvasBasics')">Save PNG</button>
+          </div>
+        </div>
+        <canvas id="canvasBasics"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 2: BRIGHTNESS & CONTRAST -->
+  <div id="brightness" class="tab-content">
+    <aside>
+      <div class="card">
+        <label>Brightness</label>
+        <div class="range-row"><input type="range" id="bri" min="-150" max="150" value="0" oninput="updateBC()"><span class="range-val" id="briV">0</span></div>
+        <label>Contrast</label>
+        <div class="range-row"><input type="range" id="con" min="-100" max="100" value="0" oninput="updateBC()"><span class="range-val" id="conV">0</span></div>
+        <label>Gamma Correction (γ)</label>
+        <div class="range-row"><input type="range" id="gam" min="10" max="300" value="100" oninput="updateBC()"><span class="range-val" id="gamV">1.00</span></div>
+        <label>Exposure (EV stops)</label>
+        <div class="range-row"><input type="range" id="expo" min="-30" max="30" value="0" oninput="updateBC()"><span class="range-val" id="expoV">0</span></div>
+        <button class="sec" onclick="resetBC()">Reset All</button>
+        <div class="formula">
+          Brightness: out = clamp(in + B)<br>
+          Contrast: out = clamp((in-128)×C + 128)<br>
+          Gamma: out = 255 × (in/255)^(1/γ)<br>
+          Exposure: out = in × 2^EV
+        </div>
+      </div>
+      <div class="card">
+        <label>Histogram Equalization</label>
+        <button onclick="histEQ()">Apply Histogram Equalization</button>
+        <div class="info-box">Redistributes pixel intensities to span the full 0–255 range. Improves contrast in poorly-exposed images.</div>
+      </div>
+      <div class="card">
+        <label>Tone Curve (drag points)</label>
+        <div class="curve-container" id="curveContainer">
+          <canvas id="curveCvs"></canvas>
+        </div>
+        <button onclick="applyCurve()" style="margin-top:10px">Apply Tone Curve</button>
+        <button class="sec" onclick="resetCurve()">Reset Curve</button>
+      </div>
+      <div class="card">
+        <label>Output Histogram</label>
+        <div class="hist-wrap"><canvas id="histBC"></canvas></div>
+      </div>
+    </aside>
+    <section>
+      <div class="card">
+        <div class="flex-row">
+          <h2>Brightness & Contrast</h2>
+          <button class="sec" style="width:auto;padding:6px 14px;font-size:.75rem" onclick="downloadCanvas('canvasBC')">Save PNG</button>
+        </div>
+        <canvas id="canvasBC"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 3: COLOR SPACES -->
+  <div id="color" class="tab-content">
+    <aside>
+      <div class="card">
+        <label>Color Space</label>
+        <select id="colorMode" onchange="toggleColorUI()">
+          <option value="hsv">HSV (Hue · Saturation · Value)</option>
+          <option value="hsl">HSL (Hue · Saturation · Lightness)</option>
+          <option value="rgb">RGB (Red · Green · Blue)</option>
+          <option value="lab">LAB (Perceptual lightness)</option>
+          <option value="ycbcr">YCbCr (Luma + Chrominance)</option>
+        </select>
+        <label>Output Mode</label>
+        <select id="colorOut" onchange="updateColor()">
+          <option value="mask">Show mask (black out-of-range)</option>
+          <option value="highlight">Highlight in-range (overlay)</option>
+          <option value="gray">Grayscale + colored in-range</option>
+        </select>
+      </div>
+
+      <div id="rgbUI" class="card" style="display:none">
+        <label>Red Range</label>
+        <div class="range-row"><input type="range" id="rMin" min="0" max="255" value="0" oninput="updateColor()"><span class="range-val" id="rMinV">0</span></div>
+        <div class="range-row"><input type="range" id="rMax" min="0" max="255" value="255" oninput="updateColor()"><span class="range-val" id="rMaxV">255</span></div>
+        <label>Green Range</label>
+        <div class="range-row"><input type="range" id="gMin" min="0" max="255" value="0" oninput="updateColor()"><span class="range-val" id="gMinV">0</span></div>
+        <div class="range-row"><input type="range" id="gMax" min="0" max="255" value="255" oninput="updateColor()"><span class="range-val" id="gMaxV">255</span></div>
+        <label>Blue Range</label>
+        <div class="range-row"><input type="range" id="bMin" min="0" max="255" value="0" oninput="updateColor()"><span class="range-val" id="bMinV">0</span></div>
+        <div class="range-row"><input type="range" id="bMax" min="0" max="255" value="255" oninput="updateColor()"><span class="range-val" id="bMaxV">255</span></div>
+      </div>
+
+      <div id="hsvUI" class="card">
+        <label>Hue Range (0–360°)</label>
+        <div class="range-row"><input type="range" id="hMin" min="0" max="360" value="0" oninput="updateColor()"><span class="range-val" id="hMinV">0°</span></div>
+        <div class="range-row"><input type="range" id="hMax" min="0" max="360" value="360" oninput="updateColor()"><span class="range-val" id="hMaxV">360°</span></div>
+        <label>Saturation Min (%)</label>
+        <div class="range-row"><input type="range" id="sMin" min="0" max="100" value="0" oninput="updateColor()"><span class="range-val" id="sMinV">0%</span></div>
+        <label>Saturation Max (%)</label>
+        <div class="range-row"><input type="range" id="sMax" min="0" max="100" value="100" oninput="updateColor()"><span class="range-val" id="sMaxV">100%</span></div>
+        <label>Value (Brightness) Min (%)</label>
+        <div class="range-row"><input type="range" id="vMin" min="0" max="100" value="0" oninput="updateColor()"><span class="range-val" id="vMinV">0%</span></div>
+        <label>Value Max (%)</label>
+        <div class="range-row"><input type="range" id="vMax" min="0" max="100" value="100" oninput="updateColor()"><span class="range-val" id="vMaxV">100%</span></div>
+        <div class="info-box">HSV isolates color (hue) from lighting (value). Ideal for object detection under variable lighting.</div>
+      </div>
+
+      <div id="hslUI" class="card" style="display:none">
+        <label>Hue Range (0–360°)</label>
+        <div class="range-row"><input type="range" id="hlMin" min="0" max="360" value="0" oninput="updateColor()"><span class="range-val" id="hlMinV">0°</span></div>
+        <div class="range-row"><input type="range" id="hlMax" min="0" max="360" value="360" oninput="updateColor()"><span class="range-val" id="hlMaxV">360°</span></div>
+        <label>Saturation Min (%)</label>
+        <div class="range-row"><input type="range" id="slMin" min="0" max="100" value="0" oninput="updateColor()"><span class="range-val" id="slMinV">0%</span></div>
+        <label>Lightness Range (%)</label>
+        <div class="range-row"><input type="range" id="llMin" min="0" max="100" value="0" oninput="updateColor()"><span class="range-val" id="llMinV">0%</span></div>
+        <div class="range-row"><input type="range" id="llMax" min="0" max="100" value="100" oninput="updateColor()"><span class="range-val" id="llMaxV">100%</span></div>
+      </div>
+
+      <div id="labUI" class="card" style="display:none">
+        <label>L* (Lightness) Range</label>
+        <div class="range-row"><input type="range" id="lMin" min="0" max="100" value="0" oninput="updateColor()"><span class="range-val" id="lMinV">0</span></div>
+        <div class="range-row"><input type="range" id="lMax" min="0" max="100" value="100" oninput="updateColor()"><span class="range-val" id="lMaxV">100</span></div>
+        <label>a* (Green–Red) Range</label>
+        <div class="range-row"><input type="range" id="aMin" min="-128" max="127" value="-128" oninput="updateColor()"><span class="range-val" id="aMinV">-128</span></div>
+        <div class="range-row"><input type="range" id="aMax" min="-128" max="127" value="127" oninput="updateColor()"><span class="range-val" id="aMaxV">127</span></div>
+        <label>b* (Blue–Yellow) Range</label>
+        <div class="range-row"><input type="range" id="bLabMin" min="-128" max="127" value="-128" oninput="updateColor()"><span class="range-val" id="bLabMinV">-128</span></div>
+        <div class="range-row"><input type="range" id="bLabMax" min="-128" max="127" value="127" oninput="updateColor()"><span class="range-val" id="bLabMaxV">127</span></div>
+        <div class="info-box">L*a*b* is perceptually uniform — equal numeric changes produce equal perceived color differences. Better for skin detection.</div>
+      </div>
+
+      <div id="ycbcrUI" class="card" style="display:none">
+        <label>Y (Luma) Range</label>
+        <div class="range-row"><input type="range" id="yMin" min="0" max="255" value="0" oninput="updateColor()"><span class="range-val" id="yMinV">0</span></div>
+        <div class="range-row"><input type="range" id="yMax" min="0" max="255" value="255" oninput="updateColor()"><span class="range-val" id="yMaxV">255</span></div>
+        <label>Cb (Blue Chroma) Range</label>
+        <div class="range-row"><input type="range" id="cbMin" min="0" max="255" value="0" oninput="updateColor()"><span class="range-val" id="cbMinV">0</span></div>
+        <div class="range-row"><input type="range" id="cbMax" min="0" max="255" value="255" oninput="updateColor()"><span class="range-val" id="cbMaxV">255</span></div>
+        <label>Cr (Red Chroma) Range</label>
+        <div class="range-row"><input type="range" id="crMin" min="0" max="255" value="133" oninput="updateColor()"><span class="range-val" id="crMinV">133</span></div>
+        <div class="range-row"><input type="range" id="crMax" min="0" max="255" value="173" oninput="updateColor()"><span class="range-val" id="crMaxV">173</span></div>
+        <div class="info-box">YCbCr separates brightness (Y) from color (Cb, Cr). Used in JPEG compression and skin-tone detection.</div>
+      </div>
+
+      <div class="card">
+        <label>Quick Presets</label>
+        <button onclick="applyPreset('red')" style="background:#b54a3a">Isolate Reds</button>
+        <button onclick="applyPreset('green')" style="background:#2f7d32">Isolate Greens</button>
+        <button onclick="applyPreset('blue')" style="background:var(--blue)">Isolate Blues</button>
+        <button onclick="applyPreset('skin')" style="background:#c08060">Skin Tone Range</button>
+        <button onclick="applyPreset('yellow')" style="background:#a07020">Isolate Yellows</button>
+      </div>
+      <div class="card">
+        <label>Pixel % in Range</label>
+        <div id="coverageBar" style="height:20px;background:var(--surface2);border-radius:6px;overflow:hidden;margin-bottom:6px"><div id="coverageFill" style="height:100%;background:var(--primary);width:0%;transition:width .3s"></div></div>
+        <div id="coveragePct" style="font-family:monospace;font-weight:700;color:var(--accent)">—</div>
+      </div>
+    </aside>
+    <section>
+      <div class="card">
+        <div class="flex-row">
+          <h2>Isolation Masking</h2>
+          <button class="sec" style="width:auto;padding:6px 14px;font-size:.75rem" onclick="downloadCanvas('canvasColor')">Save PNG</button>
+        </div>
+        <canvas id="canvasColor"></canvas>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;font-size:.8rem">
+          <div style="background:var(--surface2);border-radius:8px;padding:10px">
+            <strong>Why HSV for tracking?</strong><br>Hue stays constant even in shadow. A red ball looks different in RGB when shaded, but keeps hue ≈ 0° in HSV.
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:10px">
+            <strong>Why L*a*b* for skin?</strong><br>Perceptually uniform — skin tones cluster tightly in a*b* space regardless of illumination.
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 4: SPATIAL FILTERS -->
+  <div id="spatial" class="tab-content">
+    <aside>
+      <div class="card">
+        <label>Convolution Kernel (3×3)</label>
+        <select id="kernelSelect" onchange="loadPreset()">
+          <option value="iden">Identity (passthrough)</option>
+          <option value="blur">Gaussian Blur 3×3</option>
+          <option value="blur5">Gaussian Blur 5×5 (simulated)</option>
+          <option value="sharpen">High Pass (Unsharp)</option>
+          <option value="sobelX">Sobel X — vertical edges</option>
+          <option value="sobelY">Sobel Y — horizontal edges</option>
+          <option value="sobel">Sobel Magnitude (combined)</option>
+          <option value="prewittX">Prewitt X</option>
+          <option value="prewittY">Prewitt Y</option>
+          <option value="laplacian">Laplacian — all edges</option>
+          <option value="emboss">Emboss</option>
+          <option value="ridge">Ridge Detection</option>
+          <option value="boxBlur">Box Blur</option>
+          <option value="custom">— Custom matrix —</option>
+        </select>
+        <div class="matrix-grid" id="matrixContainer"></div>
+        <label>Divisor (normalize)</label>
+        <div class="range-row"><input type="range" id="kernDiv" min="1" max="32" value="1" step="1" oninput="document.getElementById('kernDivV').textContent=this.value"><span class="range-val" id="kernDivV">1</span></div>
+        <label>Iterations</label>
+        <div class="range-row"><input type="range" id="kernIter" min="1" max="8" value="1" step="1" oninput="document.getElementById('kernIterV').textContent=this.value"><span class="range-val" id="kernIterV">1</span></div>
+        <button onclick="runSpatial()">Convolve Image</button>
+        <div class="formula" id="kernFormula">K = identity → output = input</div>
+      </div>
+      <div class="card">
+        <label>Edge Detection Mode</label>
+        <button class="accent" onclick="runEdgeCombined()">Sobel Magnitude + Threshold</button>
+        <label style="margin-top:8px">Edge Threshold</label>
+        <div class="range-row"><input type="range" id="edgeThresh" min="0" max="255" value="50"><span class="range-val" id="edgeThreshV">50</span></div>
+        <document.getElementById('edgeThresh').oninput=function(){document.getElementById('edgeThreshV').textContent=this.value}>
+      </div>
+      <div class="card">
+        <label>Kernel Visualiser</label>
+        <canvas id="kernVis" style="background:#fff;border-radius:8px;height:80px"></canvas>
+      </div>
+    </aside>
+    <section>
+      <div class="card">
+        <div class="flex-row">
+          <h2>Kernel Result</h2>
+          <button class="sec" style="width:auto;padding:6px 14px;font-size:.75rem" onclick="downloadCanvas('canvasSpatial')">Save PNG</button>
+        </div>
+        <canvas id="canvasSpatial"></canvas>
+        <div id="kernelInfo" class="info-box" style="margin-top:12px">Select a kernel preset to see its description.</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 5: MORPHOLOGY -->
+  <div id="morph" class="tab-content">
+    <aside>
+      <div class="card">
+        <label>Preprocessing</label>
+        <button onclick="morphPrep('binary')">Binarize First (recommended)</button>
+        <button class="sec" onclick="morphPrep('original')">Use Current Image</button>
+      </div>
+      <div class="card">
+        <label>Structuring Element Size</label>
+        <div class="range-row"><input type="range" id="seSize" min="3" max="21" value="3" step="2"><span class="range-val" id="seSizeV">3×3</span></div>
+        <document.getElementById('seSize').oninput=function(){document.getElementById('seSizeV').textContent=this.value+'×'+this.value}>
+        <label>Shape</label>
+        <select id="seShape">
+          <option value="rect">Rectangle</option>
+          <option value="cross">Cross</option>
+          <option value="ellipse">Ellipse</option>
+        </select>
+      </div>
+      <div class="card">
+        <label>Morphological Operations</label>
+        <button onclick="runMorphOp('erode')">Erosion — shrink foreground</button>
+        <button onclick="runMorphOp('dilate')">Dilation — expand foreground</button>
+        <button onclick="runMorphOp('open')">Opening (erode → dilate)</button>
+        <button onclick="runMorphOp('close')">Closing (dilate → erode)</button>
+        <button class="accent" onclick="runMorphOp('gradient')">Morphological Gradient</button>
+        <button class="blue" onclick="runMorphOp('tophat')">Top Hat (find bright specks)</button>
+        <button class="purple" onclick="runMorphOp('blackhat')">Black Hat (find dark specks)</button>
+        <button onclick="runMorphOp('thinning')">Boundary Extraction</button>
+      </div>
+      <div class="card">
+        <label>Operation Explanation</label>
+        <div id="morphDesc" class="info-box">Select an operation to see its description.</div>
+      </div>
+    </aside>
+    <section>
+      <div class="card">
+        <div class="flex-row">
+          <h2>Morphology Result</h2>
+          <button class="sec" style="width:auto;padding:6px 14px;font-size:.75rem" onclick="downloadCanvas('canvasMorph')">Save PNG</button>
+        </div>
+        <canvas id="canvasMorph"></canvas>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;font-size:.8rem">
+          <div style="background:var(--surface2);border-radius:8px;padding:10px">
+            <strong>Erosion:</strong> A pixel is foreground only if ALL neighbors within SE are foreground. Removes isolated white noise.
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:10px">
+            <strong>Dilation:</strong> A pixel is foreground if ANY neighbor within SE is foreground. Fills small holes and gaps.
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:10px">
+            <strong>Opening:</strong> Erode then dilate. Removes thin protrusions and small objects without major shape change.
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:10px">
+            <strong>Closing:</strong> Dilate then erode. Fills small internal holes and closes narrow gaps.
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 6: CHANNEL ANALYSIS -->
+  <div id="channels" class="tab-content">
+    <aside>
+      <div class="card">
+        <label>Decompose as</label>
+        <select id="chMode" onchange="updateChannels()">
+          <option value="rgb">RGB channels</option>
+          <option value="hsv">HSV channels</option>
+          <option value="hsl">HSL channels</option>
+          <option value="lab">L*a*b* channels</option>
+          <option value="ycbcr">YCbCr channels</option>
+          <option value="cmyk">CMYK channels</option>
+        </select>
+        <button onclick="updateChannels()">Decompose</button>
+      </div>
+      <div class="card">
+        <label>False-Color Map</label>
+        <select id="falseColorCh" onchange="applyFalseColor()">
+          <option value="none">None</option>
+          <option value="jet">Jet (rainbow)</option>
+          <option value="heat">Heat map</option>
+          <option value="cool">Cool (cyan–magenta)</option>
+          <option value="green">Green ramp</option>
+        </select>
+        <div class="info-box">False color maps intensity to a color spectrum, making subtle differences visible.</div>
+      </div>
+      <div class="card">
+        <label>Channel Histograms</label>
+        <div id="chHistsContainer"></div>
+      </div>
+    </aside>
+    <section>
+      <div class="card">
+        <h2>Channel Decomposition</h2>
+        <div id="chCanvasContainer" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px"></div>
+        <canvas id="canvasChannelMain" style="margin-top:8px"></canvas>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<script>
+const W=800,H=500;
+let mainImg=new Image();
+let curOp=null;
+
+const demoUrls={
+  nature:'https://images.unsplash.com/photo-1542332213-31f87348057f?w=800',
+};
+
+function getCtx(id){return document.getElementById(id).getContext('2d',{willReadFrequently:true})}
+
+const cvs={};
+['canvasBasics','canvasBC','canvasColor','canvasSpatial','canvasMorph','canvasChannelMain','histBasics','histBC','curveCvs','kernVis'].forEach(id=>{
+  cvs[id]=getCtx(id);
+});
+
+const kernels={
+  iden:[0,0,0,0,1,0,0,0,0],
+  blur:[1/16,2/16,1/16,2/16,4/16,2/16,1/16,2/16,1/16],
+  blur5:[1/16,2/16,1/16,2/16,4/16,2/16,1/16,2/16,1/16],
+  sharpen:[0,-1,0,-1,5,-1,0,-1,0],
+  sobelX:[-1,0,1,-2,0,2,-1,0,1],
+  sobelY:[-1,-2,-1,0,0,0,1,2,1],
+  sobel:[-1,0,1,-2,0,2,-1,0,1],
+  prewittX:[-1,0,1,-1,0,1,-1,0,1],
+  prewittY:[-1,-1,-1,0,0,0,1,1,1],
+  laplacian:[0,1,0,1,-4,1,0,1,0],
+  emboss:[-2,-1,0,-1,1,1,0,1,2],
+  ridge:[-1,-1,-1,-1,8,-1,-1,-1,-1],
+  boxBlur:[1/9,1/9,1/9,1/9,1/9,1/9,1/9,1/9,1/9],
+  custom:[0,0,0,0,1,0,0,0,0]
+};
+
+const kernInfo={
+  iden:'Identity kernel — passes image through unchanged. Every pixel mapped 1:1.',
+  blur:'Gaussian blur — weighted average that removes high-frequency noise. Weights follow 2D Gaussian distribution.',
+  blur5:'Gaussian 5×5 applied twice — stronger smoothing, approximates σ≈1.5.',
+  sharpen:'Unsharp mask — subtracts blurred version from original, amplifying fine details.',
+  sobelX:'Sobel X — horizontal derivative, highlights vertical edges. Sum = 0 so removes DC bias.',
+  sobelY:'Sobel Y — vertical derivative, highlights horizontal edges.',
+  sobel:'Sobel magnitude = √(Gx² + Gy²). Full edge map regardless of orientation.',
+  prewittX:'Prewitt X — similar to Sobel but uniform weights. Slightly noisier.',
+  prewittY:'Prewitt Y — detects horizontal edges with uniform-weight derivative.',
+  laplacian:'Laplacian — second derivative. Detects edges in all directions. Very sensitive to noise.',
+  emboss:'Emboss — creates 3D relief effect by computing directional differences.',
+  ridge:'Ridge detection — enhanced Laplacian for thin ridges.',
+  boxBlur:'Box blur — uniform average of all neighbors. Fast but produces blocky artifacts.',
+  custom:'Custom kernel — edit matrix values directly.'
+};
+
+let curvePoints=[[0,255],[85,170],[170,85],[255,0]];
+let draggingPt=-1;
+
+function init(){
+  const container=document.getElementById('matrixContainer');
+  for(let i=0;i<9;i++){
+    const inp=document.createElement('input');
+    inp.className='mi';inp.type='number';inp.step='0.01';inp.id=`k${i}`;
+    inp.oninput=()=>{document.getElementById('kernelSelect').value='custom'};
+    container.appendChild(inp);
+  }
+  ['canvasBasics','canvasBC','canvasColor','canvasSpatial','canvasMorph','canvasChannelMain'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.width=W;el.height=H;
+  });
+
+  document.getElementById('edgeThresh').oninput=function(){document.getElementById('edgeThreshV').textContent=this.value};
+  document.getElementById('seSize').oninput=function(){document.getElementById('seSizeV').textContent=this.value+'×'+this.value};
+
+  setupCurveCanvas();
+  loadDemoImg();
+  loadPreset();
+}
+
+function loadDemoImg(){
+  const key=document.getElementById('demoImgSelect').value;
+  mainImg=new Image();
+  mainImg.crossOrigin='anonymous';
+  mainImg.src=demoUrls[key];
+  mainImg.onload=()=>{
+    document.getElementById('imgSize').textContent=mainImg.naturalWidth+'×'+mainImg.naturalHeight;
+    updateAll();
+  };
+}
+
+function resetToActive(){loadDemoImg()}
+
+function switchTab(e,name){
+  document.querySelectorAll('.tab,.tab-content').forEach(el=>el.classList.remove('active'));
+  e.currentTarget.classList.add('active');
+  document.getElementById(name).classList.add('active');
+  updateAll();
+}
+
+function updateAll(){
+  renderToCtx(cvs.canvasBasics);
+  renderToCtx(cvs.canvasBC);
+  drawHistogram(cvs.canvasBasics,'histBasics');
+  updateBC();
+  updateColor();
+  runSpatial();
+  renderToCtx(cvs.canvasMorph);
+  updateChannels();
+}
+
+function renderToCtx(ctx){
+  ctx.drawImage(mainImg,0,0,W,H);
+}
+
+// ===== TAB 1: FUNDAMENTALS =====
+function runBasic(op){
+  cvs.canvasBasics.drawImage(mainImg,0,0,W,H);
+  if(!op){drawHistogram(cvs.canvasBasics,'histBasics');return;}
+  let id=cvs.canvasBasics.getImageData(0,0,W,H);
+  let d=id.data;
+
+  if(op==='flipH'){
+    const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
+    const t=tmp.getContext('2d');
+    t.scale(-1,1);t.drawImage(mainImg,-W,0,W,H);
+    cvs.canvasBasics.drawImage(tmp,0,0);
+  } else if(op==='flipV'){
+    const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
+    const t=tmp.getContext('2d');
+    t.scale(1,-1);t.drawImage(mainImg,0,-H,W,H);
+    cvs.canvasBasics.drawImage(tmp,0,0);
+  } else if(op==='rot90'){
+    const tmp=document.createElement('canvas');tmp.width=H;tmp.height=W;
+    const t=tmp.getContext('2d');
+    t.translate(H,0);t.rotate(Math.PI/2);
+    t.drawImage(mainImg,0,0,W,H);
+    cvs.canvasBasics.clearRect(0,0,W,H);
+    cvs.canvasBasics.drawImage(tmp,0,0,W,H);
+  } else {
+    for(let i=0;i<d.length;i+=4){
+      const r=d[i],g=d[i+1],b=d[i+2];
+      const gray=0.299*r+0.587*g+0.114*b;
+      if(op==='gray'){d[i]=d[i+1]=d[i+2]=gray;}
+      else if(op==='grayAvg'){const a=(r+g+b)/3;d[i]=d[i+1]=d[i+2]=a;}
+      else if(op==='bw'){const bw=gray>128?255:0;d[i]=d[i+1]=d[i+2]=bw;}
+      else if(op==='invert'){d[i]=255-r;d[i+1]=255-g;d[i+2]=255-b;}
+      else if(op==='sepia'){
+        d[i]=clamp(r*.393+g*.769+b*.189);
+        d[i+1]=clamp(r*.349+g*.686+b*.168);
+        d[i+2]=clamp(r*.272+g*.534+b*.131);
+      } else if(op==='posterize'){
+        const levels=4;const step=255/(levels-1);
+        d[i]=Math.round(Math.round(r/step)*step);
+        d[i+1]=Math.round(Math.round(g/step)*step);
+        d[i+2]=Math.round(Math.round(b/step)*step);
+      } else if(op==='solarize'){
+        d[i]=r>128?255-r:r;
+        d[i+1]=g>128?255-g:g;
+        d[i+2]=b>128?255-b:b;
+      }
+    }
+    cvs.canvasBasics.putImageData(id,0,0);
+  }
+  drawHistogram(cvs.canvasBasics,'histBasics');
+}
+
+// ===== TAB 2: BRIGHTNESS & CONTRAST =====
+let bcCache=null;
+
+function updateBC(){
+  const bri=+document.getElementById('bri').value;
+  const con=+document.getElementById('con').value;
+  const gam=document.getElementById('gam').value/100;
+  const expo=document.getElementById('expo').value/10;
+  document.getElementById('briV').textContent=bri;
+  document.getElementById('conV').textContent=con;
+  document.getElementById('gamV').textContent=gam.toFixed(2);
+  document.getElementById('expoV').textContent=(expo>=0?'+':'')+expo.toFixed(1);
+
+  const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
+  const t=tmp.getContext('2d');
+  t.drawImage(mainImg,0,0,W,H);
+  const id=t.getImageData(0,0,W,H);
+  const d=id.data;
+  const cf=con===0?1:con>0?(1+con/100)*2.5:1+con/100;
+
+  for(let i=0;i<d.length;i+=4){
+    for(let c=0;c<3;c++){
+      let v=d[i+c];
+      v=v*(Math.pow(2,expo));
+      v=(v-128)*cf+128+bri;
+      v=255*Math.pow(clamp(v)/255,1/gam);
+      d[i+c]=clamp(v);
+    }
+  }
+  cvs.canvasBC.putImageData(id,0,0);
+  drawHistogram(cvs.canvasBC,'histBC');
+  bcCache=id;
+}
+
+function resetBC(){
+  ['bri','con'].forEach(id=>{document.getElementById(id).value=0});
+  document.getElementById('gam').value=100;
+  document.getElementById('expo').value=0;
+  resetCurve();
+  updateBC();
+}
+
+function histEQ(){
+  const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
+  const t=tmp.getContext('2d');
+  t.drawImage(mainImg,0,0,W,H);
+  const id=t.getImageData(0,0,W,H);
+  const d=id.data;
+  const hist=new Array(256).fill(0);
+  const N=W*H;
+  for(let i=0;i<d.length;i+=4){
+    const gray=Math.round(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]);
+    hist[gray]++;
+  }
+  const cdf=new Array(256).fill(0);
+  cdf[0]=hist[0];
+  for(let i=1;i<256;i++)cdf[i]=cdf[i-1]+hist[i];
+  const cdfMin=cdf.find(v=>v>0);
+  const lut=cdf.map(v=>Math.round((v-cdfMin)/(N-cdfMin)*255));
+  for(let i=0;i<d.length;i+=4){
+    const gray=Math.round(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]);
+    const mapped=lut[gray];
+    const ratio=gray>0?mapped/gray:1;
+    d[i]=clamp(d[i]*ratio);
+    d[i+1]=clamp(d[i+1]*ratio);
+    d[i+2]=clamp(d[i+2]*ratio);
+  }
+  cvs.canvasBC.putImageData(id,0,0);
+  drawHistogram(cvs.canvasBC,'histBC');
+}
+
+function setupCurveCanvas(){
+  const c=document.getElementById('curveCvs');
+  c.width=200;c.height=180;
+  drawCurve();
+  c.onmousedown=e=>{
+    const {x,y}=getCurveCoords(e,c);
+    draggingPt=curvePoints.findIndex(p=>Math.abs(p[0]-x)<12&&Math.abs(p[1]-(255-y))<12);
+    if(draggingPt===-1){curvePoints.push([clamp(x,0,255),clamp(255-y,0,255)]);curvePoints.sort((a,b)=>a[0]-b[0]);draggingPt=curvePoints.findIndex(p=>Math.abs(p[0]-x)<12);}
+  };
+  c.onmousemove=e=>{
+    if(draggingPt>=0){
+      const {x,y}=getCurveCoords(e,c);
+      curvePoints[draggingPt]=[clamp(x,0,255),clamp(255-y,0,255)];
+      drawCurve();
+    }
+  };
+  c.onmouseup=()=>{draggingPt=-1};
+}
+
+function getCurveCoords(e,c){
+  const r=c.getBoundingClientRect();
+  return{x:(e.clientX-r.left)/r.width*255,y:(e.clientY-r.top)/r.height*255};
+}
+
+function drawCurve(){
+  const c=cvs.curveCvs;const cw=200,ch=180;
+  c.canvas.width=cw;c.canvas.height=ch;
+  c.fillStyle='#fff';c.fillRect(0,0,cw,ch);
+  c.strokeStyle='#ddd';c.lineWidth=1;
+  [64,128,192].forEach(v=>{
+    const x=v/255*cw,y=(1-v/255)*ch;
+    c.beginPath();c.moveTo(x,0);c.lineTo(x,ch);c.stroke();
+    c.beginPath();c.moveTo(0,y);c.lineTo(cw,y);c.stroke();
+  });
+  c.strokeStyle='#bbb';c.setLineDash([4,4]);
+  c.beginPath();c.moveTo(0,ch);c.lineTo(cw,0);c.stroke();
+  c.setLineDash([]);
+  const pts=[[0,curvePoints[0]?curvePoints[0][1]:0],...curvePoints,[255,curvePoints[curvePoints.length-1]?curvePoints[curvePoints.length-1][1]:255]];
+  c.strokeStyle='#2f7d32';c.lineWidth=2;
+  c.beginPath();
+  pts.forEach((p,i)=>{
+    const cx=p[0]/255*cw,cy=(1-p[1]/255)*ch;
+    i===0?c.moveTo(cx,cy):c.lineTo(cx,cy);
+  });
+  c.stroke();
+  curvePoints.forEach(p=>{
+    c.fillStyle='#c98a2b';
+    c.beginPath();c.arc(p[0]/255*cw,(1-p[1]/255)*ch,5,0,Math.PI*2);c.fill();
+  });
+}
+
+function applyCurve(){
+  const lut=buildCurveLUT();
+  const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
+  const t=tmp.getContext('2d');t.drawImage(mainImg,0,0,W,H);
+  const id=t.getImageData(0,0,W,H);const d=id.data;
+  for(let i=0;i<d.length;i+=4){d[i]=lut[d[i]];d[i+1]=lut[d[i+1]];d[i+2]=lut[d[i+2]];}
+  cvs.canvasBC.putImageData(id,0,0);
+  drawHistogram(cvs.canvasBC,'histBC');
+}
+
+function buildCurveLUT(){
+  const lut=new Uint8Array(256);
+  const pts=[[0,0],...curvePoints,[255,255]].sort((a,b)=>a[0]-b[0]);
+  for(let x=0;x<256;x++){
+    let y=x;
+    for(let i=0;i<pts.length-1;i++){
+      if(x>=pts[i][0]&&x<=pts[i+1][0]){
+        const t=(x-pts[i][0])/(pts[i+1][0]-pts[i][0]);
+        y=pts[i][1]*(1-t)+pts[i+1][1]*t;break;
+      }
+    }
+    lut[x]=clamp(y);
+  }
+  return lut;
+}
+
+function resetCurve(){
+  curvePoints=[[64,191],[128,128],[192,64]];
+  drawCurve();
+}
+
+// ===== TAB 3: COLOR SPACES =====
+function toggleColorUI(){
+  const mode=document.getElementById('colorMode').value;
+  ['rgbUI','hsvUI','hslUI','labUI','ycbcrUI'].forEach(id=>document.getElementById(id).style.display='none');
+  const map={rgb:'rgbUI',hsv:'hsvUI',hsl:'hslUI',lab:'labUI',ycbcr:'ycbcrUI'};
+  document.getElementById(map[mode]).style.display='block';
+  updateColor();
+}
+
+function rv(id){return +document.getElementById(id).value}
+
+function updateColor(){
+  const mode=document.getElementById('colorMode').value;
+  const outMode=document.getElementById('colorOut').value;
+
+  const syncLabel=(id,suffix)=>{
+    const el=document.getElementById(id+'V');
+    if(el)el.textContent=rv(id)+(suffix||'');
+  };
+  ['rMin','rMax','gMin','gMax','bMin','bMax'].forEach(id=>syncLabel(id,''));
+  ['hMin','hMax'].forEach(id=>syncLabel(id,'°'));
+  ['sMin','sMax','vMin','vMax'].forEach(id=>syncLabel(id,'%'));
+  ['hlMin','hlMax'].forEach(id=>syncLabel(id,'°'));
+  ['slMin','llMin','llMax'].forEach(id=>syncLabel(id,'%'));
+  ['lMin','lMax','aMin','aMax','bLabMin','bLabMax'].forEach(id=>syncLabel(id,''));
+  ['yMin','yMax','cbMin','cbMax','crMin','crMax'].forEach(id=>syncLabel(id,''));
+
+  const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
+  const t=tmp.getContext('2d');t.drawImage(mainImg,0,0,W,H);
+  const id=t.getImageData(0,0,W,H);
+  const d=id.data;
+  let inCount=0;
+
+  for(let i=0;i<d.length;i+=4){
+    const r=d[i],g=d[i+1],b=d[i+2];
+    let inRange=false;
+
+    if(mode==='rgb'){
+      inRange=r>=rv('rMin')&&r<=rv('rMax')&&g>=rv('gMin')&&g<=rv('gMax')&&b>=rv('bMin')&&b<=rv('bMax');
+    } else if(mode==='hsv'){
+      const hsv=rgbToHsv(r,g,b);
+      const hMin=rv('hMin'),hMax=rv('hMax');
+      const hInRange=hMin<=hMax?(hsv.h>=hMin&&hsv.h<=hMax):(hsv.h>=hMin||hsv.h<=hMax);
+      inRange=hInRange&&hsv.s*100>=rv('sMin')&&hsv.s*100<=rv('sMax')&&hsv.v*100>=rv('vMin')&&hsv.v*100<=rv('vMax');
+    } else if(mode==='hsl'){
+      const hsl=rgbToHsl(r,g,b);
+      const hMin=rv('hlMin'),hMax=rv('hlMax');
+      const hInRange=hMin<=hMax?(hsl.h>=hMin&&hsl.h<=hMax):(hsl.h>=hMin||hsl.h<=hMax);
+      inRange=hInRange&&hsl.s*100>=rv('slMin')&&hsl.l*100>=rv('llMin')&&hsl.l*100<=rv('llMax');
+    } else if(mode==='lab'){
+      const lab=rgbToLab(r,g,b);
+      inRange=lab.l>=rv('lMin')&&lab.l<=rv('lMax')&&lab.a>=rv('aMin')&&lab.a<=rv('aMax')&&lab.b>=rv('bLabMin')&&lab.b<=rv('bLabMax');
+    } else if(mode==='ycbcr'){
+      const ycc=rgbToYCbCr(r,g,b);
+      inRange=ycc.y>=rv('yMin')&&ycc.y<=rv('yMax')&&ycc.cb>=rv('cbMin')&&ycc.cb<=rv('cbMax')&&ycc.cr>=rv('crMin')&&ycc.cr<=rv('crMax');
+    }
+
+    if(inRange){
+      inCount++;
+      if(outMode==='highlight'){d[i]=clamp(r+80);d[i+1]=clamp(g-40);d[i+2]=clamp(b-40);}
+      else if(outMode==='gray'){/* keep original */}
+    } else {
+      if(outMode==='mask'){d[i]=d[i+1]=d[i+2]=0;}
+      else if(outMode==='highlight'){/* keep original */}
+      else if(outMode==='gray'){const gr=Math.round(0.299*r+0.587*g+0.114*b);d[i]=d[i+1]=d[i+2]=gr;}
+    }
+  }
+
+  cvs.canvasColor.putImageData(id,0,0);
+  const pct=((inCount/(W*H))*100).toFixed(1);
+  document.getElementById('coveragePct').textContent=pct+'% pixels in range';
+  document.getElementById('coverageFill').style.width=pct+'%';
+}
+
+function applyPreset(name){
+  document.getElementById('colorMode').value='hsv';
+  document.getElementById('colorOut').value='mask';
+  toggleColorUI();
+  const presets={
+    red:{hMin:330,hMax:30,sMin:30,sMax:100,vMin:20,vMax:100},
+    green:{hMin:80,hMax:160,sMin:30,sMax:100,vMin:15,vMax:100},
+    blue:{hMin:200,hMax:260,sMin:30,sMax:100,vMin:15,vMax:100},
+    yellow:{hMin:40,hMax:80,sMin:30,sMax:100,vMin:30,vMax:100},
+    skin:{hMin:0,hMax:50,sMin:10,sMax:60,vMin:30,vMax:100}
+  };
+  const p=presets[name];
+  document.getElementById('hMin').value=p.hMin;
+  document.getElementById('hMax').value=p.hMax;
+  document.getElementById('sMin').value=p.sMin;
+  document.getElementById('sMax').value=p.sMax;
+  document.getElementById('vMin').value=p.vMin;
+  document.getElementById('vMax').value=p.vMax;
+  updateColor();
+}
+
+// ===== TAB 4: SPATIAL =====
+function loadPreset(){
+  const sel=document.getElementById('kernelSelect').value;
+  const k=kernels[sel]||kernels.iden;
+  k.forEach((v,i)=>{const el=document.getElementById(`k${i}`);if(el)el.value=v.toFixed(2);});
+  document.getElementById('kernelInfo').textContent=kernInfo[sel]||'Custom kernel.';
+  drawKernelVis(k);
+}
+
+function drawKernelVis(k){
+  const c=cvs.kernVis;
+  c.canvas.width=90;c.canvas.height=80;
+  c.clearRect(0,0,90,80);
+  const max=Math.max(...k.map(Math.abs))||1;
+  k.forEach((v,i)=>{
+    const col=i%3,row=Math.floor(i/3);
+    const norm=(v+max)/(2*max);
+    const brightness=Math.round(norm*255);
+    c.fillStyle=`rgb(${brightness},${brightness},${brightness})`;
+    c.fillRect(col*30,row*27,28,25);
+    c.fillStyle=brightness>128?'#000':'#fff';
+    c.font='9px monospace';c.textAlign='center';
+    c.fillText(v.toFixed(1),col*30+14,row*27+16);
+  });
+}
+
+function getKernel(){
+  return Array.from({length:9},(_,i)=>+document.getElementById(`k${i}`).value);
+}
+
+function convolve(src,k,div){
+  const dst=new ImageData(W,H);
+  div=div||1;
+  for(let y=1;y<H-1;y++){
+    for(let x=1;x<W-1;x++){
+      let r=0,g=0,b=0;
+      for(let i=0;i<9;i++){
+        const off=((y+Math.floor(i/3)-1)*W+(x+i%3-1))*4;
+        r+=src.data[off]*k[i];
+        g+=src.data[off+1]*k[i];
+        b+=src.data[off+2]*k[i];
+      }
+      const o=(y*W+x)*4;
+      dst.data[o]=clamp(r/div);dst.data[o+1]=clamp(g/div);dst.data[o+2]=clamp(b/div);dst.data[o+3]=255;
+    }
+  }
+  return dst;
+}
+
+function runSpatial(){
+  const sel=document.getElementById('kernelSelect').value;
+  const k=getKernel();
+  const div=+document.getElementById('kernDiv').value||1;
+  const iter=+document.getElementById('kernIter').value||1;
+  const kernDivV=document.getElementById('kernDivV');
+  if(kernDivV)kernDivV.textContent=div;
+
+  cvs.canvasSpatial.drawImage(mainImg,0,0,W,H);
+
+  if(sel==='sobel'){
+    runEdgeCombined();return;
+  }
+  if(sel==='blur5'){
+    let src=cvs.canvasSpatial.getImageData(0,0,W,H);
+    let dst=convolve(src,kernels.blur,div);
+    const tmp=new ImageData(W,H);
+    tmp.data.set(dst.data);
+    dst=convolve(tmp,kernels.blur,div);
+    cvs.canvasSpatial.putImageData(dst,0,0);
+    return;
+  }
+
+  let src=cvs.canvasSpatial.getImageData(0,0,W,H);
+  for(let n=0;n<iter;n++){
+    const dst=convolve(src,k,div);
+    src=dst;
+  }
+  cvs.canvasSpatial.putImageData(src,0,0);
+  drawKernelVis(k);
+}
+
+function runEdgeCombined(){
+  const thresh=+(document.getElementById('edgeThresh').value)||50;
+  document.getElementById('edgeThreshV').textContent=thresh;
+
+  const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
+  const t=tmp.getContext('2d');t.drawImage(mainImg,0,0,W,H);
+  const src=t.getImageData(0,0,W,H);
+
+  const gx=kernels.sobelX;
+  const gy=kernels.sobelY;
+  const dst=new ImageData(W,H);
+
+  for(let y=1;y<H-1;y++){
+    for(let x=1;x<W-1;x++){
+      let rx=0,ry=0;
+      for(let i=0;i<9;i++){
+        const off=((y+Math.floor(i/3)-1)*W+(x+i%3-1))*4;
+        const luma=0.299*src.data[off]+0.587*src.data[off+1]+0.114*src.data[off+2];
+        rx+=luma*gx[i];ry+=luma*gy[i];
+      }
+      const mag=Math.min(255,Math.sqrt(rx*rx+ry*ry));
+      const v=mag>=thresh?mag:0;
+      const o=(y*W+x)*4;
+      dst.data[o]=dst.data[o+1]=dst.data[o+2]=v;dst.data[o+3]=255;
+    }
+  }
+  cvs.canvasSpatial.putImageData(dst,0,0);
+}
+
+// ===== TAB 5: MORPHOLOGY =====
+let morphBase=null;
+const morphDescriptions={
+  erode:'Erosion: a foreground pixel survives only if ALL pixels within the structuring element are also foreground. Shrinks white regions, removes thin noise.',
+  dilate:'Dilation: a pixel becomes foreground if ANY neighbor within the SE is foreground. Expands white regions, fills small holes.',
+  open:'Opening = Erode then Dilate. Removes small bright speckles without significantly changing large shapes.',
+  close:'Closing = Dilate then Erode. Fills small dark holes inside bright regions.',
+  gradient:'Morphological Gradient = Dilate − Erode. Produces outline/boundary of objects.',
+  tophat:'Top Hat = Original − Opened. Highlights bright features smaller than the SE (small bright spots on dark bg).',
+  blackhat:'Black Hat = Closed − Original. Highlights dark features smaller than the SE.',
+  thinning:'Boundary Extraction = Original − Eroded. Extracts the outer boundary one pixel wide.'
+};
+
+function morphPrep(mode){
+  const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
+  const t=tmp.getContext('2d');t.drawImage(mainImg,0,0,W,H);
+  if(mode==='binary'){
+    const id=t.getImageData(0,0,W,H);const d=id.data;
+    for(let i=0;i<d.length;i+=4){
+      const gr=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+      const v=gr>128?255:0;d[i]=d[i+1]=d[i+2]=v;
+    }
+    t.putImageData(id,0,0);
+  }
+  morphBase=tmp;
+  cvs.canvasMorph.drawImage(tmp,0,0);
+}
+
+function buildSE(){
+  const sz=+(document.getElementById('seSize').value)||3;
+  const shape=document.getElementById('seShape').value;
+  const se=[];
+  const half=Math.floor(sz/2);
+  for(let y=0;y<sz;y++){
+    for(let x=0;x<sz;x++){
+      if(shape==='rect'){se.push(true);}
+      else if(shape==='cross'){se.push(x===half||y===half);}
+      else{
+        const dx=(x-half)/(half||1),dy=(y-half)/(half||1);
+        se.push(dx*dx+dy*dy<=1);
+      }
+    }
+  }
+  return{se,sz,half};
+}
+
+function morphStep(data,isDilate,seData){
+  const{se,sz,half}=seData;
+  const temp=new Uint8ClampedArray(data.length);
+  for(let y=half;y<H-half;y++){
+    for(let x=half;x<W-half;x++){
+      let val=isDilate?0:255;
+      let seIdx=0;
+      for(let sy=0;sy<sz;sy++){
+        for(let sx=0;sx<sz;sx++){
+          if(se[seIdx++]){
+            const off=((y+sy-half)*W+(x+sx-half))*4;
+            const avg=(data[off]+data[off+1]+data[off+2])/3;
+            val=isDilate?Math.max(val,avg):Math.min(val,avg);
+          }
+        }
+      }
+      const o=(y*W+x)*4;
+      temp[o]=temp[o+1]=temp[o+2]=val;temp[o+3]=255;
+    }
+  }
+  return temp;
+}
+
+function runMorphOp(op){
+  document.getElementById('morphDesc').textContent=morphDescriptions[op]||op;
+  const seData=buildSE();
+
+  const src=morphBase||document.getElementById('canvasMorph').getContext('2d',{willReadFrequently:true});
+  let data;
+  if(morphBase){
+    const t=morphBase.getContext('2d',{willReadFrequently:true});
+    data=t.getImageData(0,0,W,H).data;
+  } else {
+    cvs.canvasMorph.drawImage(mainImg,0,0,W,H);
+    data=cvs.canvasMorph.getImageData(0,0,W,H).data;
+  }
+
+  let result;
+  if(op==='erode') result=morphStep(data,false,seData);
+  else if(op==='dilate') result=morphStep(data,true,seData);
+  else if(op==='open') result=morphStep(morphStep(data,false,seData),true,seData);
+  else if(op==='close') result=morphStep(morphStep(data,true,seData),false,seData);
+  else if(op==='gradient'){
+    const er=morphStep(data,false,seData);
+    const di=morphStep(data,true,seData);
+    result=new Uint8ClampedArray(data.length);
+    for(let i=0;i<result.length;i+=4){result[i]=clamp(di[i]-er[i]);result[i+1]=clamp(di[i+1]-er[i+1]);result[i+2]=clamp(di[i+2]-er[i+2]);result[i+3]=255;}
+  } else if(op==='tophat'){
+    const opened=morphStep(morphStep(data,false,seData),true,seData);
+    result=new Uint8ClampedArray(data.length);
+    for(let i=0;i<result.length;i+=4){result[i]=clamp(data[i]-opened[i]);result[i+1]=clamp(data[i+1]-opened[i+1]);result[i+2]=clamp(data[i+2]-opened[i+2]);result[i+3]=255;}
+  } else if(op==='blackhat'){
+    const closed=morphStep(morphStep(data,true,seData),false,seData);
+    result=new Uint8ClampedArray(data.length);
+    for(let i=0;i<result.length;i+=4){result[i]=clamp(closed[i]-data[i]);result[i+1]=clamp(closed[i+1]-data[i+1]);result[i+2]=clamp(closed[i+2]-data[i+2]);result[i+3]=255;}
+  } else if(op==='thinning'){
+    const er=morphStep(data,false,seData);
+    result=new Uint8ClampedArray(data.length);
+    for(let i=0;i<result.length;i+=4){result[i]=clamp(data[i]-er[i]);result[i+1]=clamp(data[i+1]-er[i+1]);result[i+2]=clamp(data[i+2]-er[i+2]);result[i+3]=255;}
+  }
+  cvs.canvasMorph.putImageData(new ImageData(result,W,H),0,0);
+}
+
+// ===== TAB 6: CHANNELS =====
+function updateChannels(){
+  const mode=document.getElementById('chMode').value;
+  const container=document.getElementById('chCanvasContainer');
+  container.innerHTML='';
+
+  const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
+  const t=tmp.getContext('2d');t.drawImage(mainImg,0,0,W,H);
+  const id=t.getImageData(0,0,W,H);
+  const d=id.data;
+
+  let channels=[];
+  if(mode==='rgb'){
+    channels=['R','G','B'];
+  } else if(mode==='hsv'){
+    channels=['Hue','Saturation','Value'];
+  } else if(mode==='hsl'){
+    channels=['Hue','Saturation','Lightness'];
+  } else if(mode==='lab'){
+    channels=['L*','a*','b*'];
+  } else if(mode==='ycbcr'){
+    channels=['Y (Luma)','Cb','Cr'];
+  } else if(mode==='cmyk'){
+    channels=['Cyan','Magenta','Yellow','Key (Black)'];
+  }
+
+  const chData=channels.map(()=>new Uint8ClampedArray(W*H*4));
+
+  for(let i=0,px=0;i<d.length;i+=4,px++){
+    const r=d[i],g=d[i+1],b=d[i+2];
+    let vals=[];
+    if(mode==='rgb'){vals=[r,g,b];}
+    else if(mode==='hsv'){
+      const hsv=rgbToHsv(r,g,b);
+      vals=[hsv.h/360*255,hsv.s*255,hsv.v*255];
+    } else if(mode==='hsl'){
+      const hsl=rgbToHsl(r,g,b);
+      vals=[hsl.h/360*255,hsl.s*255,hsl.l*255];
+    } else if(mode==='lab'){
+      const lab=rgbToLab(r,g,b);
+      vals=[lab.l/100*255,(lab.a+128),clamp(lab.b+128)];
+    } else if(mode==='ycbcr'){
+      const ycc=rgbToYCbCr(r,g,b);
+      vals=[ycc.y,ycc.cb,ycc.cr];
+    } else if(mode==='cmyk'){
+      const c2=1-r/255,m=1-g/255,y2=1-b/255;
+      const k=Math.min(c2,m,y2);
+      const denom=1-k||1;
+      vals=[(c2-k)/denom*255,(m-k)/denom*255,(y2-k)/denom*255,k*255];
+    }
+    vals.forEach((v,ci)=>{
+      const o=px*4;
+      chData[ci][o]=chData[ci][o+1]=chData[ci][o+2]=clamp(v);
+      chData[ci][o+3]=255;
+    });
+  }
+
+  const chColors=['#c03030','#30a030','#3060c0','#c07030'];
+  const histContainer=document.getElementById('chHistsContainer');
+  histContainer.innerHTML='';
+
+  channels.forEach((name,ci)=>{
+    const wrap=document.createElement('div');
+    wrap.style.cssText='text-align:center;font-size:.75rem;font-weight:600;color:var(--muted)';
+    wrap.textContent=name;
+    const cv=document.createElement('canvas');
+    cv.width=W;cv.height=H;cv.style.cssText='width:100%;height:auto;border-radius:8px;border:1px solid var(--line);display:block;margin-top:4px';
+    const ctx2=cv.getContext('2d');
+    ctx2.putImageData(new ImageData(chData[ci],W,H),0,0);
+    wrap.appendChild(cv);
+    container.appendChild(wrap);
+
+    const hw=document.createElement('div');
+    hw.style.cssText='margin-bottom:10px';
+    const hl=document.createElement('div');
+    hl.style.cssText='font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:3px';
+    hl.textContent=name+' histogram';
+    hw.appendChild(hl);
+    const hc=document.createElement('canvas');
+    hc.style.cssText='width:100%;height:50px;background:#fff;border-radius:6px;border:1px solid var(--line);display:block';
+    hw.appendChild(hc);
+    histContainer.appendChild(hw);
+    drawHistogramFromData(chData[ci],hc,chColors[ci]||'#2f7d32');
+  });
+
+  applyFalseColor();
+}
+
+function applyFalseColor(){
+  const map=document.getElementById('falseColorCh').value;
+  if(map==='none'){cvs.canvasChannelMain.drawImage(mainImg,0,0,W,H);return;}
+
+  const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
+  const t=tmp.getContext('2d');t.drawImage(mainImg,0,0,W,H);
+  const id=t.getImageData(0,0,W,H);const d=id.data;
+  const dst=cvs.canvasChannelMain.createImageData(W,H);
+
+  for(let i=0;i<d.length;i+=4){
+    const gray=(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])/255;
+    const col=falseColorMap(gray,map);
+    dst.data[i]=col[0];dst.data[i+1]=col[1];dst.data[i+2]=col[2];dst.data[i+3]=255;
+  }
+  cvs.canvasChannelMain.putImageData(dst,0,0);
+}
+
+function falseColorMap(t,name){
+  if(name==='jet'){
+    const r=clamp(255*Math.min(Math.max(1.5-Math.abs(4*t-3),0),1));
+    const g=clamp(255*Math.min(Math.max(1.5-Math.abs(4*t-2),0),1));
+    const b=clamp(255*Math.min(Math.max(1.5-Math.abs(4*t-1),0),1));
+    return[r,g,b];
+  } else if(name==='heat'){
+    return[clamp(t<0.5?t*2*255:255),clamp(t>0.5?(t-0.5)*2*255:0),0];
+  } else if(name==='cool'){
+    return[clamp(t*255),clamp((1-t)*255),255];
+  } else if(name==='green'){
+    return[0,clamp(t*255),clamp((1-t)*100)];
+  }
+  return[t*255,t*255,t*255];
+}
+
+// ===== UTILS =====
+function clamp(v,mn=0,mx=255){return Math.max(mn,Math.min(mx,v));}
+
+function drawHistogram(ctx,histId){
+  const id=ctx.getImageData(0,0,W,H);
+  drawHistogramFromData(id.data,document.getElementById(histId),'#2f7d32');
+}
+
+function drawHistogramFromData(data,canvas,color){
+  const hist=new Array(256).fill(0);
+  for(let i=0;i<data.length;i+=4)hist[Math.round((data[i]+data[i+1]+data[i+2])/3)]++;
+  const max=Math.max(...hist)||1;
+  const c=canvas.getContext?canvas.getContext('2d'):null;
+  if(!c)return;
+  const cw=canvas.width||300,ch=canvas.height||100;
+  canvas.width=cw;canvas.height=ch;
+  c.clearRect(0,0,cw,ch);
+  c.fillStyle=color+'40';
+  c.strokeStyle=color;
+  c.lineWidth=1;
+  hist.forEach((v,i)=>{
+    const bh=(v/max)*ch;
+    c.fillRect(i*(cw/256),ch-bh,cw/256,bh);
+  });
+}
+
+function rgbToHsv(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;
+  let h=0,s=max===0?0:d/max,v=max;
+  if(max!==min){
+    switch(max){
+      case r:h=(g-b)/d+(g<b?6:0);break;
+      case g:h=(b-r)/d+2;break;
+      case b:h=(r-g)/d+4;break;
+    }
+    h/=6;
+  }
+  return{h:h*360,s,v};
+}
+
+function rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);
+  let h=0,s=0,l=(max+min)/2;
+  if(max!==min){
+    const d=max-min;
+    s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){
+      case r:h=(g-b)/d+(g<b?6:0);break;
+      case g:h=(b-r)/d+2;break;
+      case b:h=(r-g)/d+4;break;
+    }
+    h/=6;
+  }
+  return{h:h*360,s,l};
+}
+
+function rgbToLab(r,g,b){
+  r/=255;g/=255;b/=255;
+  r=r>0.04045?Math.pow((r+0.055)/1.055,2.4):r/12.92;
+  g=g>0.04045?Math.pow((g+0.055)/1.055,2.4):g/12.92;
+  b=b>0.04045?Math.pow((b+0.055)/1.055,2.4):b/12.92;
+  let x=(r*0.4124+g*0.3576+b*0.1805)/0.95047;
+  let y=(r*0.2126+g*0.7152+b*0.0722)/1.00000;
+  let z=(r*0.0193+g*0.1192+b*0.9505)/1.08883;
+  const f=t=>t>0.008856?Math.pow(t,1/3):7.787*t+16/116;
+  return{l:116*f(y)-16,a:500*(f(x)-f(y)),b:200*(f(y)-f(z))};
+}
+
+function rgbToYCbCr(r,g,b){
+  const y=16+0.257*r+0.504*g+0.098*b;
+  const cb=128-0.148*r-0.291*g+0.439*b;
+  const cr=128+0.439*r-0.368*g-0.071*b;
+  return{y:clamp(y),cb:clamp(cb),cr:clamp(cr)};
+}
+
+function downloadCanvas(id){
+  const el=document.getElementById(id);
+  const a=document.createElement('a');
+  a.href=el.toDataURL('image/png');
+  a.download='visionlab_'+id+'.png';
+  a.click();
+}
+
+document.getElementById('canvasBasics').onmousemove=e=>{
+  const r=e.target.getBoundingClientRect();
+  const x=Math.floor((e.clientX-r.left)*(W/r.width));
+  const y=Math.floor((e.clientY-r.top)*(H/r.height));
+  const p=cvs.canvasBasics.getImageData(x,y,1,1).data;
+  document.getElementById('pxInfo').textContent=`X:${x} Y:${y}  |  RGB(${p[0]}, ${p[1]}, ${p[2]})`;
+  document.getElementById('pxSwatch').style.background=`rgb(${p[0]},${p[1]},${p[2]})`;
+  const hsv=rgbToHsv(p[0],p[1],p[2]);
+  document.getElementById('pxHSV').textContent=`HSV: H=${Math.round(hsv.h)}°  S=${Math.round(hsv.s*100)}%  V=${Math.round(hsv.v*100)}%`;
+};
+
+document.getElementById('fileInput').onchange=e=>{
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    mainImg=new Image();
+    mainImg.onload=()=>{document.getElementById('imgSize').textContent=mainImg.naturalWidth+'×'+mainImg.naturalHeight;updateAll();};
+    mainImg.src=ev.target.result;
+  };
+  reader.readAsDataURL(e.target.files[0]);
+};
+
+init();
+</script>
+</body>
+</html>
