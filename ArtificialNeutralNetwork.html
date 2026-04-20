@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Artifical Neural Network Basics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f5ef; --surface: #fffdf8; --surface2: #efe9db; --surface3: #e6dece;
+  --text: #1f2a1f; --muted: #5c6b5c; --primary: #2f7d32; --primary-light: #edf6ee;
+  --accent: #c98a2b; --accent-light: #fdf3e3; --line: #d9d2c2;
+  --blue: #2d6cdf; --blue-light: #e8f0fd; --red: #b54a3a; --red-light: #faeae8;
+  --purple: #7c4dbc; --purple-light: #f0e8fa;
+  --radius: 18px; --radius-sm: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Inter, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* HEADER */
+header { padding: 52px 24px 36px; background: linear-gradient(170deg, #fbfaf6 0%, #f0eadd 100%); border-bottom: 1px solid var(--line); position: relative; overflow: hidden; }
+header::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 80% 50%, rgba(47,125,50,.06) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(201,138,43,.05) 0%, transparent 50%); pointer-events: none; }
+.header-inner { max-width: 1180px; margin: 0 auto; }
+h1 { font-family: "Instrument Serif", serif; font-size: clamp(2.6rem, 5.5vw, 5rem); line-height: 1.02; max-width: 16ch; margin-bottom: 16px; }
+.lede { font-size: 1.07rem; color: #2b3a2b; max-width: 62ch; line-height: 1.7; }
+.pill { display: inline-block; padding: 5px 12px; border-radius: 999px; background: var(--primary-light); color: var(--primary); font-weight: 700; font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 14px; }
+
+/* MAIN LAYOUT */
+main { max-width: 1180px; margin: 0 auto; padding: 32px 20px 80px; }
+
+/* TABS */
+.chapter-tabs { display: flex; gap: 6px; margin-bottom: 28px; flex-wrap: wrap; }
+.chapter-btn { display: flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--muted); font-family: Inter, sans-serif; font-size: .88rem; font-weight: 600; cursor: pointer; transition: all .18s; }
+.chapter-btn .ch-num { font-size: .75rem; font-weight: 700; background: var(--surface2); padding: 2px 7px; border-radius: 999px; }
+.chapter-btn:hover { border-color: var(--primary); color: var(--primary); }
+.chapter-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+.chapter-btn.active .ch-num { background: rgba(255,255,255,.2); }
+
+.section-tabs { display: flex; gap: 4px; margin-bottom: 22px; flex-wrap: wrap; }
+.sec-btn { padding: 7px 16px; border-radius: 999px; border: 1.5px solid var(--line); background: transparent; color: var(--muted); font-family: Inter, sans-serif; font-size: .84rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+.sec-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sec-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* PANELS & CARDS */
+.chapter { display: none; } .chapter.active { display: block; animation: fadeIn .22s ease; }
+.sec-panel { display: none; } .sec-panel.active { display: block; animation: fadeIn .18s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: 0 6px 28px rgba(0,0,0,.04); margin-bottom: 22px; }
+.two-col { display: grid; grid-template-columns: 1.15fr 1fr; gap: 22px; align-items: start; }
+@media (max-width: 860px) { .two-col { grid-template-columns: 1fr; } }
+
+canvas { width: 100%; height: auto; display: block; background: #fff; border-radius: 14px; border: 1px solid #e8e1cf; }
+.activ-canvas { width: 100%; max-height: 120px; background: #faf9f5; border: 1px solid var(--line); border-radius: 8px; margin-top: 8px; }
+.struct-canvas { width: 100%; height: auto; display: block; background: #faf9f5; border-radius: 10px; border: 1px solid var(--line); margin-bottom: 14px; }
+
+/* CONTROLS */
+.controls { background: var(--surface2); border-radius: var(--radius-sm); padding: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+label { font-size: .88rem; font-weight: 600; display: block; margin-bottom: 7px; color: var(--text); }
+.val-badge { display: inline-block; min-width: 36px; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; font-variant-numeric: tabular-nums; font-size: .88rem; font-weight: 700; color: var(--primary); }
+input[type=range] { width: 100%; accent-color: var(--primary); height: 4px; cursor: pointer; margin-top: 4px; }
+button.action-btn { width: 100%; padding: 9px; border-radius: 9px; border: 1.5px solid var(--primary); background: var(--primary-light); color: var(--primary); font-family: Inter, sans-serif; font-size: .9rem; font-weight: 700; cursor: pointer; transition: all .15s; }
+button.action-btn:hover { background: var(--primary); color: #fff; }
+
+/* MATH & INSIGHTS */
+.math-section { margin-top: 20px; }
+.math-label { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.formula { font-family: ui-monospace, monospace; background: #f2eee4; padding: 14px 18px; border-radius: var(--radius-sm); display: block; line-height: 2; font-size: 1.08rem; text-align: center; border: 1px solid #e3dac8; margin-bottom: 10px; }
+.insight { border-radius: var(--radius-sm); padding: 13px 16px; font-size: .88rem; line-height: 1.65; margin-top: 12px; }
+.insight.blue   { background: var(--blue-light);    border-left: 3px solid var(--blue); }
+.insight.green  { background: var(--primary-light); border-left: 3px solid var(--primary); }
+.insight.amber  { background: var(--accent-light);  border-left: 3px solid var(--accent); }
+.insight.purple { background: var(--purple-light);  border-left: 3px solid var(--purple); }
+
+/* STAT BOXES */
+.stats-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.stat-chip { flex: 1; min-width: 100px; background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 14px; text-align: center; border: 1px solid var(--line); }
+.stat-chip .stat-val  { font-family: ui-monospace, monospace; font-size: 1.3rem; font-weight: 700; }
+.stat-chip .stat-name { font-size: .74rem; color: var(--muted); margin-top: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+
+.chapter-intro { display: flex; align-items: flex-start; gap: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 26px; margin-bottom: 22px; }
+.chapter-icon { font-size: 2.4rem; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.chapter-intro h2 { font-family: "Instrument Serif", serif; font-size: 1.5rem; margin-bottom: 5px; }
+
+/* TRAINING UI */
+.train-step-box { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 8px; transition: all 0.2s; opacity: 0.4; border-left: 4px solid transparent; }
+.train-step-box.active { opacity: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left-color: var(--primary); }
+.ts-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; display: flex; justify-content: space-between; }
+.ts-math  { font-family: ui-monospace, monospace; font-size: 0.85rem; color: var(--muted); }
+.val-hl   { background: var(--surface2); padding: 1px 4px; border-radius: 4px; font-weight: 600; color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="pill">Machine Learning Series</div>
+    <h1>Artifical Neural Network Basics</h1>
+    <p class="lede">From basic logic gates to continuous probabilities and full networks. Explore how an artificial neuron processes inputs, and demystify the mathematics of training.</p>
+  </div>
+</header>
+
+<main>
+  <div class="chapter-tabs">
+    <button class="chapter-btn active" onclick="showChapter('perceptron', event)"><span class="ch-num">I</span> The Perceptron</button>
+    <button class="chapter-btn" onclick="showChapter('sigmoid', event)"><span class="ch-num">II</span> The Sigmoid Neuron</button>
+    <button class="chapter-btn" onclick="showChapter('network', event)"><span class="ch-num">III</span> Neural Network</button>
+  </div>
+
+  <div class="chapter active" id="chapter-perceptron">
+    <div class="chapter-intro">
+      <div class="chapter-icon">⚡</div>
+      <div>
+        <h2>The Artificial Neuron (Perceptron)</h2>
+        <p>The simplest building block. It takes multiple inputs (e.g., soil moisture and sunlight), computes a weighted sum (dot product), and applies a harsh binary threshold: 1 (Water) or 0 (Don't Water).</p>
+      </div>
+    </div>
+
+    <div class="section-tabs">
+      <button class="sec-btn active" onclick="showSection('perc','model',event)">1. Model &amp; Activation</button>
+      <button class="sec-btn" onclick="showSection('perc','train',event)" style="border-color:var(--accent);color:var(--accent)">2. Training (Perceptron Rule)</button>
+    </div>
+
+    <div class="sec-panel active" id="perc-model">
+      <div class="card">
+        <div class="two-col">
+          <div>
+            <canvas id="percCanvas" width="540" height="360"></canvas>
+            <div class="math-label" style="margin-top:12px">Activation Function: Step</div>
+            <canvas id="percActivCanvas" class="activ-canvas" width="540" height="100"></canvas>
+          </div>
+          <div>
+            <div class="math-label">Neuron Structure</div>
+            <canvas id="percNeuronCanvas" class="struct-canvas" width="520" height="150"></canvas>
+
+            <div class="controls">
+              <div>
+                <label>Weight 1 (w₁): <span class="val-badge" id="pw1Val">1.0</span></label>
+                <input id="pw1" type="range" min="-3" max="3" step="0.1" value="1.0" />
+              </div>
+              <div>
+                <label>Weight 2 (w₂): <span class="val-badge" id="pw2Val">-1.0</span></label>
+                <input id="pw2" type="range" min="-3" max="3" step="0.1" value="-1.0" />
+              </div>
+              <div style="grid-column:1/-1">
+                <label>Bias (b): <span class="val-badge" id="pbVal">0.5</span></label>
+                <input id="pb" type="range" min="-3" max="3" step="0.1" value="0.5" />
+              </div>
+            </div>
+
+            <div class="math-section">
+              <div class="math-label">1. The Weighted Sum (z)</div>
+              <div class="formula">z = (w₁ · x₁) + (w₂ · x₂) + b</div>
+              <div class="math-label">2. The Step Activation</div>
+              <div class="formula">ŷ = <span style="color:var(--primary)">1</span> if z ≥ 0 &nbsp;|&nbsp; ŷ = <span style="color:var(--red)">0</span> if z &lt; 0</div>
+            </div>
+
+            <div class="insight blue">
+              <strong>Crucial Insight: The Dot Product.</strong> Think of the weight vector [w₁, w₂] as a <em>learned pattern</em>. The calculation (w₁·x₁ + w₂·x₂) is a dot product, which mathematically checks the <strong>similarity</strong> between the input data and the neuron's learned pattern. If they align strongly, the dot product is highly positive, and the neuron fires!
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-panel" id="perc-train">
+      <div class="card">
+        <div class="two-col" style="grid-template-columns:1fr 1.1fr">
+          <div>
+            <canvas id="pTrainCanvas" width="540" height="400"></canvas>
+            <div style="display:flex;gap:8px;margin-top:14px">
+              <button class="action-btn" id="pTrainBtn" onclick="window.pTrainNext()" style="flex:2;padding:12px;background:var(--primary);color:#fff">1. Pick Point &amp; Predict →</button>
+              <button class="action-btn" onclick="window.pTrainReset()" style="flex:1">↺ Reset</button>
+            </div>
+          </div>
+          <div style="background:var(--surface2);padding:18px;border-radius:var(--radius-sm);border:1px solid var(--line)">
+            <div style="font-family:'Instrument Serif',serif;font-size:1.4rem;margin-bottom:12px">Perceptron Learning Rule</div>
+
+            <div class="train-step-box" id="pt-1">
+              <div class="ts-title">1. Input &amp; Target</div>
+              <div class="ts-math">
+                x₁: <span class="val-hl" id="pt-x1">--</span> | x₂: <span class="val-hl" id="pt-x2">--</span><br>
+                True Label (y): <span class="val-hl" id="pt-y">--</span>
+              </div>
+            </div>
+
+            <div class="train-step-box" id="pt-2">
+              <div class="ts-title">2. Forward Pass (Predict)</div>
+              <div class="ts-math">
+                z = (w₁x₁ + w₂x₂) + b = <span class="val-hl" id="pt-z">--</span><br>
+                Prediction (ŷ) = Step(z) = <span class="val-hl" id="pt-pred" style="color:var(--primary)">--</span>
+              </div>
+            </div>
+
+            <div class="train-step-box" id="pt-3">
+              <div class="ts-title">3. Measure Error</div>
+              <div class="ts-math">
+                Error (e) = y − ŷ = <span class="val-hl" id="pt-err" style="color:var(--red)">--</span>
+              </div>
+            </div>
+
+            <div class="train-step-box" id="pt-4">
+              <div class="ts-title">4. Update Weights &nbsp;(w = w + α·e·x)</div>
+              <div class="ts-math">
+                w₁ = <span id="pt-w1-old">--</span> + (1.0 × <span id="pt-e1">--</span> × <span id="pt-xx1">--</span>) = <span class="val-hl" id="pt-w1-new">--</span><br>
+                w₂ = <span id="pt-w2-old">--</span> + (1.0 × <span id="pt-e2">--</span> × <span id="pt-xx2">--</span>) = <span class="val-hl" id="pt-w2-new">--</span><br>
+                b &nbsp;= <span id="pt-b-old">--</span>  + (1.0 × <span id="pt-eb">--</span>) = <span class="val-hl" id="pt-b-new">--</span>
+              </div>
+            </div>
+            <div class="insight amber" style="margin-top:10px;font-size:.8rem">
+				When the perceptron makes a mistake, it nudges the weight vector in the direction of the input (or opposite direction for negative class), scaled by the learning rate. This increases the dot product for correctly labeled examples and decreases it for incorrectly labeled ones, effectively shifting and rotating the decision boundary to better separate the classes.            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter" id="chapter-sigmoid">
+    <div class="chapter-intro">
+      <div class="chapter-icon">🌊</div>
+      <div>
+        <h2>The Sigmoid Neuron</h2>
+        <p>A perceptron's rigid "step" shatters the loss landscape. To use modern Gradient Descent, we need smoothness. We swap the step function for the <strong>Sigmoid function</strong>, outputting a continuous probability instead of a hard binary.</p>
+      </div>
+    </div>
+
+    <div class="section-tabs">
+      <button class="sec-btn active" onclick="showSection('sig','model',event)">1. Model &amp; Activation</button>
+      <button class="sec-btn" onclick="showSection('sig','train',event)" style="border-color:var(--accent);color:var(--accent)">2. Training (Backpropagation)</button>
+    </div>
+
+    <div class="sec-panel active" id="sig-model">
+      <div class="card">
+        <div class="two-col">
+          <div>
+            <canvas id="sigCanvas" width="540" height="360"></canvas>
+            <div class="math-label" style="margin-top:12px">Activation Function: Sigmoid</div>
+            <canvas id="sigActivCanvas" class="activ-canvas" width="540" height="100"></canvas>
+          </div>
+          <div>
+            <div class="math-label">Neuron Structure</div>
+            <canvas id="sigNeuronCanvas" class="struct-canvas" width="520" height="150"></canvas>
+
+            <div class="controls">
+              <div>
+                <label>Weight 1 (w₁): <span class="val-badge" id="sw1Val">3.0</span></label>
+                <input id="sw1" type="range" min="-8" max="8" step="0.5" value="3.0" />
+              </div>
+              <div>
+                <label>Weight 2 (w₂): <span class="val-badge" id="sw2Val">-3.0</span></label>
+                <input id="sw2" type="range" min="-8" max="8" step="0.5" value="-3.0" />
+              </div>
+              <div style="grid-column:1/-1">
+                <label>Bias (b): <span class="val-badge" id="sbVal">1.0</span></label>
+                <input id="sb" type="range" min="-8" max="8" step="0.5" value="1.0" />
+              </div>
+            </div>
+
+            <div class="math-section">
+              <div class="math-label">The Sigmoid Activation Function</div>
+              <div class="formula">a = σ(z) = 1 / (1 + e<sup>−z</sup>)</div>
+            </div>
+
+            <div class="insight purple">
+              <strong>Calculus-Friendly:</strong> Because the sigmoid curve is smooth and continuous everywhere, we can take its derivative. This is the crucial mathematical trick that allows the neuron to calculate exactly which direction to adjust its weights.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-panel" id="sig-train">
+      <div class="card">
+        <div class="two-col" style="grid-template-columns:1fr 1.1fr">
+          <div>
+            <canvas id="sTrainCanvas" width="540" height="400"></canvas>
+            <div style="display:flex;gap:8px;margin-top:14px">
+              <button class="action-btn" id="sTrainBtn" onclick="window.sTrainNext()" style="flex:2;padding:12px;background:var(--primary);color:#fff">1. Pick Point &amp; Predict →</button>
+              <button class="action-btn" onclick="window.sTrainReset()" style="flex:1">↺ Reset</button>
+            </div>
+          </div>
+          <div style="background:var(--surface2);padding:18px;border-radius:var(--radius-sm);border:1px solid var(--line)">
+            <div style="font-family:'Instrument Serif',serif;font-size:1.4rem;margin-bottom:12px">Gradient Descent &amp; Backpropagation</div>
+
+            <div class="train-step-box" id="st-1">
+              <div class="ts-title">1. Forward Pass (Predict &amp; Error)</div>
+              <div class="ts-math">
+                z = (w₁x₁ + w₂x₂) + b = <span class="val-hl" id="st-z">--</span><br>
+                Prediction (a) = σ(z) = <span class="val-hl" id="st-a" style="color:var(--primary)">--</span><br>
+                Loss = ½(a − y)² = <span class="val-hl" id="st-loss" style="color:var(--red)">--</span>
+              </div>
+            </div>
+
+            <div class="train-step-box" id="st-2">
+              <div class="ts-title">2. Backward Pass (The Chain Rule)</div>
+              <div class="ts-math" style="font-size:.8rem">
+                <span style="color:var(--muted)">How much did the prediction contribute to the error?</span><br>
+                ∂L/∂a = (a − y) = <span class="val-hl" id="st-dLda">--</span><br>
+                <span style="color:var(--muted)">Derivative of the Sigmoid curve at point z:</span><br>
+                ∂a/∂z = a(1 − a) = <span class="val-hl" id="st-dadz">--</span><br><br>
+                <span style="color:var(--muted)">Final Gradients (∂L/∂a × ∂a/∂z × Input)</span><br>
+                Grad w₁: <span class="val-hl" id="st-dw1" style="color:#b54a3a">--</span> | Grad w₂: <span class="val-hl" id="st-dw2" style="color:#b54a3a">--</span>
+              </div>
+            </div>
+
+            <div class="train-step-box" id="st-3">
+              <div class="ts-title">3. Gradient Descent Update</div>
+              <div class="ts-math">
+                <span style="color:var(--muted)">New = Old − (LearningRate × Gradient)</span><br>
+                w₁ = <span id="st-w1-old">--</span> − (2.0 × <span id="st-w1-grad">--</span>) = <span class="val-hl" id="st-w1-new" style="color:var(--primary)">--</span><br>
+                w₂ = <span id="st-w2-old">--</span> − (2.0 × <span id="st-w2-grad">--</span>) = <span class="val-hl" id="st-w2-new" style="color:var(--primary)">--</span><br>
+                b &nbsp;= <span id="st-b-old">--</span>  − (2.0 × <span id="st-b-grad">--</span>) = <span class="val-hl" id="st-b-new" style="color:var(--primary)">--</span>
+              </div>
+            </div>
+            <div class="insight blue" style="margin-top:10px;font-size:.8rem">
+              Notice the use of calculus! A neuron uses dot products to physically measure the similarity between incoming data and its learned weight templates. When a prediction is wrong, gradients dictate the exact direction to rotate those templates to correct the mistake, while the learning rate controls how aggressively the adjustment is applied.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chapter" id="chapter-network">
+    <div class="chapter-intro">
+      <div class="chapter-icon">🕸️</div>
+      <div>
+        <h2>The Neural Network (Multi-Layer Perceptron)</h2>
+        <p>A single neuron can only draw a straight line. What if our data has a complex, cross-shaped boundary? By stacking neurons into hidden layers, they combine their straight lines into complex, non-linear shapes.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="two-col">
+        <div>
+          <canvas id="nnCanvas" width="540" height="420"></canvas>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button class="action-btn" onclick="window.toggleNNTrain()" id="nnTrainBtn" style="flex:2;padding:12px;font-size:1.05rem;background:var(--primary);color:#fff">▶ Run Backpropagation</button>
+            <button class="action-btn" onclick="window.resetNN()" style="flex:1">🔀 Re-initialize</button>
+          </div>
+        </div>
+        <div>
+          <div class="math-label">Network Architecture (2 → 4 → 1)</div>
+          <canvas id="nnArchCanvas" class="struct-canvas" width="440" height="220"></canvas>
+
+          <p style="font-size:.9rem;color:var(--muted);margin-bottom:12px">It takes two sensor inputs, passes them through a hidden layer of 4 sigmoid neurons, and combines them into 1 final output prediction.</p>
+
+          <div class="stats-row" style="margin-bottom:20px">
+            <div class="stat-chip"><div class="stat-val" id="nnEpoch" style="color:var(--blue)">0</div><div class="stat-name">Epochs</div></div>
+            <div class="stat-chip"><div class="stat-val" id="nnLoss" style="color:var(--red)">1.00</div><div class="stat-name">Loss (MSE)</div></div>
+          </div>
+
+          <div class="insight amber">
+            <strong>The XOR Problem:</strong> Notice how the red and blue dots are arranged diagonally. A single straight line cannot separate them. Watch how the hidden layers learn to draw multiple intersecting lines to carve out the curved boundary.
+          </div>
+          <div class="insight green" style="margin-top:12px">
+            <strong>Weights as Learned Features:</strong> Each of the 4 hidden neurons acts as a sub-detector. One might learn to detect "high moisture," another "low sunlight." The final output neuron learns how to weigh those intermediate features to make the final call.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ═══════════════════════════════════════
+// GLOBAL UTILS
+// ═══════════════════════════════════════
+
+// Pass event explicitly — avoids reliance on implicit global `event`
+window.showChapter = function(id, e) {
+  document.querySelectorAll('.chapter').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.chapter-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('chapter-' + id).classList.add('active');
+  e.currentTarget.classList.add('active');
+  if (id === 'network') window.resetNN();
+};
+
+// FIX: The original used getElementById('chapter-' + chap) where chap='perc'/'sig',
+// but the actual IDs are 'chapter-perceptron'/'chapter-sigmoid' — always returned null,
+// crashing with TypeError and preventing the training panels from ever opening.
+// Fix: scope to the currently active chapter instead.
+window.showSection = function(chap, sec, e) {
+  const activeChap = document.querySelector('.chapter.active');
+  activeChap.querySelectorAll('.sec-panel').forEach(el => el.classList.remove('active'));
+  activeChap.querySelectorAll('.sec-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(chap + '-' + sec).classList.add('active');
+  e.currentTarget.classList.add('active');
+};
+
+function sigmoid(z) { return 1 / (1 + Math.exp(-Math.max(-30, Math.min(30, z)))); }
+function step(z)    { return z >= 0 ? 1 : 0; }
+function fmt(n)     { return n.toFixed(3); }
+function sign(v)    { return (v >= 0 ? '+' : '') + v.toFixed(1); }
+
+function drawGrid(cx, W, H) {
+  // Draw subtle grid lines
+  cx.strokeStyle = '#ede8dc'; cx.lineWidth = 1;
+  for (let x = 0; x <= W; x += 45) { cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = 0; y <= H; y += 45) { cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+  
+  // Draw main X and Y axes
+  cx.strokeStyle = '#d9d2c2'; cx.lineWidth = 2;
+  cx.beginPath(); cx.moveTo(W/2,0); cx.lineTo(W/2,H); cx.stroke();
+  cx.beginPath(); cx.moveTo(0,H/2); cx.lineTo(W,H/2); cx.stroke();
+
+  // --- NEW: Axis Labels ---
+  cx.fillStyle = '#9aaa9a';
+  
+  // Variable Names (x₁, x₂)
+  cx.font = 'italic bold 13px Inter, sans-serif';
+  cx.textAlign = 'right'; cx.textBaseline = 'bottom';
+  cx.fillText('x₁', W - 12, H/2 - 6);
+  cx.textAlign = 'left'; cx.textBaseline = 'top';
+  cx.fillText('x₂', W/2 + 8, 8);
+
+  // Coordinate Ticks (-1, +1)
+  cx.font = '10px ui-monospace, monospace';
+  
+  // X-axis ticks
+  cx.textAlign = 'center'; cx.textBaseline = 'top';
+  cx.fillText('-1', mapToCanvas(-1, W), H/2 + 6);
+  cx.fillText('+1', mapToCanvas(1, W), H/2 + 6);
+  
+  // Y-axis ticks
+  cx.textAlign = 'right'; cx.textBaseline = 'middle';
+  cx.fillText('+1', W/2 - 6, mapToCanvas(-1, H)); // Top
+  cx.fillText('-1', W/2 - 6, mapToCanvas(1, H));  // Bottom
+}
+
+function mapToCanvas(v, W)  { return (v + 1.5) / 3 * W; }
+function mapFromCanvas(p,W) { return (p / W) * 3 - 1.5; }
+
+// Linearly separable dataset (single neurons)
+const DATA_LINEAR = [
+  {x1:0.6,x2:0.8,y:1},{x1:0.8,x2:0.4,y:1},{x1:0.2,x2:0.9,y:1},{x1:-0.6,x2:0.8,y:1},
+  {x1:-0.7,x2:-0.5,y:0},{x1:-0.3,x2:-0.8,y:0},{x1:-0.8,x2:0.1,y:0},{x1:0.5,x2:-0.6,y:0}
+];
+
+// XOR dataset (neural network)
+const DATA_XOR = [
+  {x1:0.7,x2:0.7,y:0},{x1:-0.7,x2:-0.7,y:0},{x1:0.5,x2:0.9,y:0},{x1:-0.6,x2:-0.8,y:0},
+  {x1:-0.7,x2:0.7,y:1},{x1:0.7,x2:-0.7,y:1},{x1:-0.5,x2:0.8,y:1},{x1:0.8,x2:-0.5,y:1}
+];
+
+// ═══════════════════════════════════════
+// NEURON STRUCTURE DIAGRAM
+// shared by Ch.I (Step) and Ch.II (Sigmoid)
+// ═══════════════════════════════════════
+function drawNeuronDiagram(canvasId, w1, w2, b, activLabel, activColor) {
+  const cvs = document.getElementById(canvasId);
+  if (!cvs) return;
+  const cx = cvs.getContext('2d');
+  const W = cvs.width, H = cvs.height;
+  cx.clearRect(0, 0, W, H);
+  cx.fillStyle = '#faf9f5'; cx.fillRect(0, 0, W, H);
+
+  const r = 20;
+  const x1n = {x: 58, y: 44};
+  const x2n = {x: 58, y: H - 44};
+  const sumN = {x: 210, y: H / 2};
+  const outN = {x: W - 52, y: H / 2};
+  const aX = sumN.x + 34, aY = sumN.y - 23, aW = 76, aH = 46;
+  const aCX = aX + aW / 2, aCY = aY + aH / 2;
+
+  // ── arrow helper ──
+  function arrow(ax,ay,bx,by,col) {
+    const ang = Math.atan2(by-ay,bx-ax);
+    cx.strokeStyle = col; cx.lineWidth = 1.8;
+    cx.beginPath(); cx.moveTo(ax,ay); cx.lineTo(bx,by); cx.stroke();
+    cx.fillStyle = col;
+    cx.beginPath();
+    cx.moveTo(bx,by);
+    cx.lineTo(bx-9*Math.cos(ang-0.35), by-9*Math.sin(ang-0.35));
+    cx.lineTo(bx-9*Math.cos(ang+0.35), by-9*Math.sin(ang+0.35));
+    cx.closePath(); cx.fill();
+  }
+
+  // ── labelled pill on midpoint of a line ──
+  function lineLabel(ax,ay,bx,by,txt,dx,dy,col) {
+    const mx = (ax+bx)/2+dx, my = (ay+by)/2+dy;
+    cx.font = '10px ui-monospace,monospace';
+    const tw = cx.measureText(txt).width;
+    cx.fillStyle = 'rgba(250,249,245,0.9)';
+    cx.beginPath();
+    if(cx.roundRect) cx.roundRect(mx-tw/2-3,my-7,tw+6,14,3); else cx.rect(mx-tw/2-3,my-7,tw+6,14);
+    cx.fill();
+    cx.fillStyle = col; cx.textAlign='center'; cx.textBaseline='middle';
+    cx.fillText(txt,mx,my);
+  }
+
+  // ── circle node helper ──
+  function circ(x,y,label,fill,col,fsz) {
+    cx.beginPath(); cx.arc(x,y,r,0,Math.PI*2);
+    cx.fillStyle=fill; cx.fill();
+    cx.strokeStyle='#c8c0ae'; cx.lineWidth=1.5; cx.stroke();
+    cx.fillStyle=col; cx.font=`bold ${fsz||13}px Inter,sans-serif`;
+    cx.textAlign='center'; cx.textBaseline='middle';
+    cx.fillText(label,x,y);
+  }
+
+  // connections (drawn behind nodes)
+  arrow(x1n.x+r, x1n.y, sumN.x-r, sumN.y-5, '#2d6cdf');
+  arrow(x2n.x+r, x2n.y, sumN.x-r, sumN.y+5, '#2d6cdf');
+
+  // bias dashed tap from below
+  const bY = H - 12;
+  cx.save(); cx.strokeStyle='#c98a2b'; cx.lineWidth=1.8; cx.setLineDash([5,4]);
+  cx.beginPath(); cx.moveTo(sumN.x, bY-4); cx.lineTo(sumN.x, sumN.y+r+1); cx.stroke();
+  cx.setLineDash([]); cx.restore();
+  cx.fillStyle='#c98a2b';
+  cx.beginPath();
+  cx.moveTo(sumN.x, sumN.y+r+2);
+  cx.lineTo(sumN.x-5, sumN.y+r+9); cx.lineTo(sumN.x+5, sumN.y+r+9);
+  cx.closePath(); cx.fill();
+
+  // Σ → activation (plain line, activation box butts right against it)
+  cx.strokeStyle='#5c6b5c'; cx.lineWidth=1.8;
+  cx.beginPath(); cx.moveTo(sumN.x+r,sumN.y); cx.lineTo(aX,aCY); cx.stroke();
+
+  // activation box → output
+  arrow(aX+aW, aCY, outN.x-r, outN.y, '#2f7d32');
+
+  // weight labels on connection lines
+  lineLabel(x1n.x+r,x1n.y, sumN.x-r,sumN.y-5, `w₁=${sign(w1)}`, -6,-11,'#2d6cdf');
+  lineLabel(x2n.x+r,x2n.y, sumN.x-r,sumN.y+5, `w₂=${sign(w2)}`,  -6, 11,'#2d6cdf');
+
+  // bias label
+  cx.fillStyle='#c98a2b'; cx.font='10px ui-monospace,monospace';
+  cx.textAlign='center'; cx.textBaseline='top';
+  cx.fillText(`b=${sign(b)}`, sumN.x, bY-2);
+
+  // nodes
+  circ(x1n.x, x1n.y, 'x₁', '#e8f0fd', '#2d6cdf');
+  circ(x2n.x, x2n.y, 'x₂', '#e8f0fd', '#2d6cdf');
+  circ(sumN.x, sumN.y, 'Σ',  '#fffdf8', '#1f2a1f');
+  circ(outN.x, outN.y, 'ŷ',  '#edf6ee', '#2f7d32');
+
+  // sub-labels
+  cx.fillStyle='#9aaa9a'; cx.font='10px Inter,sans-serif'; cx.textBaseline='top';
+  cx.textAlign='center';
+  cx.fillText('Input 1', x1n.x, x1n.y+r+4);
+  cx.fillText('Input 2', x2n.x, x2n.y+r+4);
+  cx.fillText('Output',  outN.x, outN.y+r+4);
+
+  // activation box
+  cx.beginPath();
+  if(cx.roundRect) cx.roundRect(aX,aY,aW,aH,7); else cx.rect(aX,aY,aW,aH);
+  cx.fillStyle = activColor + '22'; cx.fill();
+  cx.strokeStyle = activColor; cx.lineWidth = 1.8; cx.stroke();
+  cx.fillStyle = activColor; cx.font='bold 11px Inter,sans-serif';
+  cx.textAlign='center'; cx.textBaseline='middle';
+  cx.fillText(activLabel, aCX, aCY - 7);
+
+  // mini curve inside activation box
+  cx.strokeStyle = activColor; cx.lineWidth = 1.5; cx.beginPath();
+  const cw = aW*0.58, ch = 9, sx = aCX - cw/2, sy = aCY + 7;
+  if (activLabel === 'Step') {
+    cx.moveTo(sx, sy+ch/2); cx.lineTo(sx+cw/2,sy+ch/2);
+    cx.lineTo(sx+cw/2,sy-ch/2); cx.lineTo(sx+cw,sy-ch/2);
+  } else {
+    for(let i=0;i<=22;i++) {
+      const t=i/22, zv=(t-0.5)*8, yv=sy+ch/2-sigmoid(zv)*ch;
+      i===0?cx.moveTo(sx+t*cw,yv):cx.lineTo(sx+t*cw,yv);
+    }
+  }
+  cx.stroke();
+}
+
+// ═══════════════════════════════════════
+// NETWORK ARCHITECTURE DIAGRAM (2→4→1)
+// ═══════════════════════════════════════
+function drawNetworkArch() {
+  const cvs = document.getElementById('nnArchCanvas');
+  if (!cvs) return;
+  const cx = cvs.getContext('2d');
+  const W = cvs.width, H = cvs.height;
+  cx.clearRect(0,0,W,H);
+  cx.fillStyle='#faf9f5'; cx.fillRect(0,0,W,H);
+
+  const r = 17;
+  const layers = [
+    { x: 62,     ys: [H*0.32, H*0.68],                  color:'#2d6cdf', bg:'#e8f0fd', names:['x₁','x₂'],          tag:'Input\nLayer' },
+    { x: W*0.5,  ys: [H*0.12, H*0.38, H*0.62, H*0.88], color:'#7c4dbc', bg:'#f0e8fa', names:['h₁','h₂','h₃','h₄'],tag:'Hidden Layer' },
+    { x: W-62,   ys: [H*0.50],                           color:'#2f7d32', bg:'#edf6ee', names:['ŷ'],                 tag:'Output\nLayer' }
+  ];
+
+  // Draw all connections first
+  for (let li = 0; li < layers.length-1; li++) {
+    const L = layers[li], R = layers[li+1];
+    L.ys.forEach(ly => {
+      R.ys.forEach(ry => {
+        cx.strokeStyle='rgba(180,165,145,0.4)'; cx.lineWidth=1;
+        cx.beginPath(); cx.moveTo(L.x+r,ly); cx.lineTo(R.x-r,ry); cx.stroke();
+      });
+    });
+  }
+
+  // Draw nodes
+  layers.forEach(layer => {
+    layer.ys.forEach((y,i) => {
+      cx.beginPath(); cx.arc(layer.x,y,r,0,Math.PI*2);
+      cx.fillStyle=layer.bg; cx.fill();
+      cx.strokeStyle=layer.color+'99'; cx.lineWidth=1.8; cx.stroke();
+      cx.fillStyle=layer.color; cx.font='bold 12px Inter,sans-serif';
+      cx.textAlign='center'; cx.textBaseline='middle';
+      cx.fillText(layer.names[i], layer.x, y);
+    });
+    // layer tag below
+    const botY = Math.max(...layer.ys)+r+8;
+    cx.fillStyle='#9aaa9a'; cx.font='10px Inter,sans-serif';
+    cx.textAlign='center'; cx.textBaseline='top';
+    layer.tag.split('\n').forEach((ln,i)=>cx.fillText(ln,layer.x,botY+i*12));
+  });
+
+  // σ micro-labels inside hidden nodes
+  layers[1].ys.forEach(y => {
+    cx.fillStyle='#7c4dbc88'; cx.font='9px Inter,sans-serif';
+    cx.textAlign='center'; cx.textBaseline='bottom';
+    cx.fillText('σ', layers[1].x, y+r-1);
+  });
+
+  // Layer bracket labels
+  const labelY = 6;
+  [['Inputs (2)', layers[0].x], ['Hidden (4 × σ)', layers[1].x], ['Output (1)', layers[2].x]].forEach(([txt,x])=>{
+    cx.fillStyle='#b8aE98'; cx.font='bold 9px Inter,sans-serif';
+    cx.textAlign='center'; cx.textBaseline='top';
+    cx.fillText(txt.toUpperCase(), x, labelY);
+  });
+}
+
+// ═══════════════════════════════════════
+// ACTIVATION FUNCTION GRAPHS
+// ═══════════════════════════════════════
+function drawActivations() {
+  const c1 = document.getElementById('percActivCanvas');
+  if (c1) {
+    const cx = c1.getContext('2d');
+    cx.clearRect(0,0,c1.width,c1.height);
+    
+    // Axes
+    cx.strokeStyle='#d9d2c2'; cx.lineWidth=1;
+    cx.beginPath(); cx.moveTo(0,50); cx.lineTo(540,50); cx.stroke();
+    cx.beginPath(); cx.moveTo(270,0); cx.lineTo(270,100); cx.stroke();
+    
+    // Ticks
+    cx.fillStyle='#9aaa9a'; cx.font='10px ui-monospace,monospace';
+    cx.textAlign='left'; cx.textBaseline='middle';
+    cx.fillText('0',276,68); cx.fillText('1',276,28);
+
+    // --- NEW: Labels for Step Graph ---
+    cx.font = 'italic bold 12px Inter, sans-serif';
+    cx.textAlign = 'right'; cx.textBaseline = 'bottom';
+    cx.fillText('z', 530, 46); // X-axis label
+    cx.textAlign = 'left'; cx.textBaseline = 'top';
+    cx.fillText('ŷ', 276, 6);  // Y-axis label
+
+    // Step Curve
+    cx.strokeStyle='#2f7d32'; cx.lineWidth=3;
+    cx.beginPath(); cx.moveTo(0,78); cx.lineTo(270,78); cx.lineTo(270,22); cx.lineTo(540,22); cx.stroke();
+    cx.beginPath(); cx.arc(270,22,4,0,Math.PI*2); cx.fillStyle='#2f7d32'; cx.fill();
+    cx.beginPath(); cx.arc(270,78,4,0,Math.PI*2); cx.strokeStyle='#2f7d32'; cx.lineWidth=2; cx.stroke();
+  }
+
+  const c2 = document.getElementById('sigActivCanvas');
+  if (c2) {
+    const cx = c2.getContext('2d');
+    cx.clearRect(0,0,c2.width,c2.height);
+    
+    // Axes
+    cx.strokeStyle='#d9d2c2'; cx.lineWidth=1;
+    cx.beginPath(); cx.moveTo(0,80); cx.lineTo(540,80); cx.stroke();
+    cx.beginPath(); cx.moveTo(270,0); cx.lineTo(270,100); cx.stroke();
+    
+    // Ticks
+    cx.fillStyle='#9aaa9a'; cx.font='10px ui-monospace,monospace';
+    cx.textAlign='left'; cx.textBaseline='middle';
+    cx.fillText('0',276,88); cx.fillText('1',276,18); cx.fillText('0.5',276,50);
+
+    // --- NEW: Labels for Sigmoid Graph ---
+    cx.font = 'italic bold 12px Inter, sans-serif';
+    cx.textAlign = 'right'; cx.textBaseline = 'bottom';
+    cx.fillText('z', 530, 76); // X-axis label
+    cx.textAlign = 'left'; cx.textBaseline = 'top';
+    cx.fillText('a = σ(z)', 276, 6); // Y-axis label
+
+    // Sigmoid Curve
+    cx.strokeStyle='#2d6cdf'; cx.lineWidth=3; cx.beginPath();
+    for(let x=0;x<=540;x++){
+      const z=(x-270)/30, y=80-sigmoid(z)*60;
+      x===0?cx.moveTo(x,y):cx.lineTo(x,y);
+    }
+    cx.stroke();
+    cx.beginPath(); cx.arc(270,50,3,0,Math.PI*2); cx.fillStyle='#2d6cdf'; cx.fill();
+  }
+}
+setTimeout(drawActivations, 200);
+
+// ═══════════════════════════════════════
+// CHAPTER I: PERCEPTRON (MODEL & TRAIN)
+// ═══════════════════════════════════════
+{
+  const cvs = document.getElementById('percCanvas');
+  const ctx  = cvs.getContext('2d');
+  const W = cvs.width, H = cvs.height;
+  const elW1 = document.getElementById('pw1');
+  const elW2 = document.getElementById('pw2');
+  const elB  = document.getElementById('pb');
+
+  function drawPerceptron() {
+    const w1 = parseFloat(elW1.value), w2 = parseFloat(elW2.value), b = parseFloat(elB.value);
+    document.getElementById('pw1Val').textContent = w1.toFixed(1);
+    document.getElementById('pw2Val').textContent = w2.toFixed(1);
+    document.getElementById('pbVal').textContent  = b.toFixed(1);
+
+    ctx.clearRect(0,0,W,H);
+    const sz=10;
+    for(let px=0;px<W;px+=sz){
+      for(let py=0;py<H;py+=sz){
+        const x1=mapFromCanvas(px+sz/2,W), x2=-mapFromCanvas(py+sz/2,H);
+        ctx.fillStyle=(w1*x1+w2*x2+b>=0)?'rgba(47,125,50,0.12)':'rgba(181,74,58,0.12)';
+        ctx.fillRect(px,py,sz,sz);
+      }
+    }
+    drawGrid(ctx,W,H);
+    if(Math.abs(w2)>0.01){
+      ctx.strokeStyle='#1f2a1f'; ctx.lineWidth=3; ctx.beginPath();
+      ctx.moveTo(mapToCanvas(-1.5,W), mapToCanvas(-(-w1*(-1.5)-b)/w2,H));
+      ctx.lineTo(mapToCanvas( 1.5,W), mapToCanvas(-(-w1*( 1.5)-b)/w2,H));
+      ctx.stroke();
+    }
+    DATA_LINEAR.forEach(pt=>{
+      ctx.fillStyle=pt.y===1?'#2f7d32':'#b54a3a';
+      ctx.beginPath(); ctx.arc(mapToCanvas(pt.x1,W),mapToCanvas(-pt.x2,H),6,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+    });
+
+    drawNeuronDiagram('percNeuronCanvas', w1, w2, b, 'Step', '#2f7d32');
+  }
+
+  [elW1,elW2,elB].forEach(el=>el.addEventListener('input',drawPerceptron));
+  setTimeout(drawPerceptron, 100);
+
+  // ── Perceptron Training ──────────────
+  let pW1=-1.0, pW2=0.5, pB=-0.5;
+  let pState=0, pIdx=0, pZ=0, pPred=0, pErr=0;
+
+  window.pTrainReset = function() {
+    pW1=-1.0; pW2=0.5; pB=-0.5; pState=0;
+    document.getElementById('pTrainBtn').innerHTML='1. Pick Point &amp; Predict →';
+    pUpdateUI(); pDrawTrain();
+  };
+
+  window.pTrainNext = function() {
+    const btn = document.getElementById('pTrainBtn');
+
+    if (pState===0) {
+      // Pick a new random point and run forward pass
+      pIdx = Math.floor(Math.random()*DATA_LINEAR.length);
+      const pt = DATA_LINEAR[pIdx];
+      pZ    = pW1*pt.x1 + pW2*pt.x2 + pB;
+      pPred = step(pZ);
+      pErr  = pt.y - pPred;
+      pState=1; btn.innerHTML='2. Calculate Error &amp; Update →';
+
+    } else if (pState===1) {
+      pState=2; btn.innerHTML='3. Apply Perceptron Rule Update →';
+
+    } else if (pState===2) {
+      // Weight update — use the same point that was picked in state 0
+      const pt = DATA_LINEAR[pIdx];
+      pW1 += 1.0*pErr*pt.x1;
+      pW2 += 1.0*pErr*pt.x2;
+      pB  += 1.0*pErr;
+      pState=3; btn.innerHTML='Loop: Pick New Point →';
+
+    } else if (pState===3) {
+      pState=0; window.pTrainNext(); return;
+    }
+    pUpdateUI(); pDrawTrain();
+  };
+
+  function pUpdateUI() {
+    const pt = DATA_LINEAR[pIdx];
+    document.querySelectorAll('#perc-train .train-step-box').forEach(el=>el.classList.remove('active'));
+
+    // Box 1: only light up once a point has been picked (state >= 1)
+    if (pState>=1) {
+      document.getElementById('pt-1').classList.add('active');
+      document.getElementById('pt-x1').textContent = pt.x1.toFixed(2);
+      document.getElementById('pt-x2').textContent = pt.x2.toFixed(2);
+      document.getElementById('pt-y').textContent  = pt.y;
+    } else {
+      ['pt-x1','pt-x2','pt-y'].forEach(id=>document.getElementById(id).textContent='--');
+    }
+
+    if (pState>=1) {
+      document.getElementById('pt-2').classList.add('active');
+      document.getElementById('pt-z').textContent    = fmt(pZ);
+      document.getElementById('pt-pred').textContent = pPred;
+    } else {
+      document.getElementById('pt-z').textContent='--';
+      document.getElementById('pt-pred').textContent='--';
+    }
+
+    if (pState>=2) {
+      document.getElementById('pt-3').classList.add('active');
+      document.getElementById('pt-err').textContent = pErr;
+      document.getElementById('pt-4').classList.add('active');
+      document.getElementById('pt-e1').textContent  = pErr;
+      document.getElementById('pt-e2').textContent  = pErr;
+      document.getElementById('pt-eb').textContent  = pErr;
+      document.getElementById('pt-xx1').textContent = pt.x1.toFixed(2);
+      document.getElementById('pt-xx2').textContent = pt.x2.toFixed(2);
+    } else {
+      document.getElementById('pt-err').textContent='--';
+    }
+
+    if (pState>=3) {
+      document.getElementById('pt-w1-old').textContent = fmt(pW1-1.0*pErr*pt.x1);
+      document.getElementById('pt-w1-new').textContent = fmt(pW1);
+      document.getElementById('pt-w2-old').textContent = fmt(pW2-1.0*pErr*pt.x2);
+      document.getElementById('pt-w2-new').textContent = fmt(pW2);
+      document.getElementById('pt-b-old').textContent  = fmt(pB -1.0*pErr);
+      document.getElementById('pt-b-new').textContent  = fmt(pB);
+    } else {
+      ['pt-w1-old','pt-w1-new','pt-w2-old','pt-w2-new','pt-b-old','pt-b-new']
+        .forEach(id=>document.getElementById(id).textContent='--');
+    }
+  }
+
+  function pDrawTrain() {
+    const c=document.getElementById('pTrainCanvas');
+    const cx=c.getContext('2d'), cW=c.width, cH=c.height;
+    cx.clearRect(0,0,cW,cH);
+    for(let px=0;px<cW;px+=10){
+      for(let py=0;py<cH;py+=10){
+        const x1=mapFromCanvas(px+5,cW), x2=-mapFromCanvas(py+5,cH);
+        cx.fillStyle=(pW1*x1+pW2*x2+pB>=0)?'rgba(47,125,50,0.1)':'rgba(181,74,58,0.1)';
+        cx.fillRect(px,py,10,10);
+      }
+    }
+    drawGrid(cx,cW,cH);
+    if(Math.abs(pW2)>0.01){
+      cx.strokeStyle='#fff'; cx.lineWidth=3; cx.beginPath();
+      cx.moveTo(mapToCanvas(-1.5,cW), mapToCanvas(-(-pW1*(-1.5)-pB)/pW2,cH));
+      cx.lineTo(mapToCanvas( 1.5,cW), mapToCanvas(-(-pW1*( 1.5)-pB)/pW2,cH));
+      cx.stroke();
+    }
+    DATA_LINEAR.forEach((pt,idx)=>{
+      const px=mapToCanvas(pt.x1,cW), py=mapToCanvas(-pt.x2,cH);
+      const isAct=(pState>=1 && idx===pIdx);
+      if(isAct){cx.fillStyle='rgba(201,138,43,0.5)';cx.beginPath();cx.arc(px,py,14,0,Math.PI*2);cx.fill();}
+      cx.fillStyle=pt.y===1?'#2f7d32':'#b54a3a';
+      cx.beginPath();cx.arc(px,py,isAct?8:5,0,Math.PI*2);cx.fill();
+      cx.strokeStyle=isAct?'#c98a2b':'#fff';cx.lineWidth=isAct?3:1.5;cx.stroke();
+    });
+  }
+  setTimeout(()=>{pUpdateUI();pDrawTrain();},200);
+}
+
+// ═══════════════════════════════════════
+// CHAPTER II: SIGMOID (MODEL & TRAIN)
+// ═══════════════════════════════════════
+{
+  const cvs = document.getElementById('sigCanvas');
+  const ctx  = cvs.getContext('2d');
+  const W = cvs.width, H = cvs.height;
+  const elW1 = document.getElementById('sw1');
+  const elW2 = document.getElementById('sw2');
+  const elB  = document.getElementById('sb');
+
+  function drawSigmoid() {
+    const w1=parseFloat(elW1.value), w2=parseFloat(elW2.value), b=parseFloat(elB.value);
+    document.getElementById('sw1Val').textContent=w1.toFixed(1);
+    document.getElementById('sw2Val').textContent=w2.toFixed(1);
+    document.getElementById('sbVal').textContent =b.toFixed(1);
+
+    ctx.clearRect(0,0,W,H);
+    for(let px=0;px<W;px+=8){
+      for(let py=0;py<H;py+=8){
+        const x1=mapFromCanvas(px+4,W), x2=-mapFromCanvas(py+4,H);
+        const a=sigmoid(w1*x1+w2*x2+b);
+        ctx.fillStyle=`rgba(${Math.round(181*(1-a)+47*a)},${Math.round(74*(1-a)+125*a)},${Math.round(58*(1-a)+50*a)},0.25)`;
+        ctx.fillRect(px,py,8,8);
+      }
+    }
+    drawGrid(ctx,W,H);
+    if(Math.abs(w2)>0.01){
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.beginPath();
+      ctx.moveTo(mapToCanvas(-1.5,W), mapToCanvas(-(-w1*(-1.5)-b)/w2,H));
+      ctx.lineTo(mapToCanvas( 1.5,W), mapToCanvas(-(-w1*( 1.5)-b)/w2,H));
+      ctx.stroke();ctx.setLineDash([]);
+    }
+    DATA_LINEAR.forEach(pt=>{
+      ctx.fillStyle=pt.y===1?'#2f7d32':'#b54a3a';
+      ctx.beginPath();ctx.arc(mapToCanvas(pt.x1,W),mapToCanvas(-pt.x2,H),6,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    });
+
+    drawNeuronDiagram('sigNeuronCanvas', w1, w2, b, 'σ(z)', '#2d6cdf');
+  }
+  [elW1,elW2,elB].forEach(el=>el.addEventListener('input',drawSigmoid));
+  setTimeout(drawSigmoid, 150);
+
+  // ── Sigmoid Training (Backprop) ──────
+  let sW1=-1.0, sW2=0.5, sB=-0.5;
+  let sState=0, sIdx=0, sZ=0, sA=0, sLoss=0, dLda=0, dadz=0, dw1=0, dw2=0, db=0;
+
+  window.sTrainReset = function() {
+    sW1=-1.0;sW2=0.5;sB=-0.5;sState=0;
+    document.getElementById('sTrainBtn').innerHTML='1. Pick Point &amp; Predict →';
+    sUpdateUI();sDrawTrain();
+  };
+
+  window.sTrainNext = function() {
+    const btn=document.getElementById('sTrainBtn');
+
+    if (sState===0) {
+      sIdx=Math.floor(Math.random()*DATA_LINEAR.length);
+      const pt=DATA_LINEAR[sIdx];
+      sZ=sW1*pt.x1+sW2*pt.x2+sB;
+      sA=sigmoid(sZ);
+      sLoss=0.5*Math.pow(sA-pt.y,2);
+      sState=1; btn.innerHTML='2. Calculate Derivatives (Backprop) →';
+
+    } else if (sState===1) {
+      // Use the same point that was picked in state 0
+      const pt=DATA_LINEAR[sIdx];
+      dLda=sA-pt.y; dadz=sA*(1-sA);
+      const dz=dLda*dadz;
+      dw1=dz*pt.x1; dw2=dz*pt.x2; db=dz;
+      sState=2; btn.innerHTML='3. Apply Gradient Descent Update →';
+
+    } else if (sState===2) {
+      sW1-=2.0*dw1; sW2-=2.0*dw2; sB-=2.0*db;
+      sState=3; btn.innerHTML='Loop: Pick New Point →';
+
+    } else if (sState===3) {
+      sState=0; window.sTrainNext(); return;
+    }
+    sUpdateUI(); sDrawTrain();
+  };
+
+  function sUpdateUI() {
+    document.querySelectorAll('#sig-train .train-step-box').forEach(el=>el.classList.remove('active'));
+
+    if (sState>=1) {
+      document.getElementById('st-1').classList.add('active');
+      document.getElementById('st-z').textContent    = fmt(sZ);
+      document.getElementById('st-a').textContent    = fmt(sA);
+      document.getElementById('st-loss').textContent = fmt(sLoss);
+    } else {
+      ['st-z','st-a','st-loss'].forEach(id=>document.getElementById(id).textContent='--');
+    }
+
+    if (sState>=2) {
+      document.getElementById('st-2').classList.add('active');
+      document.getElementById('st-dLda').textContent = fmt(dLda);
+      document.getElementById('st-dadz').textContent = fmt(dadz);
+      document.getElementById('st-dw1').textContent  = fmt(dw1);
+      document.getElementById('st-dw2').textContent  = fmt(dw2);
+    } else {
+      ['st-dLda','st-dadz','st-dw1','st-dw2'].forEach(id=>document.getElementById(id).textContent='--');
+    }
+
+    if (sState>=3) {
+      document.getElementById('st-3').classList.add('active');
+      document.getElementById('st-w1-old').textContent  = fmt(sW1+2.0*dw1);
+      document.getElementById('st-w1-grad').textContent = fmt(dw1);
+      document.getElementById('st-w1-new').textContent  = fmt(sW1);
+      document.getElementById('st-w2-old').textContent  = fmt(sW2+2.0*dw2);
+      document.getElementById('st-w2-grad').textContent = fmt(dw2);
+      document.getElementById('st-w2-new').textContent  = fmt(sW2);
+      document.getElementById('st-b-old').textContent   = fmt(sB +2.0*db);
+      document.getElementById('st-b-grad').textContent  = fmt(db);
+      document.getElementById('st-b-new').textContent   = fmt(sB);
+    } else {
+      ['st-w1-old','st-w1-new','st-w2-old','st-w2-new','st-b-old','st-b-new']
+        .forEach(id=>document.getElementById(id).textContent='--');
+    }
+  }
+
+  function sDrawTrain() {
+    const c=document.getElementById('sTrainCanvas');
+    const cx=c.getContext('2d'), cW=c.width, cH=c.height;
+    cx.clearRect(0,0,cW,cH);
+    for(let px=0;px<cW;px+=8){
+      for(let py=0;py<cH;py+=8){
+        const a=sigmoid(sW1*mapFromCanvas(px+4,cW)+sW2*(-mapFromCanvas(py+4,cH))+sB);
+        cx.fillStyle=`rgba(${Math.round(181*(1-a)+47*a)},${Math.round(74*(1-a)+125*a)},${Math.round(58*(1-a)+50*a)},0.2)`;
+        cx.fillRect(px,py,8,8);
+      }
+    }
+    drawGrid(cx,cW,cH);
+    if(Math.abs(sW2)>0.01){
+      cx.strokeStyle='#fff';cx.lineWidth=3;cx.setLineDash([5,5]);cx.beginPath();
+      cx.moveTo(mapToCanvas(-1.5,cW), mapToCanvas(-(-sW1*(-1.5)-sB)/sW2,cH));
+      cx.lineTo(mapToCanvas( 1.5,cW), mapToCanvas(-(-sW1*( 1.5)-sB)/sW2,cH));
+      cx.stroke();cx.setLineDash([]);
+    }
+    DATA_LINEAR.forEach((pt,idx)=>{
+      const px=mapToCanvas(pt.x1,cW), py=mapToCanvas(-pt.x2,cH);
+      const isAct=(sState>=1 && idx===sIdx);
+      if(isAct){cx.fillStyle='rgba(201,138,43,0.4)';cx.beginPath();cx.arc(px,py,16,0,Math.PI*2);cx.fill();}
+      cx.fillStyle=pt.y===1?'#2f7d32':'#b54a3a';
+      cx.beginPath();cx.arc(px,py,isAct?8:5,0,Math.PI*2);cx.fill();
+      cx.strokeStyle=isAct?'#c98a2b':'#fff';cx.lineWidth=isAct?3:1.5;cx.stroke();
+    });
+  }
+  setTimeout(()=>{sUpdateUI();sDrawTrain();},200);
+}
+
+// ═══════════════════════════════════════
+// CHAPTER III: NEURAL NETWORK (2-4-1 MLP)
+// ═══════════════════════════════════════
+{
+  const cvs=document.getElementById('nnCanvas');
+  const ctx=cvs.getContext('2d');
+  const W=cvs.width, H=cvs.height;
+
+  let W1=[[0,0],[0,0],[0,0],[0,0]], B1=[0,0,0,0];
+  let W2=[0,0,0,0], B2=0;
+  let nnEpoch=0, nnTimer=null;
+  const LR=1.0;
+
+  window.resetNN = function() {
+    clearInterval(nnTimer); nnTimer=null;
+    document.getElementById('nnTrainBtn').innerHTML='▶ Run Backpropagation';
+    for(let i=0;i<4;i++){
+      W1[i][0]=(Math.random()-0.5)*2; W1[i][1]=(Math.random()-0.5)*2; B1[i]=(Math.random()-0.5)*2;
+      W2[i]=(Math.random()-0.5)*2;
+    }
+    B2=(Math.random()-0.5)*2;
+    nnEpoch=0;
+    drawNN();
+    drawNetworkArch();
+  };
+
+  function forward(x1,x2) {
+    const h=[0,0,0,0];
+    for(let i=0;i<4;i++) h[i]=sigmoid(W1[i][0]*x1+W1[i][1]*x2+B1[i]);
+    let z2=B2;
+    for(let i=0;i<4;i++) z2+=W2[i]*h[i];
+    return {h, out:sigmoid(z2)};
+  }
+
+  function trainStep() {
+    for(let s=0;s<20;s++){
+      const idx=Math.floor(Math.random()*DATA_XOR.length);
+      const pt=DATA_XOR[idx];
+      const res=forward(pt.x1,pt.x2);
+
+      const dLda=res.out-pt.y, dadz=res.out*(1-res.out), dz2=dLda*dadz;
+      const dW2=[0,0,0,0];
+      for(let i=0;i<4;i++) dW2[i]=dz2*res.h[i];
+      const dB2=dz2;
+
+      const dW1=[[0,0],[0,0],[0,0],[0,0]], dB1=[0,0,0,0];
+      for(let i=0;i<4;i++){
+        const dz1=(dz2*W2[i])*(res.h[i]*(1-res.h[i]));
+        dW1[i][0]=dz1*pt.x1; dW1[i][1]=dz1*pt.x2; dB1[i]=dz1;
+      }
+      for(let i=0;i<4;i++){
+        W1[i][0]-=LR*dW1[i][0]; W1[i][1]-=LR*dW1[i][1]; B1[i]-=LR*dB1[i];
+        W2[i]-=LR*dW2[i];
+      }
+      B2-=LR*dB2;
+    }
+    nnEpoch+=20;
+    drawNN();
+  }
+
+  window.toggleNNTrain = function() {
+    const btn=document.getElementById('nnTrainBtn');
+    if(nnTimer){clearInterval(nnTimer);nnTimer=null;btn.innerHTML='▶ Resume Backpropagation';}
+    else{nnTimer=setInterval(trainStep,30);btn.innerHTML='⏸ Pause Training';}
+  };
+
+  function drawNN() {
+    ctx.clearRect(0,0,W,H);
+    const sz=12;
+    for(let px=0;px<W;px+=sz){
+      for(let py=0;py<H;py+=sz){
+        const x1=mapFromCanvas(px+sz/2,W), x2=-mapFromCanvas(py+sz/2,H);
+        const a=forward(x1,x2).out;
+        ctx.fillStyle=`rgba(${Math.round(181*(1-a)+47*a)},${Math.round(74*(1-a)+125*a)},${Math.round(58*(1-a)+50*a)},0.3)`;
+        ctx.fillRect(px,py,sz,sz);
+      }
+    }
+    drawGrid(ctx,W,H);
+    let mse=0;
+    DATA_XOR.forEach(pt=>{
+      const a=forward(pt.x1,pt.x2).out;
+      mse+=Math.pow(a-pt.y,2);
+      ctx.fillStyle=pt.y===1?'#2f7d32':'#b54a3a';
+      ctx.beginPath();ctx.arc(mapToCanvas(pt.x1,W),mapToCanvas(-pt.x2,H),7,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    });
+    document.getElementById('nnEpoch').textContent=nnEpoch;
+    document.getElementById('nnLoss').textContent=(mse/DATA_XOR.length).toFixed(3);
+  }
+
+  setTimeout(window.resetNN, 500);
+}
+</script>
+</body>
+</html>
