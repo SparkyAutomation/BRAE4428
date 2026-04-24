@@ -57,7 +57,3 @@
   {% endif %}
 {% endfor %}
 </div>
-
----
-## About this Course
-This site automatically updates whenever new `.html` models are added to the SparkyAutomation repository.
