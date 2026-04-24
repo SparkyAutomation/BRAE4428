@@ -1,4 +1,4 @@
-# BRAE 4428: Agricultural Robotics and Automation
+# Agricultural Robotics and Automation
 
 ---
 
