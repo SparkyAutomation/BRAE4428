@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Machine Learning Series</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5ef;--surface:#fffdf8;--s2:#efe9db;--text:#1f2a1f;--muted:#5c6b5c;
+  --primary:#2f7d32;--accent:#c98a2b;--line:#d9d2c2;--blue:#2d6cdf;--red:#b54a3a;--green:#2f7d32;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
+header{padding:52px 20px 30px;background:linear-gradient(160deg,#fbfaf6 60%,#e8f5e9)}
+main{max-width:1120px;margin:0 auto;padding:24px 20px 72px}
+h1,h2,h3{font-family:"Instrument Serif",serif;line-height:1.05;margin:0 0 10px}
+h1{font-size:clamp(2.4rem,5.5vw,4.6rem);max-width:16ch}
+h2{font-size:clamp(1.5rem,2.6vw,2.4rem);margin-top:0}
+h3{font-size:1.1rem;margin:0 0 6px}
+p{max-width:72ch;margin:0 0 10px}
+.lede{font-size:1.05rem;color:#2b3a2b;max-width:65ch}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 22px;box-shadow:0 8px 28px rgba(0,0,0,.05)}
+label{font-size:.87rem;font-weight:600;display:block;margin-bottom:5px}
+input[type=range]{width:100%;accent-color:var(--primary)}
+select{padding:6px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:Inter;font-size:.88rem;color:var(--text);cursor:pointer}
+.small{font-size:.84rem;color:var(--muted)}
+.pill{display:inline-block;padding:5px 11px;border-radius:999px;background:#edf6ee;color:var(--primary);font-weight:700;font-size:.76rem;letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px}
+canvas{width:100%;height:auto;background:#fff;border-radius:14px;border:1px solid #e8e1cf;display:block}
+.example{padding:13px 15px;border-radius:13px;background:var(--s2)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.83rem;color:var(--muted);margin-top:8px}
+.sw{display:inline-flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.hint{font-size:.77rem;color:var(--muted);text-align:center;margin:3px 0 0;font-style:italic}
+
+/* Live equation panel */
+.eq-panel{background:#f9f5ec;border:1.5px solid #e3d9c4;border-radius:13px;padding:13px 16px;margin:14px 0}
+.eq-panel-title{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:9px}
+.eq-row{display:flex;align-items:baseline;gap:10px;margin:5px 0;flex-wrap:wrap}
+.eq-lbl{font-size:.77rem;font-weight:600;color:var(--muted);min-width:100px}
+.eq{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;background:#ede7da;padding:3px 9px;border-radius:6px;line-height:1.7;color:#1a2a1a}
+.eq-live{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;background:#e6f4e6;border:1px solid #c5e0c5;padding:3px 9px;border-radius:6px;line-height:1.7;color:#1a2a1a}
+
+/* Tabs */
+.tabs{display:flex;gap:5px;margin-bottom:24px;border-bottom:2px solid var(--line);padding-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tb{background:transparent;border:none;font-family:Inter;font-size:.93rem;font-weight:600;color:var(--muted);cursor:pointer;padding:8px 15px;border-radius:8px;transition:all .18s;white-space:nowrap}
+.tb:hover{background:var(--s2);color:var(--text)}
+.tb.active{background:var(--primary);color:#fff}
+.tp{display:none;animation:fi .28s ease}
+.tp.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+/* Buttons */
+.btn{border:none;padding:7px 15px;border-radius:7px;font-weight:600;cursor:pointer;font-family:Inter;font-size:.85rem;transition:opacity .14s,transform .1s}
+.btn:hover{opacity:.9}.btn:active{transform:scale(.97)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-ghost{background:var(--s2);color:var(--text);border:1px solid var(--line)}
+.bg{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:8px;background:var(--s2);font-size:.81rem;font-weight:600;border:1px solid var(--line)}
+.chip-val{font-family:ui-monospace,Menlo,monospace}
+.cpanel{background:var(--s2);padding:14px;border-radius:12px;border:1px solid var(--line)}
+.stat-grid{display:flex;flex-direction:column;gap:7px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:14px;font-size:.84rem}
+.sr{display:flex;justify-content:space-between;align-items:center}
+.sr strong{font-family:ui-monospace,Menlo,monospace}
+
+@media(max-width:860px){.two,.lr-lo,.knn-lo,.bay-lo{grid-template-columns:1fr!important}}
+</style>
+</head>
+<body>
+<header>
+  <div style="max-width:1120px;margin:0 auto;padding:0 20px">
+    <div class="pill">Machine Learning Series</div>
+    <h1>Machine Learning Cores</h1>
+    <p class="lede">Machine learning isn't magic — it's geometry and probability applied to data. Interact with four foundational algorithms and build real intuition for how they learn.</p>
+  </div>
+</header>
+
+<main>
+<div class="tabs">
+  <button class="tb" onclick="openTab('lr',this)">① Linear Regression</button>
+  <button class="tb" onclick="openTab('knn',this)">② K-Nearest Neighbors</button>
+  <button class="tb" onclick="openTab('km',this)">③ K-Means Clustering</button>
+  <button class="tb active" onclick="openTab('bay',this)">④ Bayes' Theorem</button>
+</div>
+
+<div id="tp-lr" class="tp">
+<section class="card">
+  <div class="pill" style="background:#e3ebf6;color:var(--blue)">Supervised · Regression</div>
+  <h2>Linear Regression — The Line of Best Fit</h2>
+  <p>The algorithm tries a line, computes the <strong>squared error</strong> of every prediction, then nudges the slope and intercept step-by-step downhill using partial derivatives. This is <em>gradient descent</em> — the same engine inside every neural network.</p>
+
+  <div class="eq-panel">
+    <div class="eq-panel-title">📐 Live Equations — updates as you move the sliders or run descent</div>
+    <div class="eq-row"><span class="eq-lbl">Hypothesis</span><span class="eq">ŷ = m·x + b &nbsp;=&nbsp; <span id="leqM">0.20</span>·x + <span id="leqB">80</span></span></div>
+    <div class="eq-row"><span class="eq-lbl">Loss (MSE)</span><span class="eq">L = (1/N) Σ (yᵢ − ŷᵢ)² &nbsp;= &nbsp;<strong id="leqMSE" style="color:var(--red)">—</strong></span></div>
+    <div class="eq-row"><span class="eq-lbl">Gradients</span><span class="eq">∂L/∂m = (2/N)Σ(ŷ−y)·x &nbsp;|&nbsp; ∂L/∂b = (2/N)Σ(ŷ−y)</span></div>
+    <div class="eq-row"><span class="eq-lbl">Update rule</span><span class="eq">m ← m − α·∂L/∂m &nbsp;|&nbsp; b ← b − α·∂L/∂b</span></div>
+    <div class="eq-row"><span class="eq-lbl">R² (fit)</span><span class="eq">R² = 1 − SSᵣₑₛ/SSₜₒₜ &nbsp;= &nbsp;<strong id="leqR2" style="color:var(--green)">—</strong> &nbsp;<span style="color:var(--muted);font-size:.82em">(1.0 = perfect)</span></span></div>
+    <div class="eq-row"><span class="eq-lbl">Current line</span><span class="eq-live" id="leqLine">ŷ = —</span></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px" class="lr-lo">
+    <div>
+      <canvas id="regC" width="780" height="390" style="cursor:crosshair"></canvas>
+      <p class="hint">💡 Click to add custom points · Right-click to remove nearest</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:11px;padding-top:2px">
+      <canvas id="lossC" width="300" height="185" style="cursor:default"></canvas>
+      <div style="font-size:.74rem;color:var(--muted);text-align:center;margin-top:-6px">MSE Loss vs Iteration</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="chip">MSE &nbsp;<span class="chip-val" id="mseChip" style="color:var(--red)">—</span></div>
+        <div class="chip">R² &nbsp;<span class="chip-val" id="r2Chip" style="color:var(--green)">—</span></div>
+        <div class="chip">Iteration &nbsp;<span class="chip-val" id="iterChip" style="color:var(--blue)">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend" style="margin-top:10px">
+    <span class="sw"><span class="dot" style="background:var(--blue)"></span>Training data (xᵢ, yᵢ)</span>
+    <span class="sw"><span class="dot" style="background:#7b4faf"></span>Custom points</span>
+    <span class="sw"><span class="dot" style="background:var(--accent);border-radius:0;height:4px;width:14px"></span>Hypothesis ŷ = mx+b</span>
+    <span class="sw"><span class="dot" style="background:var(--red);border-radius:0;height:12px;width:3px"></span>Residuals yᵢ − ŷᵢ</span>
+  </div>
+
+  <div class="cpanel" style="margin-top:13px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:12px">
+      <div>
+        <label>Slope (m): <span id="mLbl" style="color:var(--blue);font-family:monospace">0.20</span></label>
+        <input id="slopeR" type="range" min="-2" max="3" step="0.05" value="0.2">
+      </div>
+      <div>
+        <label>Intercept (b): <span id="bLbl" style="color:var(--blue);font-family:monospace">80</span></label>
+        <input id="intR" type="range" min="-50" max="150" step="1" value="80">
+      </div>
+    </div>
+    <div class="bg">
+      <label style="margin:0;font-size:.82rem;font-weight:600">Speed:</label>
+      <select id="gdSpd"><option value="80">Slow</option><option value="40" selected>Normal</option><option value="15">Fast</option><option value="4">Turbo</option></select>
+      <button id="gdBtn" class="btn btn-blue" onclick="toggleGD()">▶ Run Gradient Descent</button>
+      <button class="btn btn-ghost" onclick="resetReg()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="two" style="margin-top:18px">
+    <div class="example">
+      <h3>Why Square the Errors?</h3>
+      <p style="margin:0">Raw errors cancel: +10 and −10 sum to zero, suggesting a "perfect" fit. Squaring makes all errors positive and <em>heavily penalises outliers</em>. The gradient (∂L/∂m) tells the algorithm exactly which direction to nudge m to shrink the loss fastest.</p>
+    </div>
+    <div class="example">
+      <h3>MSE vs R² — Two Lenses</h3>
+      <p style="margin:0">MSE is in your data's units — useful for gradient updates. <strong>R²</strong> is unit-free (0–1): it tells you the fraction of variance your line explains. R²=0.85 → the model captures 85% of the variation. R²=0 → no better than predicting the mean every time.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<div id="tp-knn" class="tp">
+<section class="card">
+  <div class="pill" style="background:#e3ebf6;color:var(--blue)">Supervised · Classification</div>
+  <h2>K-Nearest Neighbors — Birds of a feather flock together</h2>
+  <p>"Training" is simply <strong>memorising</strong> all labelled examples. At prediction time, KNN finds the K closest stored points and takes a majority vote. The coloured background shows how every region of space would be classified — click to move the query point.</p>
+
+  <div class="eq-panel">
+    <div class="eq-panel-title">📐 Equations in Action</div>
+    <div class="eq-row"><span class="eq-lbl">Distance</span><span class="eq">d(p, q) = √[(x_p − x_q)² + (y_p − y_q)²]</span></div>
+    <div class="eq-row"><span class="eq-lbl">Decision</span><span class="eq">ŷ = argmaxₖ |{neighbours with class k}| &nbsp;(majority vote over K)</span></div>
+    <div class="eq-row"><span class="eq-lbl">Live vote</span><span class="eq-live">Class A: <strong id="kVA">–</strong> &nbsp;|&nbsp; Class B: <strong id="kVB">–</strong> &nbsp;→&nbsp; ŷ = <strong id="kPred" style="color:var(--accent)">–</strong></span></div>
+    <div class="eq-row"><span class="eq-lbl">Nearest d</span><span class="eq-live" id="kDistEq">move query point to see distances</span></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:3fr 1fr;gap:18px;margin-top:10px" class="knn-lo">
+    <div>
+      <canvas id="knnC" width="720" height="460" style="cursor:crosshair"></canvas>
+      <p class="hint">💡 Click anywhere to move the query point (●?) · Adjust K to watch the boundary shift</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:13px;padding-top:2px">
+      <div class="cpanel">
+        <label>Pipeline stage: <span id="kPhaseV" style="color:var(--primary);font-weight:700">Predict</span></label>
+        <input id="kPhase" type="range" min="0" max="2" step="1" value="2">
+        <div style="display:flex;justify-content:space-between;font-size:.71rem;color:var(--muted);margin-top:3px"><span>None</span><span>Train</span><span>Predict</span></div>
+      </div>
+      <div class="cpanel">
+        <label>Neighbors K = <span id="kK" style="font-family:monospace;color:var(--blue)">3</span></label>
+        <input id="knnK" type="range" min="1" max="15" step="2" value="3">
+        <p class="small" style="margin-top:6px">K=1 → jagged, memorises noise.<br>K=15 → smooth, possibly biased.</p>
+      </div>
+      <button class="btn btn-ghost" onclick="regenKNN()" style="width:100%">↺ New Dataset</button>
+      <div style="background:#f2eee4;border-radius:11px;padding:12px;font-family:monospace;font-size:.86rem;line-height:2">
+        <strong>Vote Tally</strong><br>
+        <span style="color:var(--blue)">● Class A:</span> <span id="votesA">–</span><br>
+        <span style="color:var(--green)">● Class B:</span> <span id="votesB">–</span><br>
+        Prediction:<br><strong id="knnPred" style="font-size:1.05em;color:var(--accent)">–</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="two" style="margin-top:18px">
+    <div class="example">
+      <h3>Bias–Variance Trade-off</h3>
+      <p style="margin:0">Try K=1 vs K=15. K=1 memorises every training point — the boundary is jagged and sensitive to noise (high variance). K=15 blurs everything — smooth but risks misclassifying complex regions (high bias). This tension exists in every ML model.</p>
+    </div>
+    <div class="example">
+      <h3>The Curse of Dimensionality</h3>
+      <p style="margin:0">KNN works beautifully here in 2D. In 100+ dimensional space, <em>all points become roughly equidistant</em> — "nearest neighbour" loses meaning. This is why dimensionality reduction (PCA, t-SNE) is essential before applying KNN to real data.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<div id="tp-km" class="tp">
+<section class="card">
+  <div class="pill" style="background:#f2eee4;color:var(--muted)">Unsupervised · Clustering</div>
+  <h2>K-Means Clustering — Finding Hidden Structure</h2>
+  <p>K-Means gets data <em>with no labels</em>. It discovers structure through two alternating steps: <strong>Assign</strong> every point to the nearest centroid (★), then <strong>Move</strong> that centroid to the mean of its assigned members. Repeat until nothing changes.</p>
+
+  <div class="eq-panel">
+    <div class="eq-panel-title">📐 Equations in Action</div>
+    <div class="eq-row"><span class="eq-lbl">Assignment</span><span class="eq">cᵢ = argminₖ ‖xᵢ − μₖ‖² &nbsp;→ nearest centroid wins</span></div>
+    <div class="eq-row"><span class="eq-lbl">Centroid update</span><span class="eq">μₖ ← (1/|Cₖ|) Σᵢ∈Cₖ xᵢ &nbsp;→ move to cluster mean</span></div>
+    <div class="eq-row"><span class="eq-lbl">Objective (WCSS)</span><span class="eq">J = Σₖ Σᵢ∈Cₖ ‖xᵢ − μₖ‖² &nbsp;= &nbsp;<strong id="eqWCSS" style="color:var(--red)">—</strong></span></div>
+    <div class="eq-row"><span class="eq-lbl">Convergence</span><span class="eq">Stop when μₖ(t) = μₖ(t−1) for all k &nbsp;(J no longer decreases)</span></div>
+  </div>
+
+  <canvas id="kmC" width="1000" height="330" style="cursor:default"></canvas>
+
+  <div class="cpanel" style="margin-top:11px">
+    <div style="display:grid;grid-template-columns:1fr auto;gap:14px;align-items:end">
+      <div>
+        <label>Step: <span id="kmStep" style="color:var(--primary);font-weight:700">Step 0 — Initialize</span></label>
+        <input id="kmR" type="range" min="0" max="4" step="1" value="0">
+      </div>
+      <div class="bg">
+        <button id="kmPlay" class="btn btn-blue" onclick="toggleKM()">▶ Play</button>
+        <button class="btn btn-ghost" onclick="resetKM()">↺ New Data</button>
+        <div class="chip">WCSS <span class="chip-val" id="wcssChip" style="color:var(--red)">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend" style="margin-top:9px">
+    <span class="sw"><span class="dot" style="background:var(--blue)"></span>Cluster A</span>
+    <span class="sw"><span class="dot" style="background:var(--red)"></span>Cluster B</span>
+    <span class="sw"><span class="dot" style="background:var(--green)"></span>Cluster C</span>
+    <span class="sw" style="font-weight:600">★ = Centroid μₖ (moves each iteration)</span>
+  </div>
+
+  <div class="two" style="margin-top:16px">
+    <div class="example">
+      <h3>Assignment — Voronoi Cells</h3>
+      <p style="margin:0">The coloured background is a Voronoi diagram — every pixel belongs to its nearest centroid. The boundaries shift as centroids move. At convergence, the Voronoi regions define the final clusters: any new point landing in a region joins that cluster.</p>
+    </div>
+    <div class="example">
+      <h3>WCSS Monotonically Decreases</h3>
+      <p style="margin:0">Watch the WCSS value drop each step — it <em>never</em> increases. K-Means is mathematically guaranteed to converge, because both the assignment and update steps reduce or maintain J. However, it may find a <em>local</em> minimum, not the global optimum.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<div id="tp-bay" class="tp active">
+<section class="card">
+  <div class="pill" style="background:#e8eaf6;color:#3949ab">Probability Theory · Geometry of Intersections</div>
+  <h2>Bayes' Theorem — The Geometry of Evidence</h2>
+  <p>Bayes' Theorem isn't just an equation; it calculates the <strong>area of overlap</strong> between events. By visualizing the entire universe of possibilities as a square (area = 1.0), we can see exactly how probabilities shift when we restrict our view only to the area where evidence is present.</p>
+
+  <div class="eq-panel">
+    <div class="eq-panel-title">📐 Bayes' Theorem — The Math of Intersections</div>
+
+    <div style="background:#fff;border:1px solid #e3d9c4;border-radius:10px;padding:12px 15px;margin-bottom:10px">
+      <div style="font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">The Intersection Area P(A ∩ B)</div>
+      <div class="eq-row" style="margin:3px 0"><span class="eq-lbl" style="min-width:0;margin-right:8px">Joint probability:</span><span class="eq">P(A) · P(B | A) &nbsp;=&nbsp; P(A ∩ B) &nbsp;=&nbsp; P(B) · P(A | B)</span></div>
+      <div style="font-size:.79rem;color:var(--muted);margin-top:6px;padding-left:4px">Rearranging gives us Bayes' Rule ↓</div>
+    </div>
+
+    <div class="eq-row"><span class="eq-lbl">Bayes' Rule</span><span class="eq">P(A | B) = P(A ∩ B) / P(B)</span></div>
+    <div class="eq-row"><span class="eq-lbl">P(B) expanded</span><span class="eq">P(B) = P(A ∩ B) + P(Not A ∩ B)</span></div>
+    <div class="eq-row" style="align-items:center"><span class="eq-lbl">In numbers</span>
+      <span class="eq-live" style="line-height:2">
+        P(A | B) = <span id="bN1" style="color:#2d6cdf">—</span>
+        &nbsp;/&nbsp;
+        [<span id="bN2" style="color:#2d6cdf">—</span> + <span id="bN3" style="color:#b54a3a">—</span>]
+        &nbsp;= &nbsp;<strong id="bNResult" style="font-size:1.1em;color:var(--primary)">—</strong>
+      </span>
+    </div>
+    <div class="eq-row"><span class="eq-lbl">Interpretation</span><span class="eq-live" id="bVerdict" style="font-weight:600">—</span></div>
+  </div>
+
+  <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <label style="margin:0;font-weight:700;font-size:.9rem">🔄 Preset Scenarios:</label>
+    <select id="bayPre" onchange="applyPreset()" style="min-width:270px">
+      <option value="">— Choose a general scenario —</option>
+      <option value="medical">Rare Disease Detection (Base Rate Fallacy)</option>
+      <option value="spam">Spam Email Filter (High Base Rate)</option>
+      <option value="sensor">Faulty Sensor reading (High False Positives)</option>
+      <option value="balanced">Balanced Events (50/50)</option>
+    </select>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:20px" class="bay-lo">
+
+    <div>
+      <canvas id="bayC" width="680" height="470" style="cursor:default;border-radius:14px;border:1px solid #e8e1cf"></canvas>
+      <p class="hint">💡 The large square represents 100% of the sample space. The dashed outline is Evidence B.</p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div class="cpanel">
+        <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Adjust the Probabilities</div>
+
+        <label>📊 Base Rate P(A): <strong id="bPV" style="color:#1f2a1f;font-family:monospace">5%</strong></label>
+        <input id="bPrior" type="range" min="1" max="99" step="1" value="5">
+        <div style="font-size:.74rem;color:var(--muted);margin-bottom:10px">How often Event A happens naturally</div>
+
+        <label>🎯 True Positives P(B|A): <strong id="bTV" style="color:#2d6cdf;font-family:monospace">90%</strong></label>
+        <input id="bTPR" type="range" min="5" max="100" step="1" value="90">
+        <div style="font-size:.74rem;color:var(--muted);margin-bottom:10px">Likelihood of Evidence B, given A is true</div>
+
+        <label>⚠️ False Positives P(B|Not A): <strong id="bFV" style="color:#b54a3a;font-family:monospace">10%</strong></label>
+        <input id="bFPR" type="range" min="0" max="50" step="1" value="10">
+        <div style="font-size:.74rem;color:var(--muted)">Likelihood of Evidence B, given A is false</div>
+      </div>
+
+      <div class="stat-grid">
+        <div style="font-size:.74rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Area Calculations (Total = 1.0)</div>
+        <div class="sr"><span>🟦 P(A ∩ B) Area</span><strong id="sTP" style="color:#2d6cdf">—</strong></div>
+        <div class="sr"><span>🟥 P(Not A ∩ B) Area</span><strong id="sFP" style="color:#b54a3a">—</strong></div>
+        <hr style="border:0;border-top:1px solid var(--line);margin:1px 0">
+        <div class="sr" style="font-weight:600"><span>Total Evidence P(B)</span><strong id="sT">—</strong></div>
+        <hr style="border:0;border-top:2px solid var(--accent);margin:2px 0">
+        <div style="font-size:.8rem;color:var(--muted)">If we observe Evidence B, the probability A is true is:</div>
+        <div style="font-size:2.2rem;font-weight:800;font-family:'Instrument Serif',serif;margin-top:2px" id="sFin">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two" style="margin-top:18px">
+    <div class="example">
+      <h3>The Base Rate Fallacy</h3>
+      <p style="margin:0">Set the Base Rate P(A) to 5%, and True Positives P(B|A) to 90%. Even with highly accurate evidence, a tiny False Positive rate (e.g., 10%) can completely dominate the results. Because the "Not A" area is so massive, 10% of a huge number dwarfs 90% of a tiny number. Your posterior probability will be surprisingly low.</p>
+    </div>
+    <div class="example">
+      <h3>How ML uses this — Naïve Bayes</h3>
+      <p style="margin:0">Algorithms like Naïve Bayes use this exact intersection logic, but layered. P(A | features) ∝ P(A) · P(f₁|A) · P(f₂|A). Each new piece of evidence "slices" the area further. The algorithm assumes features intersect independently ("naively"), allowing it to rapidly multiply these fractions together to classify data.</p>
+    </div>
+  </div>
+</section>
+</div>
+</main>
+
+<script>
+// ═══════════════ TAB ROUTING ═══════════════
+function openTab(id,btn){
+  stopAll();
+  document.querySelectorAll('.tp').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tp-'+id).classList.add('active');
+  btn.classList.add('active');
+  setTimeout(()=>{
+    if(id==='lr'){drawReg();drawLossC();}
+    if(id==='knn'){computeKNNBg();drawKNN();}
+    if(id==='km') drawKM();
+    if(id==='bay') drawBay();
+  },15);
+}
+let _gd=null,_km=null;
+function stopAll(){
+  if(_gd){clearInterval(_gd);_gd=null;resetGDBtn();}
+  if(_km){clearInterval(_km);_km=null;document.getElementById('kmPlay').textContent='▶ Play';document.getElementById('kmPlay').className='btn btn-blue';}
+}
+function resetGDBtn(){const b=document.getElementById('gdBtn');b.textContent='▶ Run Gradient Descent';b.className='btn btn-blue';}
+function seeded(s){return()=>{s=(s*9301+49297)%233280;return s/233280;};}
+
+// ═══════════════ AXIS DRAWING HELPER ═══════════════
+function axes(ctx,w,h,pad,xl,yl,xt,yt){
+  ctx.save();
+  ctx.strokeStyle='#bfc8b0';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(pad,pad*.4);ctx.lineTo(pad,h-pad);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pad,h-pad);ctx.lineTo(w-pad*.3,h-pad);ctx.stroke();
+  // arrowheads
+  ctx.fillStyle='#bfc8b0';
+  ctx.beginPath();ctx.moveTo(pad,pad*.4);ctx.lineTo(pad-4,pad*.4+8);ctx.lineTo(pad+4,pad*.4+8);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(w-pad*.3,h-pad);ctx.lineTo(w-pad*.3-8,h-pad-4);ctx.lineTo(w-pad*.3-8,h-pad+4);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#8a9a8a';ctx.font='11px Inter';
+  ctx.textAlign='center';
+  xt.forEach(t=>{
+    const x=pad+(t.v/100)*(w-pad*1.3);
+    ctx.beginPath();ctx.moveTo(x,h-pad);ctx.lineTo(x,h-pad+4);ctx.strokeStyle='#bfc8b0';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillText(t.l,x,h-pad+15);
+  });
+  ctx.textAlign='right';ctx.textBaseline='middle';
+  yt.forEach(t=>{
+    const y=h-pad-(t.v/100)*(h-pad*1.4);
+    ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(pad-4,y);ctx.stroke();
+    ctx.fillText(t.l,pad-7,y);
+  });
+  ctx.fillStyle='#6a7a6a';ctx.font='bold 11.5px Inter';
+  ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillText(xl,pad+(w-pad*1.3)/2,h-1);
+  ctx.save();ctx.translate(12,pad+(h-pad*1.4)/2);ctx.rotate(-Math.PI/2);
+  ctx.textAlign='center';ctx.fillText(yl,0,0);ctx.restore();
+  ctx.restore();
+}
+const xtick=[{v:0,l:'0'},{v:25,l:'25'},{v:50,l:'50'},{v:75,l:'75'},{v:100,l:'100'}];
+const ytick=[{v:0,l:'0'},{v:25,l:'25'},{v:50,l:'50'},{v:75,l:'75'},{v:100,l:'100'}];
+
+// ═══════════════════════════════════════
+// PART 1 — LINEAR REGRESSION
+// ═══════════════════════════════════════
+const rC=document.getElementById('regC'),rX=rC.getContext('2d');
+const lC=document.getElementById('lossC'),lX=lC.getContext('2d');
+const sEl=document.getElementById('slopeR'),iEl=document.getElementById('intR');
+let lossHist=[],gdIter=0;
+
+// Generate base training data
+const rng=seeded(42),regBase=[];
+for(let i=10;i<90;i+=6) regBase.push({x:i,y:i*0.8+20+(rng()*30-15)});
+let regExtra=[];
+const pts=()=>[...regBase,...regExtra];
+
+function calcMSE(d,m,b){return d.length?d.reduce((s,p)=>s+(p.y-(m*p.x+b))**2,0)/d.length:0;}
+function calcR2(d,m,b){
+  if(d.length<2)return 0;
+  const yb=d.reduce((s,p)=>s+p.y,0)/d.length;
+  const st=d.reduce((s,p)=>s+(p.y-yb)**2,0);
+  const sr=d.reduce((s,p)=>s+(p.y-(m*p.x+b))**2,0);
+  return st<1e-6?1:Math.max(0,Math.min(1,1-sr/st));
+}
+
+function resetReg(){
+  stopAll();regExtra=[];lossHist=[];gdIter=0;
+  sEl.value=0.2;iEl.value=80;
+  document.getElementById('iterChip').textContent='0';
+  drawReg();drawLossC();
+}
+
+function drawLossC(){
+  const w=lC.width,h=lC.height;
+  lX.clearRect(0,0,w,h);lX.fillStyle='#fff';lX.fillRect(0,0,w,h);
+  lX.strokeStyle='#ede7da';lX.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=10+(i/4)*(h-36);lX.beginPath();lX.moveTo(38,y);lX.lineTo(w-8,y);lX.stroke();}
+  if(lossHist.length<2){
+    lX.fillStyle='#b8c0b0';lX.font='10.5px Inter';lX.textAlign='center';lX.textBaseline='middle';
+    lX.fillText('Run gradient descent',w/2,h/2-9);lX.fillText('to see the loss curve',w/2,h/2+9);
+    return;
+  }
+  const maxL=lossHist[0],minL=Math.min(...lossHist),rng2=maxL-minL||1;
+  const px=i=>38+(i/(lossHist.length-1))*(w-46);
+  const py=l=>10+(h-46)-(((l-minL)/rng2)*(h-46)*0.84+2);
+  // fill
+  lX.beginPath();lossHist.forEach((l,i)=>i===0?lX.moveTo(px(i),py(l)):lX.lineTo(px(i),py(l)));
+  lX.lineTo(px(lossHist.length-1),h-26);lX.lineTo(px(0),h-26);lX.closePath();
+  lX.fillStyle='rgba(181,74,58,.1)';lX.fill();
+  // line
+  lX.beginPath();lossHist.forEach((l,i)=>i===0?lX.moveTo(px(i),py(l)):lX.lineTo(px(i),py(l)));
+  lX.strokeStyle='#b54a3a';lX.lineWidth=2;lX.stroke();
+  // axis labels
+  lX.fillStyle='#8a9a8a';lX.font='9.5px Inter';lX.textAlign='right';lX.textBaseline='middle';
+  lX.fillText(maxL.toFixed(0),36,py(maxL));lX.fillText(minL.toFixed(0),36,py(minL));
+  lX.textAlign='center';lX.textBaseline='bottom';
+  lX.fillText('0',38,h-2);lX.fillText(gdIter,px(lossHist.length-1),h-2);
+  lX.fillText('Iteration',w/2,h-2);
+  lX.save();lX.translate(10,h/2);lX.rotate(-Math.PI/2);lX.textAlign='center';lX.fillText('MSE',0,0);lX.restore();
+}
+
+function drawReg(){
+  const w=rC.width,h=rC.height,pad=50;
+  const m=parseFloat(sEl.value),b=parseFloat(iEl.value);
+  const mv=m.toFixed(3),bv=b.toFixed(1);
+  document.getElementById('mLbl').textContent=m.toFixed(2);
+  document.getElementById('bLbl').textContent=b.toFixed(1);
+  document.getElementById('leqM').textContent=mv;
+  document.getElementById('leqB').textContent=bv;
+  document.getElementById('leqLine').textContent=`ŷ = ${mv}·x + ${bv}`;
+
+  rX.clearRect(0,0,w,h);rX.fillStyle='#fff';rX.fillRect(0,0,w,h);
+  axes(rX,w,h,pad,'Input feature (x)','Output target (y)',xtick,ytick);
+
+  const mX=v=>pad+(v/100)*(w-pad*1.3);
+  const mY=v=>h-pad-((v/100)*(h-pad*1.4));
+
+  // Residuals
+  const data=pts();
+  rX.setLineDash([4,4]);rX.lineWidth=1.5;rX.strokeStyle='rgba(181,74,58,.5)';
+  data.forEach(p=>{rX.beginPath();rX.moveTo(mX(p.x),mY(p.y));rX.lineTo(mX(p.x),mY(m*p.x+b));rX.stroke();});
+  rX.setLineDash([]);
+
+  // Hypothesis line
+  rX.strokeStyle='#c98a2b';rX.lineWidth=3.5;
+  rX.beginPath();rX.moveTo(mX(0),mY(b));rX.lineTo(mX(100),mY(m*100+b));rX.stroke();
+  // Line label
+  const lx=65,ly=m*lx+b;
+  if(ly>5&&ly<97){
+    rX.fillStyle='#c98a2b';rX.font='bold 11px Inter';rX.textAlign='left';rX.textBaseline='bottom';
+    rX.fillText(`ŷ=${mv}·x+${bv}`,mX(lx)+6,mY(ly)-4);
+  }
+
+  // Data points
+  data.forEach((p,i)=>{
+    rX.fillStyle=i<regBase.length?'#2d6cdf':'#7b4faf';
+    rX.beginPath();rX.arc(mX(p.x),mY(p.y),5.5,0,Math.PI*2);rX.fill();
+    rX.strokeStyle='#fff';rX.lineWidth=1.5;rX.stroke();
+  });
+  // Residual label on first point
+  if(data.length>0){
+    const fp=data[0];
+    const err=(fp.y-(m*fp.x+b));
+    rX.fillStyle='var(--red)';rX.font='10px Inter';rX.textAlign='left';rX.textBaseline='middle';
+    rX.fillStyle='#b54a3a';
+    rX.fillText(`e=${err.toFixed(1)}`,mX(fp.x)+6,(mY(fp.y)+mY(m*fp.x+b))/2);
+  }
+  rX.textAlign='left';
+
+  if(data.length>0){
+    const e=calcMSE(data,m,b),r=calcR2(data,m,b);
+    document.getElementById('mseChip').textContent=e.toFixed(1);
+    document.getElementById('r2Chip').textContent=r.toFixed(3);
+    document.getElementById('leqMSE').textContent=e.toFixed(2);
+    document.getElementById('leqR2').textContent=r.toFixed(3);
+  }
+}
+
+function toggleGD(){
+  const btn=document.getElementById('gdBtn');
+  if(_gd){clearInterval(_gd);_gd=null;resetGDBtn();return;}
+  const data=pts();if(!data.length)return;
+  // Start from a bad position if already near optimal
+  if(calcR2(data,parseFloat(sEl.value),parseFloat(iEl.value))>0.85){
+    sEl.value=-0.5;iEl.value=120;
+  }
+  lossHist=[];gdIter=0;
+  btn.textContent='⏸ Pause';btn.className='btn btn-red';
+  const speed=parseInt(document.getElementById('gdSpd').value);
+  const N=data.length;
+  // Normalize x to improve numerical stability
+  const xMean=data.reduce((s,p)=>s+p.x,0)/N;
+  const xStd=Math.sqrt(data.reduce((s,p)=>s+(p.x-xMean)**2,0)/N)||1;
+  const yMean=data.reduce((s,p)=>s+p.y,0)/N;
+  // Use a slightly larger lr since we track convergence carefully
+  const lr=0.03;
+  // Work in normalized space
+  let m_n=(parseFloat(sEl.value)*xStd),b_n=parseFloat(iEl.value)-(parseFloat(sEl.value)*xMean);
+  // Convert to normalized params
+  m_n=(parseFloat(sEl.value)*xStd);
+  b_n=parseFloat(iEl.value)-parseFloat(sEl.value)*xMean;
+
+  const MICRO=6;
+  let prevLoss=Infinity;
+
+  _gd=setInterval(()=>{
+    for(let s=0;s<MICRO;s++){
+      let dm=0,db=0;
+      data.forEach(p=>{
+        const xn=(p.x-xMean)/xStd;
+        const pred=m_n*xn+b_n;
+        const err=pred-p.y;
+        dm+=(2/N)*err*xn;
+        db+=(2/N)*err;
+      });
+      m_n-=lr*dm;
+      b_n-=lr*db;
+    }
+    // Convert back to original space
+    const m_real=m_n/xStd;
+    const b_real=b_n-m_n*xMean/xStd;
+    const mc=Math.max(-2,Math.min(3,m_real));
+    const bc=Math.max(-50,Math.min(150,b_real));
+    sEl.value=mc;iEl.value=bc;
+    const loss=calcMSE(data,mc,bc);
+    lossHist.push(loss);
+    gdIter+=MICRO;
+    document.getElementById('iterChip').textContent=gdIter;
+    drawReg();drawLossC();
+    if(Math.abs(prevLoss-loss)<prevLoss*0.00001&&gdIter>60){
+      clearInterval(_gd);_gd=null;
+      btn.textContent='✅ Converged!';btn.className='btn btn-green';
+      setTimeout(resetGDBtn,3500);
+    }
+    prevLoss=loss;
+  },speed);
+}
+
+[sEl,iEl].forEach(el=>el.addEventListener('input',()=>{
+  if(_gd){clearInterval(_gd);_gd=null;resetGDBtn();}
+  lossHist=[];gdIter=0;document.getElementById('iterChip').textContent='0';
+  drawLossC();drawReg();
+}));
+
+rC.addEventListener('click',e=>{
+  const r=rC.getBoundingClientRect();
+  regExtra.push({x:(e.clientX-r.left)/r.width*100,y:100-(e.clientY-r.top)/r.height*100});
+  drawReg();
+});
+rC.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  const r=rC.getBoundingClientRect();
+  const tx=(e.clientX-r.left)/r.width*100,ty=100-(e.clientY-r.top)/r.height*100;
+  let minD=1e9,minI=-1;
+  regExtra.forEach((p,i)=>{const d=(p.x-tx)**2+(p.y-ty)**2;if(d<minD){minD=d;minI=i;}});
+  if(minI>=0&&minD<300)regExtra.splice(minI,1);
+  drawReg();
+});
+
+// ═══════════════════════════════════════
+// PART 2 — KNN
+// ═══════════════════════════════════════
+const kC=document.getElementById('knnC'),kX=kC.getContext('2d');
+let knnData=[],kTX=50,kTY=50,knnBg=null;
+
+function genKNN(){
+  const r=seeded(Math.floor(Math.random()*1e6));
+  knnData=[];
+  for(let i=0;i<32;i++) knnData.push({x:12+r()*42,y:55+r()*38,cls:'A',col:'#2d6cdf'});
+  for(let i=0;i<32;i++) knnData.push({x:52+r()*38,y:12+r()*42,cls:'B',col:'#2f7d32'});
+  knnBg=null;
+}
+genKNN();
+function regenKNN(){genKNN();computeKNNBg();drawKNN();}
+
+function kVote(px,py,K){
+  const s=[...knnData].map(p=>({...p,d:Math.sqrt((p.x-px)**2+(p.y-py)**2)})).sort((a,b)=>a.d-b.d).slice(0,K);
+  let A=0,B=0;s.forEach(n=>n.cls==='A'?A++:B++);
+  return{winner:A>=B?'A':'B',A,B,near:s};
+}
+
+function computeKNNBg(){
+  if(parseInt(document.getElementById('kPhase').value)<2){knnBg=null;return;}
+  const K=parseInt(document.getElementById('knnK').value);
+  const gW=72,gH=46,off=document.createElement('canvas');
+  off.width=gW;off.height=gH;const ox=off.getContext('2d');
+  for(let gx=0;gx<gW;gx++) for(let gy=0;gy<gH;gy++){
+    const{winner}=kVote(((gx+.5)/gW)*100,100-((gy+.5)/gH)*100,K);
+    ox.fillStyle=winner==='A'?'rgba(45,108,223,.13)':'rgba(47,125,50,.13)';
+    ox.fillRect(gx,gy,1,1);
+  }
+  knnBg=off;
+}
+
+function drawKNN(){
+  const w=kC.width,h=kC.height,pad=46;
+  const phase=parseInt(document.getElementById('kPhase').value);
+  const K=parseInt(document.getElementById('knnK').value);
+  document.getElementById('kPhaseV').textContent=['Blank Slate','Training (Memorize)','Inference (Predict)'][phase];
+  document.getElementById('kK').textContent=K;
+
+  kX.clearRect(0,0,w,h);kX.fillStyle='#fff';kX.fillRect(0,0,w,h);
+  axes(kX,w,h,pad,'Feature 1 (x₁)','Feature 2 (x₂)',xtick,ytick);
+  if(phase===0)return;
+
+  const mX=v=>pad+(v/100)*(w-pad*1.3);
+  const mY=v=>h-pad-((v/100)*(h-pad*1.4));
+
+  if(phase===2&&knnBg) kX.drawImage(knnBg,pad,pad,w-pad*1.3,h-pad*1.4);
+
+  knnData.forEach(p=>{
+    kX.fillStyle=p.col;kX.beginPath();kX.arc(mX(p.x),mY(p.y),5,0,Math.PI*2);kX.fill();
+    kX.strokeStyle='rgba(255,255,255,.7)';kX.lineWidth=1;kX.stroke();
+  });
+  if(phase<2)return;
+
+  const{winner,A,B,near}=kVote(kTX,kTY,K);
+  document.getElementById('votesA').textContent=A;
+  document.getElementById('votesB').textContent=B;
+  document.getElementById('kVA').textContent=A;
+  document.getElementById('kVB').textContent=B;
+  const pred=winner==='A'?'Class A (Blue)':'Class B (Green)';
+  document.getElementById('knnPred').textContent=pred;
+  document.getElementById('kPred').textContent=pred;
+  document.getElementById('knnPred').style.color=winner==='A'?'var(--blue)':'var(--green)';
+
+  const cx=mX(kTX),cy=mY(kTY);
+  const dists=near.map(n=>Math.sqrt((mX(n.x)-cx)**2+(mY(n.y)-cy)**2));
+  const maxD=Math.max(...dists);
+  document.getElementById('kDistEq').textContent=`d₁=${near[0].d.toFixed(1)}, d₂=${K>1?near[1].d.toFixed(1):'—'}, d₃=${K>2?near[2].d.toFixed(1):'—'}`;
+
+  // Circle
+  kX.fillStyle='rgba(201,138,43,.07)';kX.beginPath();kX.arc(cx,cy,maxD+10,0,Math.PI*2);kX.fill();
+  kX.strokeStyle='#c98a2b';kX.lineWidth=2;kX.setLineDash([6,4]);kX.stroke();kX.setLineDash([]);
+  kX.fillStyle='#c98a2b';kX.font='10px Inter';kX.textAlign='center';kX.textBaseline='bottom';
+  kX.fillText(`r = ${(maxD/((w-pad*1.3)/100)).toFixed(1)} units`,cx,cy-maxD-12);
+
+  near.forEach(n=>{
+    kX.strokeStyle=n.col+'99';kX.lineWidth=1.5;kX.beginPath();kX.moveTo(cx,cy);kX.lineTo(mX(n.x),mY(n.y));kX.stroke();
+    kX.fillStyle='#5c6b5c';kX.font='9.5px Inter';kX.textAlign='center';kX.textBaseline='middle';
+    kX.fillText(n.d.toFixed(1),(cx+mX(n.x))/2,(cy+mY(n.y))/2);
+  });
+  near.forEach(n=>{
+    kX.fillStyle=n.col;kX.beginPath();kX.arc(mX(n.x),mY(n.y),8,0,Math.PI*2);kX.fill();
+    kX.strokeStyle='#fff';kX.lineWidth=2.5;kX.stroke();
+  });
+
+  const qc=winner==='A'?'#2d6cdf':'#2f7d32';
+  kX.fillStyle=qc;kX.beginPath();kX.arc(cx,cy,12,0,Math.PI*2);kX.fill();
+  kX.strokeStyle='#fff';kX.lineWidth=3;kX.stroke();
+  kX.strokeStyle='#c98a2b';kX.lineWidth=2;kX.stroke();
+  kX.fillStyle='#fff';kX.font='bold 11px Inter';kX.textAlign='center';kX.textBaseline='middle';kX.fillText('?',cx,cy);
+  kX.fillStyle='#1f2a1f';kX.font='10.5px Inter';kX.textAlign='left';kX.textBaseline='bottom';
+  kX.fillText(`query(${kTX.toFixed(0)},${kTY.toFixed(0)})`,cx+15,cy-5);
+  kX.textAlign='left';
+}
+
+kC.addEventListener('click',e=>{
+  if(parseInt(document.getElementById('kPhase').value)<2)return;
+  const r=kC.getBoundingClientRect();
+  kTX=(e.clientX-r.left)/r.width*100;kTY=100-(e.clientY-r.top)/r.height*100;drawKNN();
+});
+document.getElementById('knnK').addEventListener('input',()=>{computeKNNBg();drawKNN();});
+document.getElementById('kPhase').addEventListener('input',()=>{computeKNNBg();drawKNN();});
+
+// ═══════════════════════════════════════
+// PART 3 — K-MEANS
+// ═══════════════════════════════════════
+const kmCv=document.getElementById('kmC'),kmX=kmCv.getContext('2d');
+let _kmI=null,kmPts=[],kmStates=[];
+const KM_COLS=['#2d6cdf','#b54a3a','#2f7d32'];
+const KM_FILL=['rgba(45,108,223,.11)','rgba(181,74,58,.11)','rgba(47,125,50,.11)'];
+
+function genKM(){
+  const r=seeded(Math.floor(Math.random()*1e6));
+  return[
+    ...Array.from({length:7},()=>({x:8+r()*24,y:60+r()*28})),
+    ...Array.from({length:7},()=>({x:70+r()*22,y:8+r()*26})),
+    ...Array.from({length:7},()=>({x:50+r()*26,y:64+r()*26})),
+  ];
+}
+function kmAssign(pts,cs){return pts.map(p=>{let m=1e9,b=0;cs.forEach((c,i)=>{const d=(p.x-c.x)**2+(p.y-c.y)**2;if(d<m){m=d;b=i;}});return b;});}
+function kmMove(pts,asgn){return[0,1,2].map(k=>{const m=pts.filter((_,i)=>asgn[i]===k);return m.length?{x:m.reduce((s,p)=>s+p.x,0)/m.length,y:m.reduce((s,p)=>s+p.y,0)/m.length}:{x:50,y:50};});}
+function kmWCSS(pts,asgn,cs){return pts.reduce((s,p,i)=>{const c=cs[asgn[i]];return s+(p.x-c.x)**2+(p.y-c.y)**2;},0);}
+
+function buildKMStates(pts){
+  const c0=[{x:38,y:48},{x:54,y:32},{x:64,y:58}];
+  const st=[];
+  st.push({txt:'Step 0 — Place 3 random centroids (μ₁ μ₂ μ₃)',c:c0,a:pts.map(()=>-1),w:null});
+  const a1=kmAssign(pts,c0);
+  st.push({txt:'Step 1 — Assign: cᵢ = argminₖ ‖xᵢ − μₖ‖²',c:c0,a:a1,w:kmWCSS(pts,a1,c0)});
+  const c1=kmMove(pts,a1);
+  st.push({txt:'Step 2 — Update: μₖ ← mean of cluster k',c:c1,a:a1,w:kmWCSS(pts,a1,c1)});
+  const a2=kmAssign(pts,c1);
+  st.push({txt:'Step 3 — Re-assign with updated centroids',c:c1,a:a2,w:kmWCSS(pts,a2,c1)});
+  const c2=kmMove(pts,a2);
+  const a3=kmAssign(pts,c2);
+  st.push({txt:'Step 4 — Converged ✓  μₖ stable, J minimised',c:c2,a:a3,w:kmWCSS(pts,a3,c2)});
+  return st;
+}
+
+function resetKM(){
+  if(_kmI){clearInterval(_kmI);_kmI=null;document.getElementById('kmPlay').textContent='▶ Play';document.getElementById('kmPlay').className='btn btn-blue';}
+  kmPts=genKM();kmStates=buildKMStates(kmPts);
+  document.getElementById('kmR').value=0;drawKM();
+}
+resetKM();
+
+function toggleKM(){
+  const btn=document.getElementById('kmPlay');
+  if(_kmI){clearInterval(_kmI);_kmI=null;btn.textContent='▶ Play';btn.className='btn btn-blue';return;}
+  if(parseInt(document.getElementById('kmR').value)>=4)document.getElementById('kmR').value=0;
+  btn.textContent='⏸ Pause';btn.className='btn btn-red';
+  _kmI=setInterval(()=>{
+    const r=document.getElementById('kmR');
+    if(parseInt(r.value)>=4){clearInterval(_kmI);_kmI=null;btn.textContent='▶ Play';btn.className='btn btn-blue';return;}
+    r.value=parseInt(r.value)+1;drawKM();
+  },1200);
+}
+
+function drawVoronoi(st,w,h,pad){
+  const gW=100,usableW=w-pad*1.3,usableH=h-pad*1.4;
+  const cw=usableW/gW;
+  const gH=Math.ceil(usableH/cw);
+  const ch=usableH/gH;
+  for(let gx=0;gx<gW;gx++) for(let gy=0;gy<gH;gy++){
+    const px=((gx+.5)/gW)*100,py=100-((gy+.5)/gH)*100;
+    let best=0,minD=1e9;
+    st.c.forEach((c,i)=>{const d=(c.x-px)**2+(c.y-py)**2;if(d<minD){minD=d;best=i;}});
+    kmX.fillStyle=KM_FILL[best];
+    kmX.fillRect(pad+gx*cw,pad+gy*ch,cw+1,ch+1);
+  }
+}
+
+function drawStar(ctx,cx,cy,n,o,inn){
+  ctx.beginPath();
+  for(let i=0;i<n*2;i++){const r=i%2===0?o:inn,a=(i*Math.PI/n)-Math.PI/2;i===0?ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));}
+  ctx.closePath();
+}
+
+function drawKM(){
+  const si=parseInt(document.getElementById('kmR').value);
+  const st=kmStates[si];
+  const w=kmCv.width,h=kmCv.height,pad=46;
+  document.getElementById('kmStep').textContent=st.txt;
+  document.getElementById('wcssChip').textContent=st.w!==null?st.w.toFixed(0):'—';
+  document.getElementById('eqWCSS').textContent=st.w!==null?st.w.toFixed(0):'—';
+  kmX.clearRect(0,0,w,h);kmX.fillStyle='#fff';kmX.fillRect(0,0,w,h);
+  axes(kmX,w,h,pad,'Feature 1 (x₁)','Feature 2 (x₂)',xtick,ytick);
+
+  const mX=v=>pad+(v/100)*(w-pad*1.3);
+  const mY=v=>h-pad-((v/100)*(h-pad*1.4));
+
+  if(st.a[0]!==-1) drawVoronoi(st,w,h,pad);
+
+  // Connection lines
+  if(st.a[0]!==-1) kmPts.forEach((p,i)=>{
+    const ci=st.a[i];
+    kmX.strokeStyle=KM_COLS[ci]+'44';kmX.lineWidth=1;
+    kmX.beginPath();kmX.moveTo(mX(p.x),mY(p.y));kmX.lineTo(mX(st.c[ci].x),mY(st.c[ci].y));kmX.stroke();
+  });
+
+  // Points
+  kmPts.forEach((p,i)=>{
+    kmX.fillStyle=st.a[i]===-1?'#aaa':KM_COLS[st.a[i]];
+    kmX.beginPath();kmX.arc(mX(p.x),mY(p.y),6.5,0,Math.PI*2);kmX.fill();
+    kmX.strokeStyle='#fff';kmX.lineWidth=2;kmX.stroke();
+  });
+
+  // Centroids + labels
+  st.c.forEach((c,i)=>{
+    drawStar(kmX,mX(c.x),mY(c.y),5,13,6);
+    kmX.fillStyle=KM_COLS[i];kmX.fill();
+    kmX.strokeStyle='#fff';kmX.lineWidth=2.5;kmX.stroke();
+    kmX.fillStyle=KM_COLS[i];kmX.font='bold 10.5px Inter';kmX.textAlign='left';kmX.textBaseline='bottom';
+    kmX.fillText(`μ${['₁','₂','₃'][i]}=(${c.x.toFixed(0)},${c.y.toFixed(0)})`,mX(c.x)+13,mY(c.y)-2);
+  });
+  kmX.textAlign='left';
+}
+document.getElementById('kmR').addEventListener('input',drawKM);
+
+// ═══════════════════════════════════════
+// PART 4 — BAYES (AREA DIAGRAM)
+// ═══════════════════════════════════════
+const bayC=document.getElementById('bayC'),bayX=bayC.getContext('2d');
+const bPrior=document.getElementById('bPrior'),bTPR=document.getElementById('bTPR'),bFPR=document.getElementById('bFPR');
+const PRESETS={
+  medical:{p:5,t:90,f:10},
+  spam:{p:40,t:95,f:5},
+  sensor:{p:10,t:80,f:25},
+  balanced:{p:50,t:70,f:30}
+};
+
+function applyPreset(){
+  const k=document.getElementById('bayPre').value;
+  if(!k||!PRESETS[k])return;
+  bPrior.value=PRESETS[k].p;bTPR.value=PRESETS[k].t;bFPR.value=PRESETS[k].f;drawBay();
+}
+
+function drawBay(){
+  const pA = +bPrior.value/100;
+  const pB_A = +bTPR.value/100;
+  const pB_nA = +bFPR.value/100;
+
+  document.getElementById('bPV').textContent=bPrior.value+'%';
+  document.getElementById('bTV').textContent=bTPR.value+'%';
+  document.getElementById('bFV').textContent=bFPR.value+'%';
+
+  // Calculate intersection areas
+  const pAB = pA * pB_A;
+  const pnAB = (1 - pA) * pB_nA;
+  const pB = pAB + pnAB;
+  const posterior = pB === 0 ? 0 : pAB / pB;
+  const postPct = (posterior * 100).toFixed(1);
+
+  // Update DOM Equations
+  const fmt = v => (v).toFixed(4);
+  document.getElementById('bN1').textContent = fmt(pAB);
+  document.getElementById('bN2').textContent = fmt(pAB);
+  document.getElementById('bN3').textContent = fmt(pnAB);
+  document.getElementById('bNResult').textContent = postPct + '%';
+
+  const verdict = posterior >= 0.7 ? `🟢 Strong Evidence: ${postPct}% probability Event A is true.` :
+                  posterior >= 0.35 ? `🟡 Moderate Evidence: ${postPct}% probability Event A is true.` :
+                  `🔴 Weak Evidence: Only ${postPct}% chance A is true. False Positives dominate.`;
+  document.getElementById('bVerdict').textContent = verdict;
+  document.getElementById('bVerdict').style.color = posterior >= 0.7 ? '#2f7d32' : posterior >= 0.35 ? '#c98a2b' : '#b54a3a';
+
+  // Stats text
+  document.getElementById('sTP').textContent = fmt(pAB);
+  document.getElementById('sFP').textContent = fmt(pnAB);
+  document.getElementById('sT').textContent = fmt(pB);
+  document.getElementById('sFin').textContent = postPct + '%';
+  document.getElementById('sFin').style.color = posterior >= 0.7 ? '#2f7d32' : posterior >= 0.35 ? '#c98a2b' : '#b54a3a';
+
+  // ──── DRAW AREA DIAGRAM (MOSAIC PLOT) ────
+  const w = bayC.width, h = bayC.height;
+  bayX.clearRect(0,0,w,h);
+  bayX.fillStyle = '#fafaf6';
+  bayX.fillRect(0,0,w,h);
+
+  // Header
+  const barH = 38;
+  const barCol = posterior >= 0.7 ? '#2f7d32' : posterior >= 0.35 ? '#c98a2b' : '#b54a3a';
+  bayX.fillStyle = '#e8e2d4'; bayX.fillRect(0,0,w,barH);
+  bayX.fillStyle = barCol; bayX.fillRect(0,0,posterior*w,barH);
+  bayX.fillStyle = '#fff'; bayX.font = 'bold 13px Inter'; bayX.textAlign = 'center'; bayX.textBaseline = 'middle';
+  bayX.fillText(`P(A | B) = ${postPct}% — If we are in the Evidence B area, this is the fraction belonging to A`, w/2, barH/2);
+
+  const pad = 45;
+  const sizeX = w - pad*2;
+  const sizeY = h - barH - pad*1.8;
+  const x0 = pad;
+  const y0 = barH + pad;
+
+  // Widths (Prior probability)
+  const wA = sizeX * pA;
+  const wnA = sizeX * (1 - pA);
+
+  // Heights (Conditional probability of Evidence B)
+  const hAB = sizeY * pB_A;
+  const hnAB = sizeY * pB_nA;
+
+  // Colors
+  const colA_B = '#2d6cdf';       // Blue: A and B (True Positive)
+  const colnA_B = '#b54a3a';      // Red: Not A and B (False Positive)
+  const colA_nB = '#d3e2fb';      // Light Blue: A and Not B
+  const colnA_nB = '#f7eaea';     // Light Red: Not A and Not B
+
+  // Draw the 4 rectangles
+  // Top-Left: Event A is True, Evidence B is Present
+  bayX.fillStyle = colA_B;
+  bayX.fillRect(x0, y0, wA, hAB);
+  
+  // Top-Right: Event A is False, Evidence B is Present
+  bayX.fillStyle = colnA_B;
+  bayX.fillRect(x0 + wA, y0, wnA, hnAB);
+
+  // Bottom-Left: Event A is True, Evidence B is Absent
+  bayX.fillStyle = colA_nB;
+  bayX.fillRect(x0, y0 + hAB, wA, sizeY - hAB);
+
+  // Bottom-Right: Event A is False, Evidence B is Absent
+  bayX.fillStyle = colnA_nB;
+  bayX.fillRect(x0 + wA, y0 + hnAB, wnA, sizeY - hnAB);
+
+  // Bounding box for the Universe
+  bayX.strokeStyle = '#c5c5b5';
+  bayX.lineWidth = 1.5;
+  bayX.strokeRect(x0, y0, sizeX, sizeY);
+  bayX.beginPath(); bayX.moveTo(x0 + wA, y0); bayX.lineTo(x0 + wA, y0 + sizeY); bayX.stroke();
+
+  // Highlight Evidence B outline (The "Given" condition)
+  bayX.strokeStyle = '#1f2a1f';
+  bayX.lineWidth = 3.5;
+  bayX.setLineDash([8, 6]);
+  bayX.beginPath();
+  bayX.moveTo(x0, y0);
+  bayX.lineTo(x0 + sizeX, y0);
+  bayX.lineTo(x0 + sizeX, y0 + hnAB);
+  bayX.lineTo(x0 + wA, y0 + hnAB); // stair step
+  bayX.lineTo(x0 + wA, y0 + hAB);
+  bayX.lineTo(x0, y0 + hAB);
+  bayX.closePath();
+  bayX.stroke();
+  bayX.setLineDash([]);
+
+  // Labels
+  bayX.font = 'bold 12px Inter';
+  bayX.fillStyle = '#1f2a1f';
+  bayX.textAlign = 'center';
+  
+  // X-Axis Labels
+  bayX.fillText(`Event A (${bPrior.value}%)`, x0 + wA/2, y0 - 15);
+  bayX.fillText(`Not Event A (${100 - bPrior.value}%)`, x0 + wA + wnA/2, y0 - 15);
+
+  // Intersection Labels (Drawn unconditionally with an outline to prevent illegibility on small overlapping boxes)
+  bayX.textAlign = 'center';
+  bayX.textBaseline = 'middle';
+  bayX.lineJoin = 'round';
+  
+  const drawLabel = (txt, x, y, fill, stroke) => {
+    bayX.strokeStyle = stroke;
+    bayX.lineWidth = 3;
+    bayX.strokeText(txt, x, y);
+    bayX.fillStyle = fill;
+    bayX.fillText(txt, x, y);
+  };
+
+  drawLabel('A ∩ B', x0 + wA/2, y0 + hAB/2, '#fff', colA_B);
+  drawLabel('Not A ∩ B', x0 + wA + wnA/2, y0 + hnAB/2, '#fff', colnA_B);
+  drawLabel('A ∩ Not B', x0 + wA/2, y0 + hAB + (sizeY - hAB)/2, '#2d6cdf', '#fff');
+  drawLabel('Not A ∩ Not B', x0 + wA + wnA/2, y0 + hnAB + (sizeY - hnAB)/2, '#b54a3a', '#fff');
+
+  // Bracket/Label for "Evidence B"
+  bayX.fillStyle = '#1f2a1f';
+  bayX.font = 'bold 13px Inter';
+  bayX.textAlign = 'left';
+  bayX.fillText(`Area inside dashed line = Total Evidence B`, x0 + 10, y0 + sizeY + 25);
+  
+  bayX.font = '11.5px Inter';
+  bayX.fillStyle = '#5c6b5c';
+  bayX.fillText(`Bayes asks: Of this dashed area, what percent is blue?`, x0 + 10, y0 + sizeY + 42);
+}
+[bPrior,bTPR,bFPR].forEach(el=>el.addEventListener('input',()=>{document.getElementById('bayPre').value='';drawBay();}));
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+drawReg();drawLossC();
+setTimeout(()=>{computeKNNBg();drawKNN();drawBay();},20);
+</script>
+</body>
+</html>
