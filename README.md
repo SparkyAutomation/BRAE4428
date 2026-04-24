@@ -52,7 +52,7 @@
     <a href="{{ file.path | relative_url }}" class="card">
       <span class="tag">Module</span>
       <h3>{{ file.basename | replace: "_", " " }}</h3>
-      <p>Click to open the interactive engineering tool.</p>
+      <p>Click to open</p>
     </a>
   {% endif %}
 {% endfor %}
