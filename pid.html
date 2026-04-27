@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PID Tuning Interactive Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5ef;--surface:#fffdf8;--surface2:#efe9db;--text:#1f2a1f;--muted:#5c6b5c;
+  --primary:#2f7d32;--accent:#c98a2b;--line:#d9d2c2;--blue:#2d6cdf;--red:#b54a3a;
+  --p:#2d6cdf;--i:#2f7d32;--d:#b54a3a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;line-height:1.55}
+h1,h2,h3{font-family:"Instrument Serif",serif;line-height:1.05}
+h1{font-size:clamp(2.5rem,6vw,4.5rem);margin:0 0 12px}
+h2{font-size:clamp(1.5rem,3vw,2.4rem);margin:0 0 12px}
+h3{font-size:1.25rem;margin-bottom:.5rem}
+p{max-width:72ch;margin:0 0 10px}
+
+header{padding:56px 20px 28px;background:linear-gradient(180deg,#fbfaf6,#f1ecdf)}
+.lede{font-size:1.1rem;color:#2b3a2b;max-width:65ch}
+.pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#edf6ee;color:var(--primary);font-weight:700;font-size:.8rem;letter-spacing:.02em;text-transform:uppercase;margin-bottom:12px}
+
+/* ── Tabs ── */
+.main-tabs{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;padding:.75rem 1rem;background:rgba(247,245,239,.95);backdrop-filter:blur(8px);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--line)}
+.main-tab{background:var(--surface);border:2px solid var(--line);color:var(--muted);padding:.5rem 1.4rem;border-radius:8px;cursor:pointer;font-family:Inter,sans-serif;font-weight:600;font-size:.9rem;transition:all .2s}
+.main-tab.active,.main-tab:hover{background:#edf6ee;border-color:var(--primary);color:var(--primary)}
+.main-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* ── Pages ── */
+.page{display:none;max-width:1100px;margin:0 auto;padding:2.5rem 1.5rem 72px}
+.page.active{display:block}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.25rem;box-shadow:0 8px 24px rgba(0,0,0,.04)}
+.card ul{margin:.5rem 0 0 1.2rem;color:var(--muted);font-size:.9rem}
+.card ul li{margin:6px 0}
+.p-card{border-left:4px solid var(--p)}
+.i-card{border-left:4px solid var(--i)}
+.d-card{border-left:4px solid var(--d)}
+
+.theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1rem}
+@media(max-width:680px){.theory-grid{grid-template-columns:1fr}}
+
+.formula{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f2eee4;padding:12px 16px;border-radius:12px;display:block;margin:12px 0;word-wrap:break-word;line-height:1.8;font-size:1.05rem;text-align:center;color:var(--text)}
+
+/* ── Steps ── */
+.steps{display:flex;flex-direction:column;gap:.75rem}
+.step{display:flex;align-items:flex-start;gap:1rem;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1rem;box-shadow:0 4px 12px rgba(0,0,0,.03)}
+.step-num{background:var(--primary);color:#fff;border-radius:50%;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0}
+.step h4{margin-bottom:.25rem;font-family:"Instrument Serif",serif;font-size:1.1rem}
+.step p{color:var(--muted);font-size:.9rem;margin:0}
+.tip{margin-top:1.25rem;background:var(--surface2);border-left:4px solid var(--accent);padding:.75rem 1rem;border-radius:0 12px 12px 0;font-size:.9rem}
+
+/* ── ZN sub-tabs ── */
+.sub-tabs{display:flex;gap:.5rem;margin-bottom:1.25rem}
+.sub-tab{background:var(--surface);border:2px solid var(--line);color:var(--muted);padding:.45rem 1.1rem;border-radius:8px;cursor:pointer;font-family:Inter,sans-serif;font-weight:600;transition:all .2s;font-size:.88rem}
+.sub-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.sub-tab:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+.sub-page{display:none}.sub-page.active{display:block}
+.sub-page ol{margin:.75rem 0 1rem 1.5rem;color:var(--muted)}
+.sub-page li{margin-bottom:.4rem}
+
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.9rem}
+th{background:var(--surface2);padding:.6rem 1rem;text-align:left;border:1px solid var(--line);color:var(--primary);font-family:"Instrument Serif",serif;font-size:1rem}
+td{padding:.6rem 1rem;border:1px solid var(--line);color:var(--muted)}
+tr.hl td{background:#edf6ee;color:var(--text);font-weight:600}
+
+.zn-calc{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:1rem 1.25rem;margin-top:1rem}
+.zn-calc h4{margin-bottom:.75rem;font-family:"Instrument Serif",serif;font-size:1.1rem}
+.zn-calc label{display:inline-flex;align-items:center;gap:.5rem;margin-right:1.5rem;font-size:.9rem;color:var(--muted);font-weight:600}
+.zn-calc input[type=number]{background:var(--surface);border:1px solid var(--line);color:var(--text);padding:.3rem .5rem;border-radius:8px;width:80px;font-family:Inter,sans-serif}
+.zn-result{margin-top:.75rem;display:flex;flex-wrap:wrap;gap:.75rem}
+.res-item{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.5rem .9rem;font-size:.9rem;color:var(--muted)}
+.res-item span{color:var(--primary);font-weight:700}
+
+/* ── Simulator ── */
+.sim-layout{display:grid;grid-template-columns:270px 1fr;gap:1.5rem}
+@media(max-width:780px){.sim-layout{grid-template-columns:1fr}}
+.controls{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.25rem;box-shadow:0 8px 24px rgba(0,0,0,.04)}
+.ctrl-label{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:1rem 0 .4rem;font-weight:700}
+.ctrl-label:first-child{margin-top:0}
+.sg{margin-bottom:.7rem}
+.sg .row{display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:.2rem}
+.sg .row .name{color:var(--text);font-weight:500}
+.sg .row .val{color:var(--primary);font-weight:700;min-width:2.5rem;text-align:right}
+input[type=range]{width:100%;cursor:pointer;accent-color:var(--primary)}
+.p-sl input{accent-color:var(--p)}
+.i-sl input{accent-color:var(--i)}
+.d-sl input{accent-color:var(--d)}
+.presets{margin-top:.25rem;display:flex;flex-wrap:wrap;gap:.3rem}
+.presets button{background:var(--surface2);border:1px solid var(--line);color:var(--muted);padding:.35rem .75rem;border-radius:8px;cursor:pointer;font-family:Inter,sans-serif;font-size:.82rem;font-weight:600;transition:all .2s}
+.presets button:hover{border-color:var(--primary);color:var(--primary);background:#edf6ee}
+.metrics{margin-top:1rem;font-size:.85rem;color:var(--muted);line-height:2}
+.metrics strong{color:var(--text)}
+.chart-wrap{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1rem;box-shadow:0 8px 24px rgba(0,0,0,.04)}
+canvas{width:100%!important;height:360px!important;display:block;border-radius:10px}
+
+footer{text-align:center;padding:1.5rem;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);margin-top:2rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;">
+    <div class="pill">Control Systems</div>
+    <h1>PID Controller Tuning</h1>
+    <p class="lede">Interactive guide to understanding and tuning Proportional, Integral, and Derivative controllers — from theory to live simulation.</p>
+  </div>
+</header>
+
+<div class="main-tabs">
+  <button class="main-tab active" onclick="showPage('theory',this)">Theory</button>
+  <button class="main-tab" onclick="showPage('manual',this)">Manual Tuning</button>
+  <button class="main-tab" onclick="showPage('zn',this)">Ziegler-Nichols</button>
+  <button class="main-tab" onclick="showPage('sim',this)">Simulator</button>
+</div>
+
+<!-- ══ THEORY ══════════════════════════════════════════════════ -->
+<div id="theory" class="page active">
+  <h2>What is a PID Controller?</h2>
+  <div class="theory-grid">
+    <div class="card">
+      <h3>The Control Loop</h3>
+      <p>A PID controller continuously calculates an <em>error</em> — the difference between a desired setpoint and the measured process value — then applies a correction based on three terms:</p>
+      <div class="formula">u(t) = K<sub>p</sub>&thinsp;e(t) &nbsp;+&nbsp; K<sub>i</sub>&thinsp;&int;e(t)dt &nbsp;+&nbsp; K<sub>d</sub>&thinsp;de/dt</div>
+    </div>
+    <div class="card p-card">
+      <h3>&#x1F535; Proportional &mdash; K<sub>p</sub></h3>
+      <p>Reacts to the <strong>current error</strong>. Higher K<sub>p</sub> = faster response but risks overshoot and oscillation.</p>
+      <ul>
+        <li>&uarr; K<sub>p</sub> &rarr; faster rise, more overshoot</li>
+        <li>&darr; K<sub>p</sub> &rarr; slower, more stable</li>
+        <li>Alone: leaves a steady-state error</li>
+      </ul>
+    </div>
+    <div class="card i-card">
+      <h3>&#x1F7E2; Integral &mdash; K<sub>i</sub></h3>
+      <p>Reacts to <strong>accumulated past error</strong>. Eliminates steady-state error but can cause windup and overshoot.</p>
+      <ul>
+        <li>&uarr; K<sub>i</sub> &rarr; eliminates offset faster</li>
+        <li>Too high &rarr; oscillation / instability</li>
+        <li>Fixes: steady-state error</li>
+      </ul>
+    </div>
+    <div class="card d-card">
+      <h3>&#x1F534; Derivative &mdash; K<sub>d</sub></h3>
+      <p>Reacts to the <strong>rate of change</strong> of error. Dampens oscillations but amplifies noise.</p>
+      <ul>
+        <li>&uarr; K<sub>d</sub> &rarr; less overshoot, more damping</li>
+        <li>Too high &rarr; noisy, unstable</li>
+        <li>Fixes: overshoot / oscillation</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MANUAL TUNING ═══════════════════════════════════════════ -->
+<div id="manual" class="page">
+  <h2>Manual Tuning Method</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div><h4>Zero all gains</h4><p>Set K<sub>p</sub>=0, K<sub>i</sub>=0, K<sub>d</sub>=0. Start from a clean slate.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div><h4>Increase K<sub>p</sub></h4><p>Raise K<sub>p</sub> until the output oscillates with constant amplitude. Note this as K<sub>p,osc</sub>, then reduce to ~50%.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div><h4>Add K<sub>i</sub></h4><p>Increase K<sub>i</sub> slowly until steady-state error is eliminated without excessive overshoot.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div><h4>Add K<sub>d</sub></h4><p>Increase K<sub>d</sub> to reduce overshoot and improve settling time. Stop before noise becomes an issue.</p></div></div>
+    <div class="step"><div class="step-num">5</div><div><h4>Fine-tune</h4><p>Iterate small adjustments. Priority: stability &rarr; no steady-state error &rarr; fast response.</p></div></div>
+  </div>
+  <div class="tip">&#x1F4A1; <strong>Rule of thumb:</strong> Oscillating? Reduce K<sub>p</sub> or K<sub>d</sub>. Too slow? Increase K<sub>p</sub>. Steady-state error? Increase K<sub>i</sub>.</div>
+</div>
+
+<!-- ══ ZIEGLER-NICHOLS ═════════════════════════════════════════ -->
+<div id="zn" class="page">
+  <h2>Ziegler-Nichols Method</h2>
+  <p style="color:var(--muted);margin-bottom:1.25rem">A systematic empirical method developed in 1942. Two variants:</p>
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="showSub('zn-osc',this)">Oscillation Method</button>
+    <button class="sub-tab" onclick="showSub('zn-step',this)">Step Response Method</button>
+  </div>
+
+  <div id="zn-osc" class="sub-page active">
+    <h3 style="margin-bottom:.75rem">Closed-Loop Oscillation Method</h3>
+    <ol>
+      <li>Set K<sub>i</sub>=0 and K<sub>d</sub>=0 (P-only control)</li>
+      <li>Increase K<sub>p</sub> until output oscillates at constant amplitude &rarr; <strong>Ultimate Gain K<sub>u</sub></strong></li>
+      <li>Measure the <strong>oscillation period T<sub>u</sub></strong></li>
+      <li>Apply the table:</li>
+    </ol>
+    <table>
+      <thead><tr><th>Controller</th><th>K<sub>p</sub></th><th>T<sub>i</sub></th><th>T<sub>d</sub></th></tr></thead>
+      <tbody>
+        <tr><td>P</td><td>0.5 K<sub>u</sub></td><td>&mdash;</td><td>&mdash;</td></tr>
+        <tr><td>PI</td><td>0.45 K<sub>u</sub></td><td>0.83 T<sub>u</sub></td><td>&mdash;</td></tr>
+        <tr class="hl"><td>PID</td><td>0.6 K<sub>u</sub></td><td>0.5 T<sub>u</sub></td><td>0.125 T<sub>u</sub></td></tr>
+      </tbody>
+    </table>
+    <div class="zn-calc">
+      <h4>Calculator</h4>
+      <label>K<sub>u</sub>: <input type="number" id="ku" value="2" step="0.1" oninput="calcZN()"></label>
+      <label>T<sub>u</sub> (s): <input type="number" id="tu" value="4" step="0.1" oninput="calcZN()"></label>
+      <div id="zn-result" class="zn-result"></div>
+    </div>
+  </div>
+
+  <div id="zn-step" class="sub-page">
+    <h3 style="margin-bottom:.75rem">Open-Loop Step Response Method</h3>
+    <ol>
+      <li>Apply a step input to the open-loop system</li>
+      <li>Draw a tangent at the inflection point of the S-curve response</li>
+      <li>Measure <strong>dead time L</strong> (x-intercept) and <strong>time constant T</strong></li>
+      <li>Apply the table:</li>
+    </ol>
+    <table>
+      <thead><tr><th>Controller</th><th>K<sub>p</sub></th><th>T<sub>i</sub></th><th>T<sub>d</sub></th></tr></thead>
+      <tbody>
+        <tr><td>P</td><td>T/L</td><td>&mdash;</td><td>&mdash;</td></tr>
+        <tr><td>PI</td><td>0.9 T/L</td><td>3.33 L</td><td>&mdash;</td></tr>
+        <tr class="hl"><td>PID</td><td>1.2 T/L</td><td>2 L</td><td>0.5 L</td></tr>
+      </tbody>
+    </table>
+    <div class="zn-calc">
+      <h4>Calculator</h4>
+      <label>L &mdash; dead time (s): <input type="number" id="znL" value="1" step="0.1" oninput="calcZNStep()"></label>
+      <label>T &mdash; time constant (s): <input type="number" id="znT" value="5" step="0.1" oninput="calcZNStep()"></label>
+      <div id="zn-step-result" class="zn-result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SIMULATOR ═══════════════════════════════════════════════ -->
+<div id="sim" class="page">
+  <h2>Interactive Simulator</h2>
+  <p style="color:var(--muted);margin-bottom:1.25rem">Second-order plant. Adjust gains and see the step response update live.</p>
+  <div class="sim-layout">
+    <div class="controls">
+      <div class="ctrl-label">PID Gains</div>
+      <div class="sg p-sl">
+        <div class="row"><span class="name">Kp (Proportional)</span><span class="val" id="kp-val">1.0</span></div>
+        <input type="range" id="kp" min="0" max="10" step="0.1" value="1.0" oninput="updateSim()">
+      </div>
+      <div class="sg i-sl">
+        <div class="row"><span class="name">Ki (Integral)</span><span class="val" id="ki-val">0.00</span></div>
+        <input type="range" id="ki" min="0" max="5" step="0.05" value="0.0" oninput="updateSim()">
+      </div>
+      <div class="sg d-sl">
+        <div class="row"><span class="name">Kd (Derivative)</span><span class="val" id="kd-val">0.00</span></div>
+        <input type="range" id="kd" min="0" max="2" step="0.02" value="0.0" oninput="updateSim()">
+      </div>
+      <div class="ctrl-label">Plant Parameters</div>
+      <div class="sg">
+        <div class="row"><span class="name">Damping (zeta)</span><span class="val" id="zeta-val">0.50</span></div>
+        <input type="range" id="zeta" min="0.1" max="2" step="0.05" value="0.5" oninput="updateSim()">
+      </div>
+      <div class="sg">
+        <div class="row"><span class="name">Natural freq (wn)</span><span class="val" id="wn-val">1.0</span></div>
+        <input type="range" id="wn" min="0.2" max="3" step="0.1" value="1.0" oninput="updateSim()">
+      </div>
+      <div class="ctrl-label">Presets</div>
+      <div class="presets">
+        <button onclick="applyPreset('p_only')">P Only</button>
+        <button onclick="applyPreset('pi')">PI</button>
+        <button onclick="applyPreset('pid')">PID</button>
+        <button onclick="applyPreset('overdamped')">Overdamped</button>
+        <button onclick="applyPreset('oscillating')">Oscillating</button>
+      </div>
+      <div class="metrics" id="metrics"></div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="simCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<footer>PID Tuning Interactive Guide &mdash; Built for learning and experimentation</footer>
+
+<script>
+// ── Page / tab navigation ──────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.main-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'sim') { requestAnimationFrame(updateSim); }
+}
+
+function showSub(id, btn) {
+  const parent = btn.closest('.page');
+  parent.querySelectorAll('.sub-page').forEach(el => el.classList.remove('active'));
+  parent.querySelectorAll('.sub-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── ZN Oscillation Calculator ──────────────────────────────────
+function calcZN() {
+  const ku = parseFloat(document.getElementById('ku').value) || 0;
+  const tu = parseFloat(document.getElementById('tu').value) || 0;
+  const kp = +(0.6 * ku).toFixed(3);
+  const ki = tu ? +(kp / (0.5 * tu)).toFixed(3) : 0;
+  const kd = +(kp * 0.125 * tu).toFixed(3);
+  document.getElementById('zn-result').innerHTML =
+    `<div class="res-item">Kp = <span>${kp}</span></div>
+     <div class="res-item">Ki = <span>${ki}</span></div>
+     <div class="res-item">Kd = <span>${kd}</span></div>
+     <div class="res-item">Ti = <span>${+(0.5*tu).toFixed(3)}</span> s</div>
+     <div class="res-item">Td = <span>${+(0.125*tu).toFixed(3)}</span> s</div>`;
+}
+
+// ── ZN Step Response Calculator ────────────────────────────────
+function calcZNStep() {
+  const L = parseFloat(document.getElementById('znL').value) || 0;
+  const T = parseFloat(document.getElementById('znT').value) || 0;
+  if (!L) return;
+  const kp = +(1.2 * T / L).toFixed(3);
+  const ki = +(kp / (2 * L)).toFixed(3);
+  const kd = +(kp * 0.5 * L).toFixed(3);
+  document.getElementById('zn-step-result').innerHTML =
+    `<div class="res-item">Kp = <span>${kp}</span></div>
+     <div class="res-item">Ki = <span>${ki}</span></div>
+     <div class="res-item">Kd = <span>${kd}</span></div>
+     <div class="res-item">Ti = <span>${+(2*L).toFixed(3)}</span> s</div>
+     <div class="res-item">Td = <span>${+(0.5*L).toFixed(3)}</span> s</div>`;
+}
+
+// ── Simulation ─────────────────────────────────────────────────
+// Plant: x'' + 2*zeta*wn*x' + wn^2*x = wn^2*u  (Euler, dt=0.02s)
+function simulate(kp, ki, kd, zeta, wn) {
+  const dt = 0.02, tEnd = 20, sp = 1;
+  let x = 0, xd = 0, integ = 0, prevErr = 0;
+  const t = [], y = [];
+  for (let time = 0; time <= tEnd; time += dt) {
+    const err = sp - x;
+    integ += err * dt;
+    const deriv = (err - prevErr) / dt;
+    prevErr = err;
+    let u = kp * err + ki * integ + kd * deriv;
+    u = Math.max(-20, Math.min(20, u));
+    const xdd = wn*wn*u - 2*zeta*wn*xd - wn*wn*x;
+    xd += xdd * dt;
+    x  += xd  * dt;
+    t.push(+time.toFixed(2));
+    y.push(+x.toFixed(4));
+  }
+  return { t, y };
+}
+
+function calcMetrics(t, y) {
+  const sp = 1, band = 0.02;
+  let r10 = null, r90 = null, peak = -Infinity, settle = null;
+  for (let i = 0; i < y.length; i++) {
+    if (r10 === null && y[i] >= 0.1) r10 = t[i];
+    if (r90 === null && y[i] >= 0.9) r90 = t[i];
+    if (y[i] > peak) peak = y[i];
+  }
+  for (let i = y.length - 1; i >= 0; i--) {
+    if (Math.abs(y[i] - sp) > band) { settle = t[Math.min(i+1, t.length-1)]; break; }
+  }
+  return {
+    rise: (r10 !== null && r90 !== null) ? (r90 - r10) : null,
+    overshoot: peak > sp ? (peak - sp) * 100 : 0,
+    settle,
+    sse: Math.abs(sp - y[y.length - 1])
+  };
+}
+
+// ── Canvas chart ───────────────────────────────────────────────
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawChart({ t, y }) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width  = rect.width  * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  const pad = { top:20, right:20, bottom:40, left:52 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top  - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fffdf8';
+  ctx.fillRect(0, 0, W, H);
+
+  const minY = Math.min(...y, 0) - 0.05;
+  const maxY = Math.max(...y, 1.2) + 0.05;
+  const maxT = t[t.length - 1];
+  const px = v => pad.left + (v / maxT) * cw;
+  const py = v => pad.top  + ch - ((v - minY) / (maxY - minY)) * ch;
+
+  // grid
+  ctx.strokeStyle = '#d9d2c2'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const yv = minY + (maxY - minY) * i / 5;
+    ctx.beginPath(); ctx.moveTo(pad.left, py(yv)); ctx.lineTo(pad.left + cw, py(yv)); ctx.stroke();
+    ctx.fillStyle = '#5c6b5c'; ctx.font = '11px Inter,sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(yv.toFixed(2), pad.left - 6, py(yv) + 4);
+  }
+  for (let i = 0; i <= 5; i++) {
+    const xv = maxT * i / 5;
+    ctx.beginPath(); ctx.moveTo(px(xv), pad.top); ctx.lineTo(px(xv), pad.top + ch); ctx.stroke();
+    ctx.fillStyle = '#5c6b5c'; ctx.font = '11px Inter,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(xv.toFixed(0) + 's', px(xv), pad.top + ch + 18);
+  }
+
+  // setpoint
+  ctx.strokeStyle = '#c9b99a'; ctx.lineWidth = 1.5; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(px(0), py(1)); ctx.lineTo(px(maxT), py(1)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // response
+  ctx.strokeStyle = '#2d6cdf'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  y.forEach((v, i) => i === 0 ? ctx.moveTo(px(t[i]), py(v)) : ctx.lineTo(px(t[i]), py(v)));
+  ctx.stroke();
+
+  // axis labels
+  ctx.fillStyle = '#5c6b5c'; ctx.font = '12px Inter,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Time (s)', pad.left + cw / 2, H - 4);
+  ctx.save(); ctx.translate(13, pad.top + ch / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Output', 0, 0); ctx.restore();
+
+  // legend
+  const lx = pad.left + cw - 95, ly = pad.top + 10;
+  ctx.fillStyle = '#2d6cdf'; ctx.fillRect(lx, ly, 14, 3);
+  ctx.fillStyle = '#1f2a1f'; ctx.font = '11px Inter,sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('Response', lx + 18, ly + 4);
+  ctx.fillStyle = '#c9b99a'; ctx.fillRect(lx, ly + 14, 14, 2);
+  ctx.fillStyle = '#5c6b5c'; ctx.fillText('Setpoint', lx + 18, ly + 18);
+}
+
+function updateSim() {
+  const kp   = parseFloat(document.getElementById('kp').value);
+  const ki   = parseFloat(document.getElementById('ki').value);
+  const kd   = parseFloat(document.getElementById('kd').value);
+  const zeta = parseFloat(document.getElementById('zeta').value);
+  const wn   = parseFloat(document.getElementById('wn').value);
+
+  document.getElementById('kp-val').textContent   = kp.toFixed(1);
+  document.getElementById('ki-val').textContent   = ki.toFixed(2);
+  document.getElementById('kd-val').textContent   = kd.toFixed(2);
+  document.getElementById('zeta-val').textContent = zeta.toFixed(2);
+  document.getElementById('wn-val').textContent   = wn.toFixed(1);
+
+  const data = simulate(kp, ki, kd, zeta, wn);
+  drawChart(data);
+  const m = calcMetrics(data.t, data.y);
+  document.getElementById('metrics').innerHTML =
+    `<div><strong>Rise time:</strong> ${m.rise !== null ? m.rise.toFixed(2)+' s' : 'N/A'}</div>
+     <div><strong>Overshoot:</strong> ${m.overshoot.toFixed(1)} %</div>
+     <div><strong>Settling time:</strong> ${m.settle !== null ? m.settle.toFixed(2)+' s' : '> 20 s'}</div>
+     <div><strong>Steady-state error:</strong> ${m.sse.toFixed(4)}</div>`;
+}
+
+const PRESETS = {
+  p_only:     [1.5, 0,    0,    0.5, 1.0],
+  pi:         [1.2, 0.8,  0,    0.5, 1.0],
+  pid:        [2.0, 1.0,  0.5,  0.5, 1.0],
+  overdamped: [0.5, 0.2,  0,    1.5, 1.0],
+  oscillating:[5.0, 0,    0,    0.2, 1.0],
+};
+function applyPreset(name) {
+  const [kp,ki,kd,z,w] = PRESETS[name];
+  document.getElementById('kp').value   = kp;
+  document.getElementById('ki').value   = ki;
+  document.getElementById('kd').value   = kd;
+  document.getElementById('zeta').value = z;
+  document.getElementById('wn').value   = w;
+  updateSim();
+}
+
+window.addEventListener('resize', () => { if (document.getElementById('sim').classList.contains('active')) updateSim(); });
+
+// Init calculators
+calcZN();
+calcZNStep();
+</script>
+</body>
+</html>
