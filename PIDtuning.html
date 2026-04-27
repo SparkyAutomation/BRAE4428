@@ -127,7 +127,7 @@ footer{text-align:center;padding:1.5rem;color:var(--muted);font-size:.85rem;bord
     <div class="card">
       <h3>The Control Loop</h3>
       <p>A PID controller continuously calculates an <em>error</em> — the difference between a desired setpoint and the measured process value — then applies a correction based on three terms:</p>
-      <div class="formula">u(t) = K<sub>p</sub>&thinsp;e(t) &nbsp;+&nbsp; K<sub>i</sub>&thinsp;&int;e(t)dt &nbsp;+&nbsp; K<sub>d</sub>&thinsp;de/dt</div>
+      <div class="formula">u(t) = K<sub>p</sub>&thinsp;e(t) &nbsp;+&nbsp; K<sub>i</sub>&thinsp;&int;e(t)dt &nbsp;+&nbsp; K<sub>d</sub>&thinsp;de(t)/dt</div>
     </div>
     <div class="card p-card">
       <h3>&#x1F535; Proportional &mdash; K<sub>p</sub></h3>
@@ -274,7 +274,7 @@ footer{text-align:center;padding:1.5rem;color:var(--muted);font-size:.85rem;bord
   </div>
 </div>
 
-<footer>PID Tuning Interactive Guide &mdash; Built for learning and experimentation</footer>
+<footer>PID Tuning Interactive Guide </footer>
 
 <script>
 // ── Page / tab navigation ──────────────────────────────────────
