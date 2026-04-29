@@ -1,0 +1,1520 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Neural Networks — ANN &amp; CNN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5ef;--surface:#fffdf8;--s2:#efe9db;--text:#1f2a1f;--muted:#5c6b5c;
+  --primary:#2f7d32;--accent:#c98a2b;--line:#d9d2c2;--blue:#2d6cdf;--red:#b54a3a;--green:#2f7d32;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;font-size:15px;line-height:1.6}
+h1,h2,h3{font-family:"Instrument Serif",serif;line-height:1.05;margin:0 0 10px}
+h2{font-size:clamp(1.4rem,2.4vw,2rem);margin-top:0}
+h3{font-size:1.1rem;margin:0 0 6px}
+p{max-width:72ch;margin:0 0 10px}
+.hero{padding:2.5rem 2rem 2rem;background:linear-gradient(160deg,#fbfaf6 60%,#e8f5e9);border-bottom:1px solid var(--line);text-align:center}
+.hero h1{font-size:clamp(2rem,4vw,3rem);max-width:none}
+.hero p{color:var(--muted);max-width:660px;margin:.6rem auto 0}
+.pill{display:inline-block;padding:5px 11px;border-radius:999px;background:#edf6ee;color:var(--primary);font-weight:700;font-size:.76rem;letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px;margin-right:4px}
+.tabs{display:flex;gap:5px;border-bottom:2px solid var(--line);background:var(--surface);padding:0 2rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tb{background:transparent;border:none;font-family:Inter;font-size:.93rem;font-weight:600;color:var(--muted);cursor:pointer;padding:10px 18px;border-radius:8px 8px 0 0;transition:all .18s;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tb:hover{background:var(--s2);color:var(--text)}
+.tb.active{background:var(--primary);color:#fff;border-bottom-color:var(--primary)}
+.tp{display:none;animation:fi .28s ease}
+.tp.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.tab-wrap{max-width:1200px;margin:0 auto;padding:2rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin-bottom:1.2rem;box-shadow:0 4px 16px rgba(0,0,0,.04)}
+.ct{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.7rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+.eq-panel{background:#f9f5ec;border:1.5px solid #e3d9c4;border-radius:13px;padding:13px 16px;margin:14px 0}
+.eq-panel-title{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:9px}
+.eq-row{display:flex;align-items:baseline;gap:10px;margin:5px 0;flex-wrap:wrap}
+.eq-lbl{font-size:.77rem;font-weight:600;color:var(--muted);min-width:130px}
+.eq{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;background:#ede7da;padding:3px 9px;border-radius:6px;line-height:1.7;color:#1a2a1a}
+.eq-live{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;background:#e6f4e6;border:1px solid #c5e0c5;padding:3px 9px;border-radius:6px;line-height:1.7;color:#1a2a1a}
+.btn{border:none;padding:7px 15px;border-radius:7px;font-weight:600;cursor:pointer;font-family:Inter;font-size:.85rem;transition:opacity .14s,transform .1s;display:inline-flex;align-items:center;gap:.4rem}
+.btn:hover{opacity:.9}.btn:active{transform:scale(.97)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-green{background:var(--primary);color:#fff}
+.btn-ghost{background:var(--s2);color:var(--text);border:1px solid var(--line)}
+.bg{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:.8rem}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:8px;background:var(--s2);font-size:.81rem;font-weight:600;border:1px solid var(--line)}
+.chip-val{font-family:ui-monospace,Menlo,monospace}
+.cpanel{background:var(--s2);padding:14px;border-radius:12px;border:1px solid var(--line)}
+.example{padding:13px 15px;border-radius:13px;background:var(--s2);margin-bottom:.8rem}
+.example h3{font-size:1rem;margin-bottom:.4rem}
+.pg{display:inline-grid;gap:2px}
+.pc{width:26px;height:26px;border-radius:3px;cursor:pointer;transition:background .1s;border:1px solid #d9d2c2}
+.wbw{display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;font-size:.8rem}
+.wbb{flex:1;height:10px;background:#e8e1cf;border-radius:5px;overflow:hidden}
+.wbf{height:100%;border-radius:5px;transition:width .3s}
+.sr2{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:.6rem}
+.sv{font-size:1.4rem;font-weight:700;color:var(--primary);font-family:monospace}
+.sl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.ll{font-family:monospace;font-size:.78rem;color:var(--muted);max-height:110px;overflow-y:auto;background:var(--s2);border-radius:6px;padding:.5rem .8rem;margin-top:.5rem}
+.ll div{padding:.05rem 0}
+.ll .gd{color:var(--primary)}
+.tag{display:inline-block;padding:.1rem .5rem;border-radius:4px;font-size:.75rem;font-weight:600}
+.tz{background:#e3ebf6;color:var(--blue)}
+.to{background:#fce8e8;color:var(--red)}
+.rr{display:flex;align-items:center;gap:.8rem;margin-bottom:.5rem;font-size:.88rem}
+.rr label{width:160px;color:var(--muted)}
+.rr span{width:44px;text-align:right;font-family:monospace;color:var(--primary)}
+input[type=range]{accent-color:var(--primary);width:100%}
+select{padding:6px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:Inter;font-size:.88rem;color:var(--text);cursor:pointer}
+.cpipe{display:flex;align-items:flex-start;gap:.6rem;overflow-x:auto;padding-bottom:.5rem}
+.cst{text-align:center;flex-shrink:0;cursor:pointer}
+.csl{font-size:.7rem;color:var(--muted);margin-bottom:.3rem;font-weight:600;text-transform:uppercase}
+.car{font-size:1.2rem;color:var(--line);align-self:center;flex-shrink:0;margin-top:1.4rem}
+.cst.sel .csl{color:var(--accent)}
+.cst.sel canvas{outline:2px solid var(--accent);border-radius:4px}
+.cmp-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.cmp-table th{background:var(--s2);padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--line)}
+.cmp-table td{padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.cmp-table tr:last-child td{border-bottom:none}
+.cmp-table td:first-child{font-weight:600;color:var(--muted);width:160px}
+.cmp-table td:nth-child(2){background:#f0f7ff}
+.cmp-table td:nth-child(3){background:#f0fff4}
+.ins{background:var(--s2);border-left:3px solid var(--primary);border-radius:0 8px 8px 0;padding:.8rem 1rem;margin-bottom:.8rem;font-size:.88rem;color:var(--muted)}
+.ins strong{color:var(--text)}
+.ins.blue{border-left-color:var(--blue)}
+.ins.red{border-left-color:var(--red)}
+.ins.accent{border-left-color:var(--accent)}
+canvas{display:block}
+.cl{font-size:.75rem;color:var(--muted);text-align:center;margin-top:.3rem}
+@media(max-width:700px){.two,.three{grid-template-columns:1fr}.tb{padding:.7rem 1rem;font-size:.88rem}}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="pill">Machine Learning Series</div>
+  <h1>Neural Networks</h1>
+  <p>Artificial Neural Networks &amp; Convolutional Neural Networks &mdash; trained live in your browser on the simplest possible dataset: recognising <strong>Z</strong> and <strong>O</strong> drawn on a 5&times;5 pixel grid.</p>
+</div>
+<div class="tabs">
+  <button class="tb active" onclick="switchTab('ann',this)">&#9312; Artificial Neural Network</button>
+  <button class="tb" onclick="switchTab('cnn',this)">&#9313; Convolutional Neural Network</button>
+  <button class="tb" onclick="switchTab('cmp',this)">&#9314; Comparison</button>
+</div>
+
+<!-- ANN TAB -->
+<div id="tp-ann" class="tp active">
+<div class="tab-wrap">
+<div style="margin-bottom:1.5rem">
+  <span class="pill">Supervised</span><span class="pill">Classification</span>
+  <h2>Artificial Neural Network &mdash; Learning Z vs O</h2>
+  <p style="color:var(--muted)">A fully-connected network with one hidden layer. Every pixel of the 5&times;5 image is an input neuron. Watch weights update in real time as the network learns to tell Z apart from O.</p>
+</div>
+
+<div class="card">
+  <div class="ct">&#128230; Dataset &mdash; draw or pick a sample</div>
+  <div class="two">
+    <div>
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-start">
+        <div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem">Training samples <span class="tag tz">Z</span></div>
+          <div id="ann-zs" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+        </div>
+        <div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem">Training samples <span class="tag to">O</span></div>
+          <div id="ann-os" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+      <div class="bg">
+        <button class="btn btn-ghost" onclick="annAddNoise()">+ Noisy sample</button>
+        <button class="btn btn-red" onclick="annResetData()">&#8634; Reset data</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem">&#9999;&#65039; Draw your own (click pixels) then add to dataset</div>
+      <div id="ann-draw" class="pg" style="grid-template-columns:repeat(5,1fr)"></div>
+      <div class="bg">
+        <button class="btn btn-blue" onclick="annAddDrawn('Z')">Add as Z</button>
+        <button class="btn btn-red" onclick="annAddDrawn('O')">Add as O</button>
+        <button class="btn btn-ghost" onclick="annClearDraw()">Clear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ct">&#9881;&#65039; Network Architecture &amp; Hyperparameters</div>
+  <div class="two">
+    <div>
+      <div class="rr"><label>Hidden neurons</label><input type="range" id="ann-hn" min="2" max="16" value="4" oninput="annCfg()"><span id="ann-hnv">4</span></div>
+      <div class="rr"><label>Learning rate &alpha;</label><input type="range" id="ann-lr" min="1" max="50" value="10" oninput="annCfg()"><span id="ann-lrv">0.10</span></div>
+      <div class="rr"><label>Activation</label>
+        <select id="ann-act" onchange="annCfg()">
+          <option value="sigmoid">Sigmoid &sigma;</option>
+          <option value="relu">ReLU</option>
+          <option value="tanh">Tanh</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <div class="ins"><strong>Architecture:</strong> <span id="ann-arch">25 &rarr; 4 &rarr; 2</span><br>Input = 25 pixels. Hidden layer learns feature detectors. Output = 2 neurons (P(Z), P(O)) via softmax.</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ct">&#127947;&#65039; Training Controls</div>
+  <div class="bg">
+    <button class="btn btn-green" id="ann-tb" onclick="annToggle()">&#9654; Train</button>
+    <button class="btn btn-ghost" onclick="annStep(1)">Step &times;1</button>
+    <button class="btn btn-ghost" onclick="annStep(10)">Step &times;10</button>
+    <button class="btn btn-red" onclick="annReset()">&#8634; Reset weights</button>
+    <span style="font-size:.82rem;color:var(--muted)">Speed:
+      <select id="ann-sp" style="margin-left:4px">
+        <option value="200">Slow</option>
+        <option value="50" selected>Normal</option>
+        <option value="10">Fast</option>
+        <option value="1">Turbo</option>
+      </select>
+    </span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ct">&#128208; Live Equations &mdash; update every training step</div>
+  <div class="eq-panel">
+    <div class="eq-panel-title">&#128202; Forward &amp; Backward Pass</div>
+    <div class="eq-row"><span class="eq-lbl">Forward pass</span><span class="eq">z&sup1; = W&sup1;&middot;x + b&sup1; &rarr; a&sup1; = act(z&sup1;) &rarr; z&sup2; = W&sup2;&middot;a&sup1; + b&sup2; &rarr; &ycirc; = softmax(z&sup2;)</span></div>
+    <div class="eq-row"><span class="eq-lbl">Softmax</span><span class="eq">softmax(z)&#8342; = exp(z&#8342;) / &sum;&#11785; exp(z&#11785;)</span><span class="eq-live" id="ann-esm">&mdash;</span></div>
+    <div class="eq-row"><span class="eq-lbl">Loss (cross-entropy)</span><span class="eq">L = &minus;&sum; y&middot;log(&ycirc;)</span><span class="eq-live" id="ann-el">L = &mdash;</span></div>
+    <div class="eq-row"><span class="eq-lbl">Output delta &delta;&sup2;</span><span class="eq">&delta;&sup2; = &ycirc; &minus; y</span><span class="eq-live" id="ann-ed2">&mdash;</span></div>
+    <div class="eq-row"><span class="eq-lbl">Hidden delta &delta;&sup1;</span><span class="eq">&delta;&sup1; = (W&sup2;&sup;T&middot;&delta;&sup2;) &odot; act&prime;(z&sup1;)</span><span class="eq-live" id="ann-ed1">&mdash;</span></div>
+    <div class="eq-row"><span class="eq-lbl">Weight update</span><span class="eq">W &larr; W &minus; &alpha;&middot;&delta;&middot;a&sup;T</span><span class="eq-live" id="ann-ew">&mdash;</span></div>
+    <div class="eq-row"><span class="eq-lbl">Prediction</span><span class="eq-live" id="ann-ep">&ycirc; = &mdash;</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ct">&#128161; Cross-Entropy Loss &mdash; why it works</div>
+  <div class="two">
+    <div class="example">
+      <h3>The Formula: L = &minus;&sum; y&middot;log(&ycirc;)</h3>
+      <p style="margin:0">For a two-class problem, if the true label is Z (y=[1,0]) and the network outputs &ycirc;=[p, 1&minus;p], the loss simplifies to <strong>L = &minus;log(p)</strong> &mdash; the negative log of the probability assigned to the correct class. The sum over classes collapses to a single term because only the true class has y=1.</p>
+    </div>
+    <div class="example">
+      <h3>Why log? Exponential penalty for confidence</h3>
+      <p style="margin:0">The log function penalises <em>confident wrong predictions</em> exponentially. Being 99% wrong is catastrophically worse than being 60% wrong &mdash; the gradient is huge, forcing a large weight update. Being 99% right barely moves the weights at all. MSE would give a much weaker signal for the confident-wrong case.</p>
+    </div>
+  </div>
+  <div class="example" style="margin-top:.5rem">
+    <h3>Numeric example &mdash; true label is Z</h3>
+    <div class="two" style="gap:1rem;margin-top:.5rem">
+      <div style="font-family:monospace;font-size:.88rem;line-height:2.2">
+        <div>P(Z) = 0.01 &nbsp;&rarr;&nbsp; L = &minus;log(0.01) = <strong style="color:var(--red)">4.605</strong> &nbsp;&#128308; huge loss, big gradient</div>
+        <div>P(Z) = 0.50 &nbsp;&rarr;&nbsp; L = &minus;log(0.50) = <strong style="color:var(--accent)">0.693</strong> &nbsp;&#128992; uncertain, moderate gradient</div>
+        <div>P(Z) = 0.99 &nbsp;&rarr;&nbsp; L = &minus;log(0.99) = <strong style="color:var(--primary)">0.010</strong> &nbsp;&#128994; tiny loss, tiny gradient</div>
+      </div>
+      <div style="font-size:.85rem;color:var(--muted)">
+        <p>The network is <em>confident and wrong</em> at P(Z)=0.01 &mdash; loss is 460&times; larger than when it&rsquo;s confident and right. This asymmetry drives fast learning: big mistakes produce big gradients, small mistakes barely move the weights.</p>
+        <p style="margin-top:.5rem">Compare to MSE: (0&minus;0.01)&sup2;=0.0001 vs (0&minus;0.99)&sup2;=0.98. Cross-entropy&rsquo;s log scale is far more sensitive to confident errors.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="two">
+  <div class="card">
+    <div class="ct">&#129504; Network &mdash; live activations &amp; weights</div>
+    <canvas id="ann-net" width="420" height="300" style="background:#1a1d27;border-radius:10px;border:1px solid #2e3250"></canvas>
+    <div class="cl">Node brightness = activation &middot; Blue=positive weight, Red=negative</div>
+  </div>
+  <div class="card">
+    <div class="ct">&#128201; Loss curve</div>
+    <canvas id="ann-lc" width="420" height="190" style="background:#1a1d27;border-radius:10px;border:1px solid #2e3250"></canvas>
+    <div class="sr2">
+      <div><div class="sv" id="ann-sl">&mdash;</div><div class="sl">Loss</div></div>
+      <div><div class="sv" id="ann-sa">&mdash;</div><div class="sl">Accuracy</div></div>
+      <div><div class="sv" id="ann-se">0</div><div class="sl">Epoch</div></div>
+      <div><div class="sv" id="ann-slr">0.10</div><div class="sl">&alpha;</div></div>
+    </div>
+    <div class="ll" id="ann-log"><div>Training log will appear here&hellip;</div></div>
+  </div>
+</div>
+
+<div class="two">
+  <div class="card">
+    <div class="ct">&#128300; Hidden layer weight heatmaps &mdash; what each neuron looks for</div>
+    <div id="ann-wm" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+    <div style="font-size:.78rem;color:var(--muted);margin-top:.6rem">Each 5&times;5 grid = weights from all 25 inputs to one hidden neuron. <span style="color:var(--blue)">Blue=positive</span>, <span style="color:var(--red)">Red=negative</span>.</div>
+  </div>
+  <div class="card">
+    <div class="ct">&#127919; Live Prediction &mdash; draw and classify</div>
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Draw a letter &mdash; the network decides in real time</div>
+    <div id="ann-pg" class="pg" style="grid-template-columns:repeat(5,1fr)"></div>
+    <div style="margin-top:.8rem">
+      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+        <div>
+          <div style="font-size:.8rem;color:var(--muted)">P(Z)</div>
+          <div class="wbw"><div class="wbb" style="width:130px"><div id="ann-bz" class="wbf" style="width:50%;background:var(--blue)"></div></div><span id="ann-pz" style="font-family:monospace;font-size:.85rem">50%</span></div>
+        </div>
+        <div>
+          <div style="font-size:.8rem;color:var(--muted)">P(O)</div>
+          <div class="wbw"><div class="wbb" style="width:130px"><div id="ann-bo" class="wbf" style="width:50%;background:var(--red)"></div></div><span id="ann-po" style="font-family:monospace;font-size:.85rem">50%</span></div>
+        </div>
+        <div style="font-size:2rem;font-weight:700;font-family:'Instrument Serif',serif" id="ann-pl">?</div>
+      </div>
+    </div>
+    <div class="bg">
+      <button class="btn btn-ghost" onclick="annClrPred()">Clear</button>
+      <button class="btn btn-ghost" onclick="annFillZ()">Fill Z</button>
+      <button class="btn btn-ghost" onclick="annFillO()">Fill O</button>
+    </div>
+  </div>
+</div>
+
+<div class="two">
+  <div>
+    <div class="ins"><strong>Softmax output.</strong> The two output neurons compete: their raw values are normalised so they always sum to 1.0, giving a proper probability distribution over classes. exp(z) ensures all values are positive before normalising.</div>
+    <div class="ins blue"><strong>Backpropagation.</strong> Error flows backwards: output &rarr; hidden &rarr; input weights. Each weight is nudged proportionally to how much it contributed to the mistake (chain rule). The softmax+cross-entropy combination gives a clean gradient: &delta;&sup2; = &ycirc; &minus; y.</div>
+  </div>
+  <div>
+    <div class="ins accent"><strong>Vanishing gradients.</strong> Sigmoid squashes gradients as they pass through layers. Switch to ReLU &mdash; it passes gradients unchanged for positive values, training much faster on deeper networks.</div>
+    <div class="ins red"><strong>Overfitting.</strong> With only 8 training samples, the network can memorise them perfectly. Add noisy samples to see how the decision boundary generalises to unseen inputs.</div>
+  </div>
+</div>
+
+</div></div>
+
+<!-- CNN TAB -->
+<div id="tp-cnn" class="tp">
+<div class="tab-wrap">
+<div style="margin-bottom:1.5rem">
+  <span class="pill">Supervised</span><span class="pill">Computer Vision</span>
+  <h2>Convolutional Neural Network &mdash; Same Z vs O, smarter architecture</h2>
+  <p style="color:var(--muted)">A CNN applies small learnable filters that slide across the image detecting local patterns like edges and corners &mdash; regardless of where they appear. Same dataset, but the network now understands spatial structure.</p>
+</div>
+
+<div class="card">
+  <div class="ct">&#128230; Same Dataset &mdash; 5&times;5 Z and O images</div>
+  <div class="two">
+    <div>
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-start">
+        <div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem">Samples <span class="tag tz">Z</span></div>
+          <div id="cnn-zs" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+        </div>
+        <div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem">Samples <span class="tag to">O</span></div>
+          <div id="cnn-os" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="ins"><strong>Same data, different architecture.</strong> The ANN treats each pixel independently. The CNN uses 3&times;3 filters that look at pixel neighbourhoods &mdash; detecting the diagonal stroke of Z or the curve of O as a spatial pattern.</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ct">&#9881;&#65039; CNN Architecture &amp; Hyperparameters</div>
+  <div class="two">
+    <div>
+      <div class="rr"><label>Learning rate &alpha;</label><input type="range" id="cnn-lr" min="1" max="20" value="8" oninput="cnnCfg()"><span id="cnn-lrv">0.08</span></div>
+      <div style="font-size:.82rem;color:var(--muted);margin-top:.4rem">Architecture: Input 5&times;5 &rarr; Conv 3&times;3 (2 filters) &rarr; ReLU &rarr; MaxPool 2&times;2 &rarr; FC 18&rarr;2 &rarr; Softmax</div>
+    </div>
+    <div>
+      <div class="ins"><strong>FC layer input = 18.</strong> After conv (3&times;3 output per filter) and ReLU, we flatten both 3&times;3 maps directly: 9 + 9 = 18 values. This gives the FC layer rich spatial information to classify from.</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ct">&#127947;&#65039; Training Controls</div>
+  <div class="bg">
+    <button class="btn btn-green" id="cnn-tb" onclick="cnnToggle()">&#9654; Train</button>
+    <button class="btn btn-ghost" onclick="cnnStep(1)">Step &times;1</button>
+    <button class="btn btn-ghost" onclick="cnnStep(10)">Step &times;10</button>
+    <button class="btn btn-red" onclick="cnnReset()">&#8634; Reset weights</button>
+    <span style="font-size:.82rem;color:var(--muted)">Speed:
+      <select id="cnn-sp" style="margin-left:4px">
+        <option value="200">Slow</option>
+        <option value="50" selected>Normal</option>
+        <option value="10">Fast</option>
+        <option value="1">Turbo</option>
+      </select>
+    </span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ct">&#128301; CNN Pipeline &mdash; click any stage to inspect it</div>
+  <div class="cpipe">
+    <div class="cst" id="cs-input" onclick="cnnStage('input')">
+      <div class="csl">Input 5&times;5</div>
+      <canvas id="cnn-ci" width="70" height="70" style="border:2px solid #2e3250;border-radius:6px;background:#1a1d27"></canvas>
+    </div>
+    <div class="car">&rarr;</div>
+    <div class="cst" id="cs-conv" onclick="cnnStage('conv')">
+      <div class="csl">Conv 3&times;3 (2 filters)</div>
+      <div id="cnn-cm" style="display:flex;gap:4px"></div>
+    </div>
+    <div class="car">&rarr;</div>
+    <div class="cst" id="cs-relu" onclick="cnnStage('relu')">
+      <div class="csl">ReLU</div>
+      <div id="cnn-rm" style="display:flex;gap:4px"></div>
+    </div>
+    <div class="car">&rarr;</div>
+    <div class="cst" id="cs-pool" onclick="cnnStage('pool')">
+      <div class="csl">MaxPool 2&times;2</div>
+      <div id="cnn-pm" style="display:flex;gap:4px"></div>
+    </div>
+    <div class="car">&rarr;</div>
+    <div class="cst" id="cs-fc" onclick="cnnStage('fc')">
+      <div class="csl">Flatten + FC</div>
+      <canvas id="cnn-fc" width="60" height="70" style="border:2px solid #2e3250;border-radius:6px;background:#1a1d27"></canvas>
+    </div>
+    <div class="car">&rarr;</div>
+    <div class="cst" id="cs-out" onclick="cnnStage('out')">
+      <div class="csl">Output</div>
+      <canvas id="cnn-oc" width="60" height="70" style="border:2px solid #2e3250;border-radius:6px;background:#1a1d27"></canvas>
+    </div>
+  </div>
+  <div id="cnn-sd" class="eq-panel" style="margin-top:.8rem;min-height:56px">
+    <div style="color:var(--muted);font-size:.88rem">&#128070; Click a stage above to see its equations and live values</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ct">&#128300; Learned Filters &mdash; what the CNN is looking for</div>
+  <div class="three">
+    <div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Filter 1 (3&times;3) &mdash; weights</div>
+      <div id="cnn-f1" class="pg" style="grid-template-columns:repeat(3,1fr);gap:3px"></div>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:.4rem" id="cnn-f1d">&mdash;</div>
+    </div>
+    <div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Filter 2 (3&times;3) &mdash; weights</div>
+      <div id="cnn-f2" class="pg" style="grid-template-columns:repeat(3,1fr);gap:3px"></div>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:.4rem" id="cnn-f2d">&mdash;</div>
+    </div>
+    <div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Convolution animation</div>
+      <canvas id="cnn-ca" width="150" height="150" style="background:#1a1d27;border-radius:8px;border:1px solid #2e3250"></canvas>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">Filter sliding over input (3&times;3 window)</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ct">&#128208; Live Equations</div>
+  <div class="eq-panel">
+    <div class="eq-panel-title">&#128202; CNN Forward Pass</div>
+    <div class="eq-row"><span class="eq-lbl">Convolution</span><span class="eq">(I&lowast;K)[i,j] = &sum;<sub>m</sub>&sum;<sub>n</sub> I[i+m,j+n]&middot;K[m,n]</span><span class="eq-live" id="cnn-econv">&mdash;</span></div>
+    <div class="eq-row"><span class="eq-lbl">ReLU</span><span class="eq">a = max(0, z)</span><span class="eq-live" id="cnn-erelu">&mdash;</span></div>
+    <div class="eq-row"><span class="eq-lbl">MaxPool 2&times;2</span><span class="eq">p = max(a[i,j], a[i+1,j], a[i,j+1], a[i+1,j+1])</span><span class="eq-live" id="cnn-epool">&mdash;</span></div>
+    <div class="eq-row"><span class="eq-lbl">Loss (cross-entropy)</span><span class="eq">L = &minus;&sum; y&middot;log(&ycirc;)</span><span class="eq-live" id="cnn-el">L = &mdash;</span></div>
+    <div class="eq-row"><span class="eq-lbl">Prediction</span><span class="eq-live" id="cnn-ep">&ycirc; = &mdash;</span></div>
+  </div>
+</div>
+
+<div class="two">
+  <div class="card">
+    <div class="ct">&#127919; Live Prediction &mdash; draw and classify</div>
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Draw a letter &mdash; the full pipeline updates live</div>
+    <div id="cnn-pg" class="pg" style="grid-template-columns:repeat(5,1fr)"></div>
+    <div style="margin-top:.8rem">
+      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+        <div>
+          <div style="font-size:.8rem;color:var(--muted)">P(Z)</div>
+          <div class="wbw"><div class="wbb" style="width:130px"><div id="cnn-bz" class="wbf" style="width:50%;background:var(--blue)"></div></div><span id="cnn-pz" style="font-family:monospace;font-size:.85rem">50%</span></div>
+        </div>
+        <div>
+          <div style="font-size:.8rem;color:var(--muted)">P(O)</div>
+          <div class="wbw"><div class="wbb" style="width:130px"><div id="cnn-bo" class="wbf" style="width:50%;background:var(--red)"></div></div><span id="cnn-po" style="font-family:monospace;font-size:.85rem">50%</span></div>
+        </div>
+        <div style="font-size:2rem;font-weight:700;font-family:'Instrument Serif',serif" id="cnn-pl">?</div>
+      </div>
+    </div>
+    <div class="bg">
+      <button class="btn btn-ghost" onclick="cnnClrPred()">Clear</button>
+      <button class="btn btn-ghost" onclick="cnnFillZ()">Fill Z</button>
+      <button class="btn btn-ghost" onclick="cnnFillO()">Fill O</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">&#128201; Loss curve &amp; stats</div>
+    <canvas id="cnn-lc" width="420" height="190" style="background:#1a1d27;border-radius:10px;border:1px solid #2e3250"></canvas>
+    <div class="sr2">
+      <div><div class="sv" id="cnn-sl">&mdash;</div><div class="sl">Loss</div></div>
+      <div><div class="sv" id="cnn-sa">&mdash;</div><div class="sl">Accuracy</div></div>
+      <div><div class="sv" id="cnn-se">0</div><div class="sl">Epoch</div></div>
+    </div>
+    <div class="ll" id="cnn-log"><div>Training log will appear here&hellip;</div></div>
+  </div>
+</div>
+
+<div class="two">
+  <div>
+    <div class="ins"><strong>Translation invariance.</strong> If the Z shifts one pixel right, the ANN sees a completely different input vector. The CNN&rsquo;s filter detects the diagonal stroke wherever it appears.</div>
+    <div class="ins accent"><strong>MaxPooling.</strong> Takes the strongest activation in each 2&times;2 region. Makes the representation robust to small shifts and reduces feature map size by 4&times;.</div>
+  </div>
+  <div>
+    <div class="ins blue"><strong>Feature hierarchy.</strong> In deeper CNNs, early filters detect edges, middle filters detect shapes, deep filters detect objects. Even our tiny 2-filter network learns meaningful edge detectors.</div>
+    <div class="ins red"><strong>Backprop through conv.</strong> Gradients flow back through pooling (only to the max position), through ReLU (zero where input was negative), and through convolution (cross-correlation with flipped filter).</div>
+  </div>
+</div>
+
+</div></div>
+
+<!-- COMPARISON TAB -->
+<div id="tp-cmp" class="tp">
+<div class="tab-wrap">
+<div style="margin-bottom:1.5rem">
+  <span class="pill">Analysis</span>
+  <h2>ANN vs CNN &mdash; Side-by-Side Comparison</h2>
+  <p style="color:var(--muted)">Both networks trained on the same Z/O dataset. Here&rsquo;s how they differ in architecture, capability, and when to use each.</p>
+</div>
+
+<div class="card">
+  <div class="ct">&#128203; Architecture Comparison</div>
+  <table class="cmp-table">
+    <thead>
+      <tr><th>Property</th><th>&#129504; ANN (Fully Connected)</th><th>&#128247; CNN (Convolutional)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Architecture</td><td>Input &rarr; Dense hidden &rarr; Output. Every neuron connects to every other.</td><td>Input &rarr; Conv filters &rarr; ReLU &rarr; Pool &rarr; FC &rarr; Output.</td></tr>
+      <tr><td>Parameters</td><td>25&times;4 + 4&times;2 + biases = <strong>110</strong> (H=4). Grows as O(n&sup2;) with image size.</td><td>2&times;9 filters + FC 18&times;2 + biases = <strong>56</strong>. Grows slowly with image size.</td></tr>
+      <tr><td>Spatial Awareness</td><td>None. Pixel (0,0) and pixel (4,4) are unrelated features.</td><td>Full. 3&times;3 filters look at pixel neighbourhoods and detect local patterns.</td></tr>
+      <tr><td>Translation Invariance</td><td>None. Shifting the Z one pixel changes all 25 inputs.</td><td>Partial. The same filter detects a pattern wherever it appears in the image.</td></tr>
+      <tr><td>Training Speed</td><td>Fast on small inputs. Slows dramatically as image size grows.</td><td>Slightly slower per epoch due to conv ops, but needs fewer parameters to converge.</td></tr>
+      <tr><td>Best For</td><td>Tabular data, small fixed-size inputs, non-spatial features.</td><td>Images, audio spectrograms, any data with local spatial structure.</td></tr>
+      <tr><td>Limitations</td><td>No spatial reasoning. Doesn&rsquo;t generalise to shifted/rotated inputs.</td><td>Requires more implementation complexity. Needs enough spatial resolution to be useful.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="ct">&#128201; Live Accuracy Comparison &mdash; train both simultaneously</div>
+  <canvas id="cmp-chart" width="900" height="260" style="background:#1a1d27;border-radius:10px;border:1px solid #2e3250;width:100%"></canvas>
+  <div style="display:flex;gap:1.5rem;margin-top:.6rem;font-size:.82rem;flex-wrap:wrap">
+    <span style="display:flex;align-items:center;gap:.4rem"><span style="width:20px;height:3px;background:#60a5fa;display:inline-block;border-radius:2px"></span>ANN Accuracy</span>
+    <span style="display:flex;align-items:center;gap:.4rem"><span style="width:20px;height:3px;background:#43e97b;display:inline-block;border-radius:2px"></span>CNN Accuracy</span>
+    <span style="display:flex;align-items:center;gap:.4rem"><span style="width:20px;height:3px;background:#f472b6;display:inline-block;border-radius:2px;border-top:2px dashed #f472b6"></span>ANN Loss</span>
+    <span style="display:flex;align-items:center;gap:.4rem"><span style="width:20px;height:3px;background:#f7971e;display:inline-block;border-radius:2px;border-top:2px dashed #f7971e"></span>CNN Loss</span>
+  </div>
+  <div class="bg">
+    <button class="btn btn-green" id="cmp-tb" onclick="trainBoth()">&#9654; Train Both</button>
+    <button class="btn btn-ghost" onclick="cmpReset()">&#8634; Reset Both</button>
+    <div class="chip">ANN Acc <span class="chip-val" id="cmp-ann-acc" style="color:var(--blue)">—</span></div>
+    <div class="chip">CNN Acc <span class="chip-val" id="cmp-cnn-acc" style="color:var(--primary)">—</span></div>
+    <div class="chip">Epoch <span class="chip-val" id="cmp-epoch" style="color:var(--accent)">0</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ct">&#129354; Head-to-Head Test &mdash; draw and compare both networks</div>
+  <div class="two">
+    <div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Draw a letter &mdash; both networks predict simultaneously</div>
+      <div id="cmp-pg" class="pg" style="grid-template-columns:repeat(5,1fr)"></div>
+      <div class="bg">
+        <button class="btn btn-ghost" onclick="cmpClr()">Clear</button>
+        <button class="btn btn-ghost" onclick="cmpFillZ()">Fill Z</button>
+        <button class="btn btn-ghost" onclick="cmpFillO()">Fill O</button>
+      </div>
+    </div>
+    <div>
+      <div style="margin-bottom:1rem">
+        <div style="font-size:.85rem;font-weight:600;color:var(--muted);margin-bottom:.5rem">&#129504; ANN Prediction</div>
+        <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+          <div>
+            <div style="font-size:.75rem;color:var(--muted)">P(Z)</div>
+            <div class="wbw"><div class="wbb" style="width:160px"><div id="cmp-ann-bz" class="wbf" style="width:50%;background:var(--blue)"></div></div><span id="cmp-ann-pz" style="font-family:monospace;font-size:.85rem">50%</span></div>
+          </div>
+          <div>
+            <div style="font-size:.75rem;color:var(--muted)">P(O)</div>
+            <div class="wbw"><div class="wbb" style="width:160px"><div id="cmp-ann-bo" class="wbf" style="width:50%;background:var(--red)"></div></div><span id="cmp-ann-po" style="font-family:monospace;font-size:.85rem">50%</span></div>
+          </div>
+          <div style="font-size:2rem;font-weight:700;font-family:'Instrument Serif',serif" id="cmp-ann-pl">?</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:.85rem;font-weight:600;color:var(--muted);margin-bottom:.5rem">&#128247; CNN Prediction</div>
+        <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+          <div>
+            <div style="font-size:.75rem;color:var(--muted)">P(Z)</div>
+            <div class="wbw"><div class="wbb" style="width:160px"><div id="cmp-cnn-bz" class="wbf" style="width:50%;background:var(--blue)"></div></div><span id="cmp-cnn-pz" style="font-family:monospace;font-size:.85rem">50%</span></div>
+          </div>
+          <div>
+            <div style="font-size:.75rem;color:var(--muted)">P(O)</div>
+            <div class="wbw"><div class="wbb" style="width:160px"><div id="cmp-cnn-bo" class="wbf" style="width:50%;background:var(--red)"></div></div><span id="cmp-cnn-po" style="font-family:monospace;font-size:.85rem">50%</span></div>
+          </div>
+          <div style="font-size:2rem;font-weight:700;font-family:'Instrument Serif',serif" id="cmp-cnn-pl">?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="two">
+  <div class="example">
+    <h3>When to use ANN</h3>
+    <p>Use a fully-connected ANN when your data is <strong>tabular</strong> (rows and columns with no spatial relationship), when inputs are small and fixed-size, or when you need a simple baseline. Examples: predicting house prices from features, classifying customer churn, any structured dataset where pixel position doesn&rsquo;t matter.</p>
+  </div>
+  <div class="example">
+    <h3>When to use CNN</h3>
+    <p>Use a CNN whenever your data has <strong>local spatial structure</strong> &mdash; images, video frames, audio spectrograms, time-series signals. The convolutional layers learn to detect patterns (edges, textures, shapes) that are meaningful regardless of where they appear. CNNs are the backbone of all modern computer vision.</p>
+  </div>
+</div>
+
+<div class="ins blue"><strong>Key insight.</strong> On this tiny 5&times;5 dataset both networks can reach 100% accuracy. The CNN&rsquo;s advantage becomes dramatic at scale: a 224&times;224 image has 50,176 pixels. An ANN with one hidden layer of 256 neurons needs 12.8M parameters. A CNN with the same depth needs only ~1M &mdash; and generalises far better to unseen images.</div>
+
+</div></div>
+
+<script>
+// ─── UTILITIES ───────────────────────────────────────────────────────────────
+function sigmoid(x){return 1/(1+Math.exp(-x))}
+function sigmoidD(x){const s=sigmoid(x);return s*(1-s)}
+function relu(x){return Math.max(0,x)}
+function reluD(x){return x>0?1:0}
+function tanhA(x){return Math.tanh(x)}
+function tanhD(x){const t=Math.tanh(x);return 1-t*t}
+function softmax(arr){const m=Math.max(...arr),e=arr.map(v=>Math.exp(v-m)),s=e.reduce((a,b)=>a+b,0);return e.map(v=>v/s)}
+function randn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v))}
+function fmt(v,d=4){return v.toFixed(d)}
+
+// ─── DATASET ─────────────────────────────────────────────────────────────────
+const Z_BASE=[1,1,1,1,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,1,1,1,1];
+const O_BASE=[0,1,1,1,0,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,0,1,1,1,0];
+function addNoise(pat,amt=0.15){return pat.map(v=>Math.random()<amt?1-v:v)}
+function makeDataset(){
+  const d=[];
+  d.push({x:Z_BASE.slice(),y:0});
+  d.push({x:addNoise(Z_BASE,0.1),y:0});
+  d.push({x:addNoise(Z_BASE,0.15),y:0});
+  d.push({x:addNoise(Z_BASE,0.2),y:0});
+  d.push({x:O_BASE.slice(),y:1});
+  d.push({x:addNoise(O_BASE,0.1),y:1});
+  d.push({x:addNoise(O_BASE,0.15),y:1});
+  d.push({x:addNoise(O_BASE,0.2),y:1});
+  return d;
+}
+
+// ─── PIXEL GRID HELPER ───────────────────────────────────────────────────────
+function makeGrid(containerId,size,vals,onToggle){
+  const c=document.getElementById(containerId);
+  if(!c)return;
+  c.innerHTML='';
+  for(let i=0;i<size*size;i++){
+    const cell=document.createElement('div');
+    cell.className='pc';
+    cell.style.background=vals[i]>0.5?'#1f2a1f':'#f7f5ef';
+    cell.addEventListener('mousedown',()=>{onToggle(i);});
+    cell.addEventListener('mouseover',e=>{if(e.buttons===1)onToggle(i);});
+    c.appendChild(cell);
+  }
+}
+function updateGrid(containerId,vals){
+  const c=document.getElementById(containerId);
+  if(!c)return;
+  const cells=c.querySelectorAll('.pc');
+  cells.forEach((cell,i)=>{
+    const v=clamp(vals[i]||0,0,1);
+    cell.style.background=v>0.5?'#1f2a1f':'#f7f5ef';
+  });
+}
+function miniCanvas(vals,size=5,px=10){
+  const cv=document.createElement('canvas');
+  cv.width=size*px+size-1; cv.height=size*px+size-1;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#f7f5ef';ctx.fillRect(0,0,cv.width,cv.height);
+  for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+    const v=clamp(vals[r*size+c]||0,0,1);
+    ctx.fillStyle=v>0.5?'#1f2a1f':'#efe9db';
+    ctx.fillRect(c*(px+1),r*(px+1),px,px);
+  }
+  return cv;
+}
+
+// ─── LOSS CHART ──────────────────────────────────────────────────────────────
+function drawLossChart(canvasId,losses){
+  const cv=document.getElementById(canvasId);
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,pad=32;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#1a1d27';ctx.fillRect(0,0,W,H);
+  if(losses.length<2)return;
+  const maxL=Math.max(...losses,0.01),minL=0;
+  ctx.strokeStyle='#2e3250';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad+(H-2*pad)*i/4;
+    ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-10,y);ctx.stroke();
+    ctx.fillStyle='#8892b0';ctx.font='10px monospace';
+    ctx.fillText(fmt(maxL*(1-i/4),2),2,y+4);
+  }
+  ctx.strokeStyle='#6c63ff';ctx.lineWidth=2;ctx.beginPath();
+  losses.forEach((l,i)=>{
+    const x=pad+(W-pad-10)*i/(losses.length-1);
+    const y=pad+(H-2*pad)*(1-(l-minL)/(maxL-minL));
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  ctx.fillStyle='#8892b0';ctx.font='10px monospace';
+  ctx.fillText('Loss',W-32,pad-6);
+}
+
+// ─── SAMPLE THUMBNAILS ───────────────────────────────────────────────────────
+function renderSamples(zId,oId,dataset){
+  const zc=document.getElementById(zId),oc=document.getElementById(oId);
+  if(!zc||!oc)return;
+  zc.innerHTML='';oc.innerHTML='';
+  dataset.forEach(d=>{
+    const cv=miniCanvas(d.x,5,7);
+    cv.style.borderRadius='3px';
+    cv.style.border='1px solid #d9d2c2';
+    cv.title=d.y===0?'Z':'O';
+    (d.y===0?zc:oc).appendChild(cv);
+  });
+}
+
+// ─── TAB SWITCH ──────────────────────────────────────────────────────────────
+function switchTab(id,btn){
+  document.querySelectorAll('.tp').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tp-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='cmp'){drawComparisonChart();}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ANN
+// ═══════════════════════════════════════════════════════════════════════════════
+const ANN={
+  dataset:makeDataset(),
+  drawPx:new Array(25).fill(0),
+  predPx:new Array(25).fill(0),
+  W1:null,b1:null,W2:null,b2:null,
+  H:4,lr:0.1,act:'sigmoid',
+  losses:[],epoch:0,running:false,timer:null,
+  cache:{}
+};
+
+function annActFn(z){
+  if(ANN.act==='relu')return relu(z);
+  if(ANN.act==='tanh')return tanhA(z);
+  return sigmoid(z);
+}
+function annActD(z){
+  if(ANN.act==='relu')return reluD(z);
+  if(ANN.act==='tanh')return tanhD(z);
+  return sigmoidD(z);
+}
+
+function annInitWeights(){
+  const H=ANN.H,I=25,O=2;
+  ANN.W1=Array.from({length:H},()=>Array.from({length:I},()=>randn()*0.5));
+  ANN.b1=new Array(H).fill(0);
+  ANN.W2=Array.from({length:O},()=>Array.from({length:H},()=>randn()*0.5));
+  ANN.b2=new Array(O).fill(0);
+  ANN.losses=[];ANN.epoch=0;
+  document.getElementById('ann-se').textContent='0';
+  document.getElementById('ann-sl').textContent='—';
+  document.getElementById('ann-sa').textContent='—';
+  const log=document.getElementById('ann-log');
+  if(log)log.innerHTML='<div>Weights reset. Ready to train.</div>';
+}
+
+function annForward(x){
+  const H=ANN.H;
+  const z1=ANN.W1.map((row,h)=>row.reduce((s,w,i)=>s+w*x[i],0)+ANN.b1[h]);
+  const a1=z1.map(z=>annActFn(z));
+  const z2=ANN.W2.map((row,k)=>row.reduce((s,w,h)=>s+w*a1[h],0)+ANN.b2[k]);
+  const yhat=softmax(z2);
+  return {z1,a1,z2,yhat};
+}
+
+function annBackward(x,yLabel,fwd){
+  const {z1,a1,z2,yhat}=fwd;
+  const H=ANN.H;
+  const y=[0,0];y[yLabel]=1;
+  const d2=yhat.map((v,k)=>v-y[k]);
+  const d1=ANN.W1.map((_,h)=>{
+    const err=ANN.W2.reduce((s,row,k)=>s+row[h]*d2[k],0);
+    return err*annActD(z1[h]);
+  });
+  ANN.W2.forEach((row,k)=>{
+    row.forEach((_,h)=>{ANN.W2[k][h]-=ANN.lr*d2[k]*a1[h];});
+    ANN.b2[k]-=ANN.lr*d2[k];
+  });
+  ANN.W1.forEach((row,h)=>{
+    row.forEach((_,i)=>{ANN.W1[h][i]-=ANN.lr*d1[h]*x[i];});
+    ANN.b1[h]-=ANN.lr*d1[h];
+  });
+  const loss=-Math.log(Math.max(yhat[yLabel],1e-9));
+  ANN.cache={z1,a1,z2,yhat,d2,d1,x,yLabel};
+  return loss;
+}
+
+function annTrainEpoch(){
+  let totalLoss=0;
+  ANN.dataset.forEach(d=>{
+    const fwd=annForward(d.x);
+    totalLoss+=annBackward(d.x,d.y,fwd);
+  });
+  const avgLoss=totalLoss/ANN.dataset.length;
+  ANN.losses.push(avgLoss);
+  ANN.epoch++;
+  let correct=0;
+  ANN.dataset.forEach(d=>{
+    const fwd=annForward(d.x);
+    if(fwd.yhat.indexOf(Math.max(...fwd.yhat))===d.y)correct++;
+  });
+  const acc=correct/ANN.dataset.length;
+  document.getElementById('ann-se').textContent=ANN.epoch;
+  document.getElementById('ann-sl').textContent=fmt(avgLoss,4);
+  document.getElementById('ann-sa').textContent=(acc*100).toFixed(0)+'%';
+  if(ANN.cache.yhat){
+    const c=ANN.cache;
+    const sm=c.yhat;
+    document.getElementById('ann-esm').textContent='['+sm.map(v=>fmt(v,3)).join(', ')+'] sum='+fmt(sm[0]+sm[1],3);
+    document.getElementById('ann-el').textContent='L = '+fmt(avgLoss,4);
+    document.getElementById('ann-ed2').textContent='['+c.d2.map(v=>fmt(v,3)).join(', ')+']';
+    document.getElementById('ann-ed1').textContent='['+c.d1.slice(0,3).map(v=>fmt(v,3)).join(', ')+(c.d1.length>3?'…':'')+']';
+    document.getElementById('ann-ew').textContent='max|ΔW|='+fmt(Math.max(...ANN.W2.flat().map(Math.abs)),4);
+    const pred=c.yhat.indexOf(Math.max(...c.yhat))===0?'Z':'O';
+    document.getElementById('ann-ep').textContent='ŷ = P(Z)='+fmt(c.yhat[0],3)+' P(O)='+fmt(c.yhat[1],3)+' → '+pred;
+  }
+  const log=document.getElementById('ann-log');
+  if(log&&ANN.epoch%5===0){
+    const d=document.createElement('div');
+    d.className=acc>=1?'gd':'';
+    d.textContent='Epoch '+ANN.epoch+' | Loss: '+fmt(avgLoss,4)+' | Acc: '+(acc*100).toFixed(0)+'%';
+    log.appendChild(d);
+    log.scrollTop=log.scrollHeight;
+  }
+  drawLossChart('ann-lc',ANN.losses);
+  annDrawNetwork();
+  annDrawWeightMaps();
+  annRunPredict();
+}
+
+function annDrawNetwork(){
+  const cv=document.getElementById('ann-net');
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#1a1d27';ctx.fillRect(0,0,W,H);
+  const layers=[25,ANN.H,2];
+  const xs=[50,W/2,W-50];
+  const acts=[];
+  if(ANN.cache.a1){
+    acts.push(ANN.cache.x||new Array(25).fill(0.5));
+    acts.push(ANN.cache.a1);
+    acts.push(ANN.cache.yhat);
+  } else {
+    acts.push(new Array(25).fill(0.3));
+    acts.push(new Array(ANN.H).fill(0.3));
+    acts.push([0.5,0.5]);
+  }
+  layers.forEach((n,li)=>{
+    if(li===layers.length-1)return;
+    const nNext=layers[li+1];
+    const showSrc=li===0?Array.from({length:25},(_,i)=>i).filter((_,i)=>i%5===2):Array.from({length:n},(_,i)=>i);
+    showSrc.forEach(si=>{
+      const sy=H/(n+1)*(si+1);
+      for(let ti=0;ti<nNext;ti++){
+        const ty=H/(nNext+1)*(ti+1);
+        const w=li===0?ANN.W1[ti][si]:ANN.W2[ti][si];
+        const alpha=clamp(Math.abs(w)*0.8,0.05,0.7);
+        ctx.strokeStyle=w>0?`rgba(96,165,250,${alpha})`:`rgba(244,114,182,${alpha})`;
+        ctx.lineWidth=clamp(Math.abs(w)*1.5,0.3,2.5);
+        ctx.beginPath();ctx.moveTo(xs[li],sy);ctx.lineTo(xs[li+1],ty);ctx.stroke();
+      }
+    });
+  });
+  layers.forEach((n,li)=>{
+    for(let ni=0;ni<n;ni++){
+      const x=xs[li],y=H/(n+1)*(ni+1);
+      const act=clamp(acts[li][ni]||0,0,1);
+      const r=li===0?5:li===1?9:12;
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+      const bright=Math.round(act*220);
+      ctx.fillStyle=`rgb(${bright},${bright},${Math.round(bright*1.1)})`;
+      ctx.fill();
+      ctx.strokeStyle='#6c63ff';ctx.lineWidth=1.5;ctx.stroke();
+      if(li===2){
+        ctx.fillStyle='#e8eaf6';ctx.font='bold 11px sans-serif';
+        ctx.fillText(ni===0?'Z':'O',x+15,y+4);
+      }
+    }
+  });
+  ctx.fillStyle='#8892b0';ctx.font='10px sans-serif';
+  ctx.fillText('Input (25)',xs[0]-18,H-8);
+  ctx.fillText('Hidden ('+ANN.H+')',xs[1]-22,H-8);
+  ctx.fillText('Output (2)',xs[2]-18,H-8);
+}
+
+function annDrawWeightMaps(){
+  const c=document.getElementById('ann-wm');
+  if(!c)return;
+  c.innerHTML='';
+  for(let h=0;h<ANN.H;h++){
+    const wrap=document.createElement('div');
+    wrap.style.textAlign='center';
+    const label=document.createElement('div');
+    label.style.cssText='font-size:.7rem;color:var(--muted);margin-bottom:3px';
+    label.textContent='H'+h;
+    wrap.appendChild(label);
+    const grid=document.createElement('div');
+    grid.className='pg';
+    grid.style.gridTemplateColumns='repeat(5,1fr)';
+    grid.style.gap='1px';
+    for(let i=0;i<25;i++){
+      const cell=document.createElement('div');
+      cell.style.width='14px';cell.style.height='14px';cell.style.borderRadius='2px';
+      const w=ANN.W1[h][i];
+      const norm=clamp((w+2)/4,0,1);
+      const r=Math.round((1-norm)*180+60);
+      const b=Math.round(norm*200+50);
+      const g=Math.round(norm*100+(1-norm)*80);
+      cell.style.background=`rgb(${r},${g},${b})`;
+      cell.title='w='+fmt(w,3);
+      grid.appendChild(cell);
+    }
+    wrap.appendChild(grid);
+    c.appendChild(wrap);
+  }
+}
+
+function annRunPredict(){
+  if(!ANN.W1)return;
+  const fwd=annForward(ANN.predPx);
+  const pz=fwd.yhat[0],po=fwd.yhat[1];
+  document.getElementById('ann-bz').style.width=(pz*100)+'%';
+  document.getElementById('ann-bo').style.width=(po*100)+'%';
+  document.getElementById('ann-pz').textContent=(pz*100).toFixed(1)+'%';
+  document.getElementById('ann-po').textContent=(po*100).toFixed(1)+'%';
+  const pred=pz>po?'Z':'O';
+  const el=document.getElementById('ann-pl');
+  el.textContent=pred;
+  el.style.color=pred==='Z'?'var(--blue)':'var(--red)';
+}
+
+function annCfg(){
+  ANN.H=parseInt(document.getElementById('ann-hn').value);
+  ANN.lr=parseInt(document.getElementById('ann-lr').value)/100;
+  ANN.act=document.getElementById('ann-act').value;
+  document.getElementById('ann-hnv').textContent=ANN.H;
+  document.getElementById('ann-lrv').textContent=ANN.lr.toFixed(2);
+  document.getElementById('ann-arch').textContent='25 → '+ANN.H+' → 2';
+  document.getElementById('ann-slr').textContent=ANN.lr.toFixed(2);
+  annInitWeights();
+  annDrawNetwork();
+  annDrawWeightMaps();
+}
+
+function annToggle(){
+  ANN.running=!ANN.running;
+  const btn=document.getElementById('ann-tb');
+  if(ANN.running){
+    btn.textContent='⏸ Pause';btn.className='btn btn-red';
+    function loop(){
+      if(!ANN.running)return;
+      annTrainEpoch();
+      const spd=parseInt(document.getElementById('ann-sp').value);
+      ANN.timer=setTimeout(loop,spd);
+    }
+    loop();
+  } else {
+    btn.textContent='▶ Train';btn.className='btn btn-green';
+    clearTimeout(ANN.timer);
+  }
+}
+function annStep(n){for(let i=0;i<n;i++)annTrainEpoch();}
+function annReset(){
+  ANN.running=false;clearTimeout(ANN.timer);
+  const btn=document.getElementById('ann-tb');
+  btn.textContent='▶ Train';btn.className='btn btn-green';
+  annInitWeights();annDrawNetwork();annDrawWeightMaps();
+}
+function annResetData(){
+  ANN.dataset=makeDataset();
+  renderSamples('ann-zs','ann-os',ANN.dataset);
+  annReset();
+}
+function annAddNoise(){
+  const base=Math.random()<0.5?Z_BASE:O_BASE;
+  const label=base===Z_BASE?0:1;
+  ANN.dataset.push({x:addNoise(base,0.25),y:label});
+  renderSamples('ann-zs','ann-os',ANN.dataset);
+}
+function annAddDrawn(cls){
+  ANN.dataset.push({x:ANN.drawPx.slice(),y:cls==='Z'?0:1});
+  renderSamples('ann-zs','ann-os',ANN.dataset);
+}
+function annClearDraw(){ANN.drawPx.fill(0);updateGrid('ann-draw',ANN.drawPx);}
+function annFillZ(){ANN.predPx=Z_BASE.slice();updateGrid('ann-pg',ANN.predPx);annRunPredict();}
+function annFillO(){ANN.predPx=O_BASE.slice();updateGrid('ann-pg',ANN.predPx);annRunPredict();}
+function annClrPred(){ANN.predPx.fill(0);updateGrid('ann-pg',ANN.predPx);annRunPredict();}
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// CNN  — FC bug fixed: Wfc uses 18 inputs (was 8), lr=0.08
+// ═══════════════════════════════════════════════════════════════════════════════
+const CNN={
+  dataset:makeDataset(),
+  predPx:new Array(25).fill(0),
+  F:[null,null], bF:[0,0],
+  Wfc:null, bfc:null,
+  lr:0.08, losses:[], epoch:0, running:false, timer:null,
+  fwd:{}, animPos:0
+};
+
+function cnnCfg(){
+  CNN.lr=parseInt(document.getElementById('cnn-lr').value)/100;
+  document.getElementById('cnn-lrv').textContent=CNN.lr.toFixed(2);
+}
+
+function cnnInitWeights(){
+  CNN.F=[
+    Array.from({length:9},()=>randn()*0.3),
+    Array.from({length:9},()=>randn()*0.3)
+  ];
+  CNN.bF=[0,0];
+  // FIXED: 18 inputs (9 relu values per filter x 2 filters)
+  CNN.Wfc=Array.from({length:2},()=>Array.from({length:18},()=>randn()*0.3));
+  CNN.bfc=[0,0];
+  CNN.losses=[];CNN.epoch=0;
+  document.getElementById('cnn-se').textContent='0';
+  document.getElementById('cnn-sl').textContent='—';
+  document.getElementById('cnn-sa').textContent='—';
+  const log=document.getElementById('cnn-log');
+  if(log)log.innerHTML='<div>Weights reset. Ready to train.</div>';
+}
+
+function conv2d(input,filter,inSize){
+  const outSize=inSize-2;
+  const out=[];
+  for(let r=0;r<outSize;r++){
+    for(let c=0;c<outSize;c++){
+      let sum=0;
+      for(let fr=0;fr<3;fr++)for(let fc=0;fc<3;fc++){
+        sum+=input[(r+fr)*inSize+(c+fc)]*filter[fr*3+fc];
+      }
+      out.push(sum);
+    }
+  }
+  return out;
+}
+
+function maxpool2x2(input,inSize){
+  const outSize=Math.floor(inSize/2);
+  const out=[],maxIdx=[];
+  for(let r=0;r<outSize;r++){
+    for(let c=0;c<outSize;c++){
+      const i00=r*2*inSize+c*2,i01=i00+1,i10=i00+inSize,i11=i10+1;
+      const vals=[input[i00],input[i01],input[i10],input[i11]];
+      const idxs=[i00,i01,i10,i11];
+      const m=Math.max(...vals);
+      out.push(m);
+      maxIdx.push(idxs[vals.indexOf(m)]);
+    }
+  }
+  return {out,maxIdx,outSize};
+}
+
+function cnnForward(x){
+  const conv0=conv2d(x,CNN.F[0],5).map(v=>v+CNN.bF[0]);
+  const conv1=conv2d(x,CNN.F[1],5).map(v=>v+CNN.bF[1]);
+  const relu0=conv0.map(v=>Math.max(0,v));
+  const relu1=conv1.map(v=>Math.max(0,v));
+  const pool0=maxpool2x2(relu0,3);
+  const pool1=maxpool2x2(relu1,3);
+  // FIXED: use full relu maps (9+9=18) for FC input — was silently using only 8
+  const flat=[...relu0,...relu1];
+  const z2=CNN.Wfc.map((row,k)=>row.reduce((s,w,i)=>s+w*flat[i],0)+CNN.bfc[k]);
+  const yhat=softmax(z2);
+  return {conv0,conv1,relu0,relu1,pool0,pool1,flat,z2,yhat};
+}
+
+function cnnBackward(x,yLabel,fwd){
+  const {conv0,conv1,relu0,relu1,flat,z2,yhat}=fwd;
+  const y=[0,0];y[yLabel]=1;
+  const d2=yhat.map((v,k)=>v-y[k]);
+  // FC backward — all 18 inputs properly used
+  const dFlat=flat.map((_,i)=>CNN.Wfc.reduce((s,row,k)=>s+row[i]*d2[k],0));
+  CNN.Wfc.forEach((row,k)=>{
+    row.forEach((_,i)=>{CNN.Wfc[k][i]-=CNN.lr*d2[k]*flat[i];});
+    CNN.bfc[k]-=CNN.lr*d2[k];
+  });
+  const dRelu0=relu0.map((v,i)=>v>0?dFlat[i]:0);
+  const dRelu1=relu1.map((v,i)=>v>0?dFlat[9+i]:0);
+  const outSize=3;
+  for(let fr=0;fr<3;fr++)for(let fc=0;fc<3;fc++){
+    let g0=0,g1=0;
+    for(let r=0;r<outSize;r++)for(let c=0;c<outSize;c++){
+      g0+=dRelu0[r*outSize+c]*x[(r+fr)*5+(c+fc)];
+      g1+=dRelu1[r*outSize+c]*x[(r+fr)*5+(c+fc)];
+    }
+    CNN.F[0][fr*3+fc]-=CNN.lr*g0;
+    CNN.F[1][fr*3+fc]-=CNN.lr*g1;
+  }
+  CNN.bF[0]-=CNN.lr*dRelu0.reduce((a,b)=>a+b,0);
+  CNN.bF[1]-=CNN.lr*dRelu1.reduce((a,b)=>a+b,0);
+  const loss=-Math.log(Math.max(yhat[yLabel],1e-9));
+  return loss;
+}
+
+function cnnTrainEpoch(){
+  let totalLoss=0;
+  CNN.dataset.forEach(d=>{
+    const fwd=cnnForward(d.x);
+    totalLoss+=cnnBackward(d.x,d.y,fwd);
+  });
+  const avgLoss=totalLoss/CNN.dataset.length;
+  CNN.losses.push(avgLoss);
+  CNN.epoch++;
+  let correct=0;
+  CNN.dataset.forEach(d=>{
+    const fwd=cnnForward(d.x);
+    if(fwd.yhat.indexOf(Math.max(...fwd.yhat))===d.y)correct++;
+  });
+  const acc=correct/CNN.dataset.length;
+  document.getElementById('cnn-se').textContent=CNN.epoch;
+  document.getElementById('cnn-sl').textContent=fmt(avgLoss,4);
+  document.getElementById('cnn-sa').textContent=(acc*100).toFixed(0)+'%';
+  document.getElementById('cnn-el').textContent='L = '+fmt(avgLoss,4);
+  const fwd0=cnnForward(CNN.dataset[0].x);
+  document.getElementById('cnn-econv').textContent='max='+fmt(Math.max(...fwd0.conv0),3);
+  document.getElementById('cnn-erelu').textContent='zeros='+fwd0.relu0.filter(v=>v===0).length+'/9';
+  document.getElementById('cnn-epool').textContent='max='+fmt(Math.max(...fwd0.pool0.out),3);
+  const pred=fwd0.yhat[0]>fwd0.yhat[1]?'Z':'O';
+  document.getElementById('cnn-ep').textContent='ŷ = P(Z)='+fmt(fwd0.yhat[0],3)+' P(O)='+fmt(fwd0.yhat[1],3)+' → '+pred;
+  const log=document.getElementById('cnn-log');
+  if(log&&CNN.epoch%5===0){
+    const d=document.createElement('div');
+    d.className=acc>=1?'gd':'';
+    d.textContent='Epoch '+CNN.epoch+' | Loss: '+fmt(avgLoss,4)+' | Acc: '+(acc*100).toFixed(0)+'%';
+    log.appendChild(d);log.scrollTop=log.scrollHeight;
+  }
+  drawLossChart('cnn-lc',CNN.losses);
+  cnnUpdatePipeline(CNN.predPx);
+  cnnDrawFilters();
+  cnnRunPredict();
+}
+
+function cnnUpdatePipeline(x){
+  if(!CNN.Wfc)return;
+  const fwd=cnnForward(x);
+  const ci=document.getElementById('cnn-ci');
+  if(ci){const ctx=ci.getContext('2d');drawPixelGrid(ctx,x,5,ci.width,ci.height);}
+  drawFeatureMaps('cnn-cm',[fwd.conv0,fwd.conv1],3,40);
+  drawFeatureMaps('cnn-rm',[fwd.relu0,fwd.relu1],3,40);
+  drawFeatureMaps('cnn-pm',[fwd.pool0.out,fwd.pool1.out],1,40);
+  const fc=document.getElementById('cnn-fc');
+  if(fc){
+    const ctx=fc.getContext('2d');
+    ctx.fillStyle='#1a1d27';ctx.fillRect(0,0,fc.width,fc.height);
+    const vals=fwd.flat.slice(0,8);
+    const mx=Math.max(...vals.map(Math.abs),0.01);
+    vals.forEach((v,i)=>{
+      const y=fc.height/(vals.length+1)*(i+1);
+      const norm=clamp((v/mx+1)/2,0,1);
+      const bright=Math.round(norm*220);
+      ctx.fillStyle=`rgb(${bright},${bright},${Math.round(bright*1.1)})`;
+      ctx.beginPath();ctx.arc(fc.width/2,y,5,0,Math.PI*2);ctx.fill();
+    });
+  }
+  const oc=document.getElementById('cnn-oc');
+  if(oc){
+    const ctx=oc.getContext('2d');
+    ctx.fillStyle='#1a1d27';ctx.fillRect(0,0,oc.width,oc.height);
+    const pz=fwd.yhat[0],po=fwd.yhat[1];
+    ctx.fillStyle='#60a5fa';ctx.fillRect(8,10,Math.round(pz*(oc.width-16)),18);
+    ctx.fillStyle='#f472b6';ctx.fillRect(8,36,Math.round(po*(oc.width-16)),18);
+    ctx.fillStyle='#e8eaf6';ctx.font='10px sans-serif';
+    ctx.fillText('Z:'+(pz*100).toFixed(0)+'%',8,62);
+    ctx.fillText('O:'+(po*100).toFixed(0)+'%',8,74);
+  }
+  CNN.fwd=fwd;
+}
+
+function drawPixelGrid(ctx,vals,size,W,H){
+  ctx.fillStyle='#1a1d27';ctx.fillRect(0,0,W,H);
+  const px=Math.floor(W/size);
+  for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+    const v=clamp(vals[r*size+c]||0,0,1);
+    const bright=Math.round(v*220);
+    ctx.fillStyle=`rgb(${bright},${bright},${Math.round(bright*1.1)})`;
+    ctx.fillRect(c*px+1,r*px+1,px-1,px-1);
+  }
+}
+
+function drawFeatureMaps(containerId,maps,size,px){
+  const c=document.getElementById(containerId);
+  if(!c)return;
+  c.innerHTML='';
+  maps.forEach((map)=>{
+    const cv=document.createElement('canvas');
+    cv.width=size*px+size; cv.height=size*px+size;
+    cv.style.borderRadius='4px';cv.style.border='1px solid #2e3250';
+    const ctx=cv.getContext('2d');
+    ctx.fillStyle='#1a1d27';ctx.fillRect(0,0,cv.width,cv.height);
+    const mx=Math.max(...map.map(Math.abs),0.01);
+    for(let r=0;r<size;r++)for(let col=0;col<size;col++){
+      const v=map[r*size+col];
+      const norm=clamp((v/mx+1)/2,0,1);
+      const rv=Math.round((1-norm)*244);
+      const bv=Math.round(norm*250);
+      const gv=Math.round(norm*114+(1-norm)*114);
+      ctx.fillStyle=`rgb(${rv},${gv},${bv})`;
+      ctx.fillRect(col*(px+1)+1,r*(px+1)+1,px,px);
+    }
+    c.appendChild(cv);
+  });
+}
+
+function cnnDrawFilters(){
+  [0,1].forEach(fi=>{
+    const c=document.getElementById('cnn-f'+(fi+1));
+    if(!c)return;
+    c.innerHTML='';
+    const mx=Math.max(...CNN.F[fi].map(Math.abs),0.01);
+    CNN.F[fi].forEach(w=>{
+      const cell=document.createElement('div');
+      cell.style.cssText='width:28px;height:28px;border-radius:3px;border:1px solid #2e3250';
+      const norm=clamp((w/mx+1)/2,0,1);
+      const r=Math.round((1-norm)*244);
+      const b=Math.round(norm*250);
+      cell.style.background=`rgb(${r},${Math.round(norm*114+(1-norm)*114)},${b})`;
+      cell.title='w='+fmt(w,3);
+      c.appendChild(cell);
+    });
+    const desc=document.getElementById('cnn-f'+(fi+1)+'d');
+    if(desc){
+      const mx2=Math.max(...CNN.F[fi]);
+      const mn=Math.min(...CNN.F[fi]);
+      desc.textContent='max='+fmt(mx2,2)+' min='+fmt(mn,2);
+    }
+  });
+}
+
+function cnnRunPredict(){
+  if(!CNN.Wfc)return;
+  const fwd=cnnForward(CNN.predPx);
+  const pz=fwd.yhat[0],po=fwd.yhat[1];
+  document.getElementById('cnn-bz').style.width=(pz*100)+'%';
+  document.getElementById('cnn-bo').style.width=(po*100)+'%';
+  document.getElementById('cnn-pz').textContent=(pz*100).toFixed(1)+'%';
+  document.getElementById('cnn-po').textContent=(po*100).toFixed(1)+'%';
+  const pred=pz>po?'Z':'O';
+  const el=document.getElementById('cnn-pl');
+  el.textContent=pred;
+  el.style.color=pred==='Z'?'var(--blue)':'var(--red)';
+  cnnUpdatePipeline(CNN.predPx);
+}
+
+function cnnStage(id){
+  document.querySelectorAll('.cst').forEach(s=>s.classList.remove('sel'));
+  document.getElementById('cs-'+id).classList.add('sel');
+  const sd=document.getElementById('cnn-sd');
+  const fwd=CNN.fwd;
+  const info={
+    input:`<div class="eq-panel-title">Input Stage</div><table style="width:100%;font-size:.85rem"><tr><td style="color:var(--muted);width:140px">Shape</td><td>5&times;5 = 25 pixel values, range [0,1]</td></tr><tr><td style="color:var(--muted)">Values</td><td><span class="eq-live">[${(CNN.predPx.slice(0,5).map(v=>fmt(v,1)).join(', '))}…]</span></td></tr><tr><td style="color:var(--muted)">Role</td><td>Raw pixel intensities fed into the first conv layer</td></tr></table>`,
+    conv:`<div class="eq-panel-title">Convolution Stage</div><table style="width:100%;font-size:.85rem"><tr><td style="color:var(--muted);width:140px">Operation</td><td>(I&lowast;K)[i,j] = &sum; I[i+m,j+n]&middot;K[m,n] + b</td></tr><tr><td style="color:var(--muted)">Output shape</td><td>3&times;3 per filter (5&minus;3+1=3), 2 filters &rarr; 2 feature maps</td></tr><tr><td style="color:var(--muted)">Filter 1 max</td><td><span class="eq-live">${fwd.conv0?fmt(Math.max(...fwd.conv0),3):'—'}</span></td></tr><tr><td style="color:var(--muted)">Filter 2 max</td><td><span class="eq-live">${fwd.conv1?fmt(Math.max(...fwd.conv1),3):'—'}</span></td></tr></table>`,
+    relu:`<div class="eq-panel-title">ReLU Stage</div><table style="width:100%;font-size:.85rem"><tr><td style="color:var(--muted);width:140px">Operation</td><td>a = max(0, z) — kills negative activations</td></tr><tr><td style="color:var(--muted)">Filter 1 zeros</td><td><span class="eq-live">${fwd.relu0?fwd.relu0.filter(v=>v===0).length+'/9 values zeroed':'—'}</span></td></tr><tr><td style="color:var(--muted)">Filter 2 zeros</td><td><span class="eq-live">${fwd.relu1?fwd.relu1.filter(v=>v===0).length+'/9 values zeroed':'—'}</span></td></tr><tr><td style="color:var(--muted)">Why?</td><td>Introduces non-linearity. No vanishing gradient for positive values.</td></tr></table>`,
+    pool:`<div class="eq-panel-title">MaxPool Stage</div><table style="width:100%;font-size:.85rem"><tr><td style="color:var(--muted);width:140px">Operation</td><td>p = max over 2&times;2 window, stride 2</td></tr><tr><td style="color:var(--muted)">Input shape</td><td>3&times;3 &rarr; output 1&times;1 per filter</td></tr><tr><td style="color:var(--muted)">Pool 1 value</td><td><span class="eq-live">${fwd.pool0?fmt(fwd.pool0.out[0],3):'—'}</span></td></tr><tr><td style="color:var(--muted)">Pool 2 value</td><td><span class="eq-live">${fwd.pool1?fmt(fwd.pool1.out[0],3):'—'}</span></td></tr></table>`,
+    fc:`<div class="eq-panel-title">Fully Connected Stage</div><table style="width:100%;font-size:.85rem"><tr><td style="color:var(--muted);width:140px">Operation</td><td>z = W&middot;flatten(relu) + b</td></tr><tr><td style="color:var(--muted)">Input size</td><td>18 (9 from each relu map, flattened)</td></tr><tr><td style="color:var(--muted)">Output size</td><td>2 (one per class)</td></tr><tr><td style="color:var(--muted)">z values</td><td><span class="eq-live">${fwd.z2?'['+fwd.z2.map(v=>fmt(v,3)).join(', ')+']':'—'}</span></td></tr></table>`,
+    out:`<div class="eq-panel-title">Output Stage</div><table style="width:100%;font-size:.85rem"><tr><td style="color:var(--muted);width:140px">Operation</td><td>&ycirc; = softmax(z) — normalises to probabilities summing to 1</td></tr><tr><td style="color:var(--muted)">P(Z)</td><td><span class="eq-live">${fwd.yhat?fmt(fwd.yhat[0],4):'—'}</span></td></tr><tr><td style="color:var(--muted)">P(O)</td><td><span class="eq-live">${fwd.yhat?fmt(fwd.yhat[1],4):'—'}</span></td></tr><tr><td style="color:var(--muted)">Prediction</td><td><span class="eq-live">${fwd.yhat?(fwd.yhat[0]>fwd.yhat[1]?'Z':'O'):'—'}</span></td></tr></table>`
+  };
+  sd.innerHTML=info[id]||'';
+}
+
+function cnnToggle(){
+  CNN.running=!CNN.running;
+  const btn=document.getElementById('cnn-tb');
+  if(CNN.running){
+    btn.textContent='⏸ Pause';btn.className='btn btn-red';
+    function loop(){
+      if(!CNN.running)return;
+      cnnTrainEpoch();
+      const spd=parseInt(document.getElementById('cnn-sp').value);
+      CNN.timer=setTimeout(loop,spd);
+    }
+    loop();
+  } else {
+    btn.textContent='▶ Train';btn.className='btn btn-green';
+    clearTimeout(CNN.timer);
+  }
+}
+function cnnStep(n){for(let i=0;i<n;i++)cnnTrainEpoch();}
+function cnnReset(){
+  CNN.running=false;clearTimeout(CNN.timer);
+  const btn=document.getElementById('cnn-tb');
+  btn.textContent='▶ Train';btn.className='btn btn-green';
+  cnnInitWeights();cnnDrawFilters();cnnUpdatePipeline(CNN.predPx);
+}
+function cnnFillZ(){CNN.predPx=Z_BASE.slice();updateGrid('cnn-pg',CNN.predPx);cnnRunPredict();}
+function cnnFillO(){CNN.predPx=O_BASE.slice();updateGrid('cnn-pg',CNN.predPx);cnnRunPredict();}
+function cnnClrPred(){CNN.predPx.fill(0);updateGrid('cnn-pg',CNN.predPx);cnnRunPredict();}
+
+function cnnAnimateConv(){
+  const cv=document.getElementById('cnn-ca');
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  const px=Math.floor(W/7);
+  const pos=CNN.animPos;
+  const r=Math.floor(pos/3),c=pos%3;
+  ctx.fillStyle='#1a1d27';ctx.fillRect(0,0,W,H);
+  for(let ir=0;ir<5;ir++)for(let ic=0;ic<5;ic++){
+    const v=clamp(CNN.predPx[ir*5+ic]||0,0,1);
+    const bright=Math.round(v*200);
+    ctx.fillStyle=`rgb(${bright},${bright},${Math.round(bright*1.1)})`;
+    ctx.fillRect(ic*px+2,ir*px+2,px-2,px-2);
+  }
+  ctx.strokeStyle='#f7971e';ctx.lineWidth=2;
+  ctx.strokeRect(c*px+1,r*px+1,3*px,3*px);
+  const fx=5*px+8;
+  ctx.fillStyle='#2e3250';ctx.fillRect(fx,0,3*px+4,3*px+4);
+  ctx.fillStyle='#8892b0';ctx.font='9px sans-serif';ctx.fillText('Filter',fx,H-4);
+  for(let fr=0;fr<3;fr++)for(let fc=0;fc<3;fc++){
+    const w=CNN.F[0][fr*3+fc];
+    const norm=clamp((w+1)/2,0,1);
+    const rv=Math.round((1-norm)*244);
+    const bv=Math.round(norm*250);
+    ctx.fillStyle=`rgb(${rv},${Math.round(norm*114+(1-norm)*114)},${bv})`;
+    ctx.fillRect(fx+fc*px+2,fr*px+2,px-2,px-2);
+  }
+  let dot=0;
+  for(let fr=0;fr<3;fr++)for(let fc=0;fc<3;fc++){
+    dot+=CNN.predPx[(r+fr)*5+(c+fc)]*CNN.F[0][fr*3+fc];
+  }
+  ctx.fillStyle='#43e97b';ctx.font='bold 10px monospace';
+  ctx.fillText(fmt(dot,2),fx,H-14);
+  CNN.animPos=(CNN.animPos+1)%9;
+}
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMPARISON TAB
+// ═══════════════════════════════════════════════════════════════════════════════
+const CMP={
+  predPx:new Array(25).fill(0),
+  annAccHistory:[],
+  cnnAccHistory:[],
+  annLossHistory:[],
+  cnnLossHistory:[],
+  running:false,
+  timer:null,
+  epoch:0
+};
+
+function cmpUpdatePredictions(){
+  if(ANN.W1){
+    const fwd=annForward(CMP.predPx);
+    const pz=fwd.yhat[0],po=fwd.yhat[1];
+    document.getElementById('cmp-ann-bz').style.width=(pz*100)+'%';
+    document.getElementById('cmp-ann-bo').style.width=(po*100)+'%';
+    document.getElementById('cmp-ann-pz').textContent=(pz*100).toFixed(1)+'%';
+    document.getElementById('cmp-ann-po').textContent=(po*100).toFixed(1)+'%';
+    const pred=pz>po?'Z':'O';
+    const el=document.getElementById('cmp-ann-pl');
+    el.textContent=pred;el.style.color=pred==='Z'?'var(--blue)':'var(--red)';
+  }
+  if(CNN.Wfc){
+    const fwd=cnnForward(CMP.predPx);
+    const pz=fwd.yhat[0],po=fwd.yhat[1];
+    document.getElementById('cmp-cnn-bz').style.width=(pz*100)+'%';
+    document.getElementById('cmp-cnn-bo').style.width=(po*100)+'%';
+    document.getElementById('cmp-cnn-pz').textContent=(pz*100).toFixed(1)+'%';
+    document.getElementById('cmp-cnn-po').textContent=(po*100).toFixed(1)+'%';
+    const pred=pz>po?'Z':'O';
+    const el=document.getElementById('cmp-cnn-pl');
+    el.textContent=pred;el.style.color=pred==='Z'?'var(--blue)':'var(--red)';
+  }
+}
+
+function cmpClr(){CMP.predPx.fill(0);updateGrid('cmp-pg',CMP.predPx);cmpUpdatePredictions();}
+function cmpFillZ(){CMP.predPx=Z_BASE.slice();updateGrid('cmp-pg',CMP.predPx);cmpUpdatePredictions();}
+function cmpFillO(){CMP.predPx=O_BASE.slice();updateGrid('cmp-pg',CMP.predPx);cmpUpdatePredictions();}
+
+function trainBoth(){
+  CMP.running=!CMP.running;
+  const btn=document.getElementById('cmp-tb');
+  if(CMP.running){
+    btn.textContent='⏸ Pause';btn.className='btn btn-red';
+    function loop(){
+      if(!CMP.running)return;
+      // Train ANN one epoch
+      let annLoss=0;
+      ANN.dataset.forEach(d=>{const fwd=annForward(d.x);annLoss+=annBackward(d.x,d.y,fwd);});
+      annLoss/=ANN.dataset.length;
+      ANN.losses.push(annLoss);ANN.epoch++;
+      let annCorrect=0;
+      ANN.dataset.forEach(d=>{const fwd=annForward(d.x);if(fwd.yhat.indexOf(Math.max(...fwd.yhat))===d.y)annCorrect++;});
+      const annAcc=annCorrect/ANN.dataset.length;
+      // Train CNN one epoch
+      let cnnLoss=0;
+      CNN.dataset.forEach(d=>{const fwd=cnnForward(d.x);cnnLoss+=cnnBackward(d.x,d.y,fwd);});
+      cnnLoss/=CNN.dataset.length;
+      CNN.losses.push(cnnLoss);CNN.epoch++;
+      let cnnCorrect=0;
+      CNN.dataset.forEach(d=>{const fwd=cnnForward(d.x);if(fwd.yhat.indexOf(Math.max(...fwd.yhat))===d.y)cnnCorrect++;});
+      const cnnAcc=cnnCorrect/CNN.dataset.length;
+      // Store history
+      CMP.annAccHistory.push(annAcc);
+      CMP.cnnAccHistory.push(cnnAcc);
+      CMP.annLossHistory.push(annLoss);
+      CMP.cnnLossHistory.push(cnnLoss);
+      CMP.epoch++;
+      // Update UI
+      document.getElementById('cmp-ann-acc').textContent=(annAcc*100).toFixed(0)+'%';
+      document.getElementById('cmp-cnn-acc').textContent=(cnnAcc*100).toFixed(0)+'%';
+      document.getElementById('cmp-epoch').textContent=CMP.epoch;
+      document.getElementById('ann-se').textContent=ANN.epoch;
+      document.getElementById('ann-sl').textContent=fmt(annLoss,4);
+      document.getElementById('ann-sa').textContent=(annAcc*100).toFixed(0)+'%';
+      document.getElementById('cnn-se').textContent=CNN.epoch;
+      document.getElementById('cnn-sl').textContent=fmt(cnnLoss,4);
+      document.getElementById('cnn-sa').textContent=(cnnAcc*100).toFixed(0)+'%';
+      drawComparisonChart();
+      cmpUpdatePredictions();
+      CMP.timer=setTimeout(loop,50);
+    }
+    loop();
+  } else {
+    btn.textContent='▶ Train Both';btn.className='btn btn-green';
+    clearTimeout(CMP.timer);
+  }
+}
+
+function cmpReset(){
+  CMP.running=false;clearTimeout(CMP.timer);
+  document.getElementById('cmp-tb').textContent='▶ Train Both';
+  document.getElementById('cmp-tb').className='btn btn-green';
+  CMP.annAccHistory=[];CMP.cnnAccHistory=[];
+  CMP.annLossHistory=[];CMP.cnnLossHistory=[];
+  CMP.epoch=0;
+  document.getElementById('cmp-epoch').textContent='0';
+  document.getElementById('cmp-ann-acc').textContent='—';
+  document.getElementById('cmp-cnn-acc').textContent='—';
+  annReset();cnnReset();
+  drawComparisonChart();
+}
+
+function drawComparisonChart(){
+  const cv=document.getElementById('cmp-chart');
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,pad=44;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#1a1d27';ctx.fillRect(0,0,W,H);
+  // Grid lines
+  ctx.strokeStyle='#2e3250';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad+(H-2*pad)*i/4;
+    ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-10,y);ctx.stroke();
+    ctx.fillStyle='#8892b0';ctx.font='10px monospace';ctx.textAlign='right';
+    ctx.fillText((100-i*25)+'%',pad-4,y+4);
+  }
+  ctx.textAlign='left';
+  const annAcc=CMP.annAccHistory;
+  const cnnAcc=CMP.cnnAccHistory;
+  const annLoss=CMP.annLossHistory;
+  const cnnLoss=CMP.cnnLossHistory;
+  const n=Math.max(annAcc.length,cnnAcc.length,2);
+  if(n<2){
+    ctx.fillStyle='#8892b0';ctx.font='13px Inter';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('Click "Train Both" to see accuracy and loss curves',W/2,H/2);
+    return;
+  }
+  const maxLoss=Math.max(...annLoss,...cnnLoss,0.01);
+  function px(i,arr){return pad+(W-pad-10)*i/Math.max(arr.length-1,1);}
+  function pyAcc(v){return pad+(H-2*pad)*(1-v);}
+  function pyLoss(v){return pad+(H-2*pad)*(1-v/maxLoss);}
+  // ANN accuracy (solid blue)
+  if(annAcc.length>=2){
+    ctx.strokeStyle='#60a5fa';ctx.lineWidth=2.5;ctx.setLineDash([]);ctx.beginPath();
+    annAcc.forEach((v,i)=>i===0?ctx.moveTo(px(i,annAcc),pyAcc(v)):ctx.lineTo(px(i,annAcc),pyAcc(v)));
+    ctx.stroke();
+  }
+  // CNN accuracy (solid green)
+  if(cnnAcc.length>=2){
+    ctx.strokeStyle='#43e97b';ctx.lineWidth=2.5;ctx.setLineDash([]);ctx.beginPath();
+    cnnAcc.forEach((v,i)=>i===0?ctx.moveTo(px(i,cnnAcc),pyAcc(v)):ctx.lineTo(px(i,cnnAcc),pyAcc(v)));
+    ctx.stroke();
+  }
+  // ANN loss (dashed pink)
+  if(annLoss.length>=2){
+    ctx.strokeStyle='#f472b6';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();
+    annLoss.forEach((v,i)=>i===0?ctx.moveTo(px(i,annLoss),pyLoss(v)):ctx.lineTo(px(i,annLoss),pyLoss(v)));
+    ctx.stroke();
+  }
+  // CNN loss (dashed orange)
+  if(cnnLoss.length>=2){
+    ctx.strokeStyle='#f7971e';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();
+    cnnLoss.forEach((v,i)=>i===0?ctx.moveTo(px(i,cnnLoss),pyLoss(v)):ctx.lineTo(px(i,cnnLoss),pyLoss(v)));
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.fillStyle='#8892b0';ctx.font='10px monospace';ctx.textAlign='center';
+  ctx.fillText('Epoch',W/2,H-4);
+  ctx.fillText(n,W-10,H-4);
+  ctx.fillText('0',pad,H-4);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  // ANN init
+  annInitWeights();
+  makeGrid('ann-draw',5,ANN.drawPx,i=>{
+    ANN.drawPx[i]=ANN.drawPx[i]>0.5?0:1;
+    updateGrid('ann-draw',ANN.drawPx);
+  });
+  makeGrid('ann-pg',5,ANN.predPx,i=>{
+    ANN.predPx[i]=ANN.predPx[i]>0.5?0:1;
+    updateGrid('ann-pg',ANN.predPx);
+    annRunPredict();
+  });
+  renderSamples('ann-zs','ann-os',ANN.dataset);
+  annDrawNetwork();
+  annDrawWeightMaps();
+  annRunPredict();
+
+  // CNN init
+  cnnInitWeights();
+  makeGrid('cnn-pg',5,CNN.predPx,i=>{
+    CNN.predPx[i]=CNN.predPx[i]>0.5?0:1;
+    updateGrid('cnn-pg',CNN.predPx);
+    cnnRunPredict();
+  });
+  renderSamples('cnn-zs','cnn-os',CNN.dataset);
+  cnnDrawFilters();
+  cnnUpdatePipeline(CNN.predPx);
+  cnnRunPredict();
+
+  // Comparison grid init
+  makeGrid('cmp-pg',5,CMP.predPx,i=>{
+    CMP.predPx[i]=CMP.predPx[i]>0.5?0:1;
+    updateGrid('cmp-pg',CMP.predPx);
+    cmpUpdatePredictions();
+  });
+
+  // Conv animation loop
+  setInterval(cnnAnimateConv,400);
+
+  // Initial comparison chart
+  drawComparisonChart();
+});
+</script>
+</body>
+</html>
