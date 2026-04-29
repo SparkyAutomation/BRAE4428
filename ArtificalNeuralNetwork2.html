@@ -202,7 +202,7 @@ canvas{display:block}
   <div class="two">
     <div class="example">
       <h3>The Formula: L = &minus;&sum; y&middot;log(&ycirc;)</h3>
-      <p style="margin:0">For a two-class problem, if the true label is Z (y=[1,0]) and the network outputs &ycirc;=[p, 1&minus;p], the loss simplifies to <strong>L = &minus;log(p)</strong> &mdash; the negative log of the probability assigned to the correct class. The sum over classes collapses to a single term because only the true class has y=1.</p>
+      <p style="margin:0">Cross-entropy uses a dot product to measure the similarity between the true answers and a logarithmic penalty scale—which ruthlessly punishes confident mistakes—and then applies a minus sign to flip that negative alignment score into a positive error.</p>
     </div>
     <div class="example">
       <h3>Why log? Exponential penalty for confidence</h3>
