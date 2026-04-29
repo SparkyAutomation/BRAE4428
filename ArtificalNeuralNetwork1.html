@@ -303,6 +303,8 @@ button.action-btn:hover { background: var(--primary); color: #fff; }
                 <span style="color:var(--muted)">Derivative of the Sigmoid curve at point z:</span><br>
                 ∂a/∂z = a(1 − a) = <span class="val-hl" id="st-dadz">--</span><br><br>
                 <span style="color:var(--muted)">Final Gradients (∂L/∂a × ∂a/∂z × Input)</span><br>
+				<span>Gradient for $w_1$: $\frac{\partial L}{\partial w_1} = \frac{\partial L}{\partial a} \times \frac{\partial a}{\partial z} \times x_1$ </span><br>
+				<span>Gradient for $w_2$: $\frac{\partial L}{\partial w_2} = \frac{\partial L}{\partial a} \times \frac{\partial a}{\partial z} \times x_2$ </span><br>
                 Grad w₁: <span class="val-hl" id="st-dw1" style="color:#b54a3a">--</span> | Grad w₂: <span class="val-hl" id="st-dw2" style="color:#b54a3a">--</span>
               </div>
             </div>
