@@ -1,0 +1,1419 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ML Training - Data Splits, Overfitting and Evaluation Metrics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5ef;--surface:#fffdf8;--s2:#efe9db;--text:#1f2a1f;--muted:#5c6b5c;--primary:#2f7d32;--accent:#c98a2b;--line:#d9d2c2;--blue:#2d6cdf;--red:#b54a3a;--green:#2f7d32;--purple:#7b4faf;--teal:#1a7a6e;}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
+header{padding:52px 20px 30px;background:linear-gradient(160deg,#fbfaf6 60%,#e8f5e9)}
+main{max-width:1120px;margin:0 auto;padding:24px 20px 72px}
+h1,h2,h3{font-family:"Instrument Serif",serif;line-height:1.05;margin:0 0 10px}
+h1{font-size:clamp(2.4rem,5.5vw,4.6rem);max-width:20ch}
+h2{font-size:clamp(1.5rem,2.6vw,2.4rem);margin-top:0}
+h3{font-size:1.1rem;margin:0 0 6px}
+p{max-width:72ch;margin:0 0 10px}
+.lede{font-size:1.05rem;color:#2b3a2b;max-width:65ch}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 22px;box-shadow:0 8px 28px rgba(0,0,0,.05)}
+label{font-size:.87rem;font-weight:600;display:block;margin-bottom:5px}
+input[type=range]{width:100%;accent-color:var(--primary)}
+select{padding:6px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:Inter;font-size:.88rem;color:var(--text);cursor:pointer}
+.small{font-size:.84rem;color:var(--muted)}
+.pill{display:inline-block;padding:5px 11px;border-radius:999px;background:#edf6ee;color:var(--primary);font-weight:700;font-size:.76rem;letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px}
+canvas{width:100%;height:auto;background:#fff;border-radius:14px;border:1px solid #e8e1cf;display:block}
+.example{padding:13px 15px;border-radius:13px;background:var(--s2)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.83rem;color:var(--muted);margin-top:8px}
+.sw{display:inline-flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.hint{font-size:.77rem;color:var(--muted);text-align:center;margin:3px 0 0;font-style:italic}
+.eq-panel{background:#f9f5ec;border:1.5px solid #e3d9c4;border-radius:13px;padding:13px 16px;margin:14px 0}
+.eq-panel-title{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:9px}
+.eq-row{display:flex;align-items:baseline;gap:10px;margin:5px 0;flex-wrap:wrap}
+.eq-lbl{font-size:.77rem;font-weight:600;color:var(--muted);min-width:120px}
+.eq{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;background:#ede7da;padding:3px 9px;border-radius:6px;line-height:1.7;color:#1a2a1a}
+.eq-live{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;background:#e6f4e6;border:1px solid #c5e0c5;padding:3px 9px;border-radius:6px;line-height:1.7;color:#1a2a1a}
+.eq-plain{font-size:.82rem;color:var(--muted);font-style:italic;padding:2px 9px;line-height:1.7}
+.tabs{display:flex;gap:5px;margin-bottom:24px;border-bottom:2px solid var(--line);padding-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tb{background:transparent;border:none;font-family:Inter;font-size:.93rem;font-weight:600;color:var(--muted);cursor:pointer;padding:8px 15px;border-radius:8px;transition:all .18s;white-space:nowrap}
+.tb:hover{background:var(--s2);color:var(--text)}
+.tb.active{background:var(--primary);color:#fff}
+.tp{display:none;animation:fi .28s ease}
+.tp.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.btn{border:none;padding:7px 15px;border-radius:7px;font-weight:600;cursor:pointer;font-family:Inter;font-size:.85rem;transition:opacity .14s,transform .1s}
+.btn:hover{opacity:.9}.btn:active{transform:scale(.97)}
+.btn-blue{background:var(--blue);color:#fff}.btn-red{background:var(--red);color:#fff}.btn-green{background:var(--green);color:#fff}
+.btn-ghost{background:var(--s2);color:var(--text);border:1px solid var(--line)}.btn-purple{background:var(--purple);color:#fff}
+.bg{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:8px;background:var(--s2);font-size:.81rem;font-weight:600;border:1px solid var(--line)}
+.chip-val{font-family:ui-monospace,Menlo,monospace}
+.cpanel{background:var(--s2);padding:14px;border-radius:12px;border:1px solid var(--line)}
+.cm-cell{display:flex;align-items:center;justify-content:center;border-radius:8px;font-weight:700;font-size:1.1rem;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative}
+.cm-cell:hover{transform:scale(1.06);box-shadow:0 4px 16px rgba(0,0,0,.13)}
+.metric-bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden;margin:4px 0 8px}
+.metric-fill{height:100%;border-radius:5px;transition:width .5s ease}
+.split-bar{height:44px;border-radius:10px;overflow:hidden;display:flex;margin:12px 0}
+.split-seg{display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:#fff;transition:flex .4s ease;overflow:hidden;white-space:nowrap}
+.aug-preview{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.aug-img{border-radius:10px;border:2px solid var(--line);overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#f0ece0;font-size:.7rem;color:var(--muted);text-align:center;padding:4px}
+.aug-img canvas{border-radius:8px;border:none}
+.plain-words-box{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:14px 0}
+.pw-card{border-radius:12px;padding:14px 16px;border:1.5px solid}
+.pw-card-title{font-size:.82rem;font-weight:700;margin-bottom:4px}
+.pw-card-quote{font-size:.95rem;font-style:italic;color:var(--text)}
+.map-plain-box{background:#f0f7ff;border:1.5px solid #b8d4f5;border-radius:13px;padding:14px 16px;margin:0 0 14px}
+.map-plain-step{display:flex;align-items:flex-start;gap:10px;margin:7px 0}
+.map-plain-num{background:var(--blue);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;margin-top:1px}
+.map-plain-text{font-size:.88rem;color:var(--text)}
+.map-plain-text strong{color:var(--blue)}
+.map-chip-callout{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:#e8f4e8;border:1.5px solid #b5d9b5;font-size:.82rem;font-weight:600;color:var(--green);margin:10px 0 0}
+@media(max-width:860px){.two{grid-template-columns:1fr!important}.three{grid-template-columns:1fr!important}.plain-words-box{grid-template-columns:1fr!important}}
+</style>
+</head>
+<body>
+<header>
+  <div style="max-width:1120px;margin:0 auto;padding:0 20px">
+    <div class="pill">Machine Learning Series</div>
+    <h1>Training, Evaluation &amp; Metrics</h1>
+    <p class="lede">From splitting your dataset to reading a confusion matrix - understand every step of the ML training loop, how to spot overfitting, when to stop, and what every metric actually means.</p>
+  </div>
+</header>
+<main>
+<div class="tabs">
+  <button class="tb active" onclick="openTab('splits',this)">&#9312; Data Splits</button>
+  <button class="tb" onclick="openTab('fitting',this)">&#9313; Fit &amp; Stop</button>
+  <button class="tb" onclick="openTab('augmentation',this)">&#9314; Augmentation</button>
+  <button class="tb" onclick="openTab('confusion',this)">&#9315; Confusion Matrix</button>
+  <button class="tb" onclick="openTab('metrics',this)">&#9316; Metrics</button>
+  <button class="tb" onclick="openTab('hyperparams',this)">&#9317; Hyperparameters</button>
+  <button class="tb" onclick="openTab('map',this)">&#9318; mAP</button>
+</div>
+<div id="tp-splits" class="tp active">
+<section class="card">
+  <div class="pill" style="background:#e3ebf6;color:var(--blue)">Dataset Fundamentals</div>
+  <h2>Training, Validation &amp; Test Data</h2>
+  <p>Every ML project splits its dataset into three non-overlapping subsets. Each plays a distinct role - mixing them up is one of the most common sources of misleading results.</p>
+  <div class="eq-panel">
+    <div class="eq-panel-title">&#128208; The Three Splits</div>
+    <div class="eq-row"><span class="eq-lbl">Training set</span><span class="eq">Model sees this data and learns from it (gradient updates)</span></div>
+    <div class="eq-row"><span class="eq-lbl">Validation set</span><span class="eq">Model never trains on this - used to tune hyperparameters &amp; detect overfitting</span></div>
+    <div class="eq-row"><span class="eq-lbl">Test set</span><span class="eq">Touched exactly once - final unbiased performance estimate</span></div>
+    <div class="eq-row"><span class="eq-lbl">Typical split</span><span class="eq-live" id="splitEqLive">70 / 15 / 15 - 1000 samples to 700 / 150 / 150</span></div>
+  </div>
+  <div class="split-bar" id="splitBar">
+    <div class="split-seg" id="splitTrain" style="background:#2f7d32;flex:70">Train 70%</div>
+    <div class="split-seg" id="splitVal" style="background:#2d6cdf;flex:15">Val 15%</div>
+    <div class="split-seg" id="splitTest" style="background:#c98a2b;flex:15">Test 15%</div>
+  </div>
+  <canvas id="splitsC" width="700" height="320"></canvas>
+  <p class="hint">&#128161; Drag the split slider and watch how each subset role changes</p>
+  <div class="cpanel" style="margin-top:11px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+      <div><label>Training % = <span id="trainPctLbl" style="color:var(--green);font-family:monospace">70</span></label><input id="trainPct" type="range" min="50" max="85" step="5" value="70"></div>
+      <div><label>Total samples = <span id="totalSampLbl" style="color:var(--blue);font-family:monospace">1000</span></label><input id="totalSamp" type="range" min="200" max="5000" step="100" value="1000"></div>
+    </div>
+    <div style="margin-top:10px" class="bg">
+      <div class="chip">Train <span class="chip-val" id="trainChip" style="color:var(--green)">700</span></div>
+      <div class="chip">Val <span class="chip-val" id="valChip" style="color:var(--blue)">150</span></div>
+      <div class="chip">Test <span class="chip-val" id="testChip" style="color:var(--accent)">150</span></div>
+    </div>
+  </div>
+  <div class="three" style="margin-top:18px">
+    <div class="example"><h3 style="color:var(--green)">&#128994; Training Set</h3><p style="margin:0">The model sees this data repeatedly across epochs. Weights are updated via backpropagation. <strong>Never evaluate final performance on training data</strong> - the model has memorized it.</p></div>
+    <div class="example"><h3 style="color:var(--blue)">&#128309; Validation Set</h3><p style="margin:0">Used after each epoch to check how well the model generalizes. You use val loss to decide when to stop training, which learning rate to use, and which architecture works best.</p></div>
+    <div class="example"><h3 style="color:var(--accent)">&#128993; Test Set</h3><p style="margin:0">Locked away until the very end. You report test metrics once - after all hyperparameter tuning is done. Treat it like a sealed exam.</p></div>
+  </div>
+</section>
+</div>
+<div id="tp-fitting" class="tp">
+<section class="card">
+  <div class="pill" style="background:#fdecea;color:var(--red)">Training Dynamics</div>
+  <h2>Overfitting, Underfitting &amp; Early Stopping</h2>
+  <p>The training curve tells the whole story. Watch how train loss and val loss diverge - that gap is your signal.</p>
+  <div class="eq-panel">
+    <div class="eq-panel-title">&#128208; Diagnosing Fit - live curve updates with sliders</div>
+    <div class="eq-row"><span class="eq-lbl">Underfitting</span><span class="eq">Train loss high + Val loss high - model too simple</span></div>
+    <div class="eq-row"><span class="eq-lbl">Good fit</span><span class="eq">Train loss low + Val loss low + gap small - generalization achieved</span></div>
+    <div class="eq-row"><span class="eq-lbl">Overfitting</span><span class="eq">Train loss low + Val loss rising - memorizing training data</span></div>
+    <div class="eq-row"><span class="eq-lbl">Early stop</span><span class="eq-live" id="earlyStopLive">Stop when val loss has not improved for N epochs</span></div>
+  </div>
+  <canvas id="fittingC" width="700" height="340"></canvas>
+  <p class="hint">&#128161; Adjust model complexity and epochs - watch the train/val gap</p>
+  <div class="cpanel" style="margin-top:11px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px">
+      <div><label>Model complexity = <span id="complexityLbl" style="color:var(--blue);font-family:monospace">5</span></label><input id="complexity" type="range" min="1" max="10" step="1" value="5"><div style="font-size:.74rem;color:var(--muted)">1=underfit 5=good 10=overfit</div></div>
+      <div><label>Epochs = <span id="epochsLbl" style="color:var(--blue);font-family:monospace">60</span></label><input id="epochs" type="range" min="10" max="150" step="5" value="60"></div>
+      <div><label>Early stop patience = <span id="patienceLbl" style="color:var(--blue);font-family:monospace">10</span></label><input id="patience" type="range" min="3" max="30" step="1" value="10"></div>
+    </div>
+    <div style="margin-top:10px" class="bg">
+      <div class="chip">Diagnosis <span class="chip-val" id="diagnosisChip" style="color:var(--red)">-</span></div>
+      <div class="chip">Best val epoch <span class="chip-val" id="bestEpochChip" style="color:var(--green)">-</span></div>
+      <div class="chip">Early stop at <span class="chip-val" id="earlyStopChip" style="color:var(--accent)">-</span></div>
+    </div>
+  </div>
+  <div class="two" style="margin-top:18px">
+    <div class="example"><h3>How to Read the Curves</h3><p style="margin:0"><strong>Both curves high:</strong> underfitting. <strong>Train low, val diverging:</strong> overfitting - add dropout, augmentation, reduce model size. <strong>Both converging low:</strong> sweet spot found.</p></div>
+    <div class="example"><h3>Early Stopping in Practice</h3><p style="margin:0">Monitor val loss after every epoch. If it has not improved for patience epochs, stop and restore best weights. Patience of 5-15 is typical.</p></div>
+  </div>
+</section>
+</div>
+<div id="tp-augmentation" class="tp">
+<section class="card">
+  <div class="pill" style="background:#f2eee4;color:var(--accent)">Training Settings - Data Augmentation</div>
+  <h2>Augmentation - Synthetic Variety to Fight Overfitting</h2>
+  <p>Augmentation artificially expands your training set by applying random transformations to existing images. The model sees a different version each epoch, making it harder to memorize and forcing it to learn robust features.</p>
+  <div class="eq-panel">
+    <div class="eq-panel-title">&#128208; Augmentation Effect on Effective Dataset Size</div>
+    <div class="eq-row"><span class="eq-lbl">Without aug</span><span class="eq">Model sees same N images every epoch - memorizes after ~20 epochs</span></div>
+    <div class="eq-row"><span class="eq-lbl">With aug</span><span class="eq">Each epoch: N images x random transforms - effectively infinite variety</span></div>
+    <div class="eq-row"><span class="eq-lbl">Rule of thumb</span><span class="eq-live" id="augRuleLive">Strong aug - train longer (more epochs needed to converge)</span></div>
+  </div>
+  <div class="aug-preview" id="augPreviews">
+    <div class="aug-img"><canvas id="augC0" width="120" height="120"></canvas></div>
+    <div class="aug-img"><canvas id="augC1" width="120" height="120"></canvas></div>
+    <div class="aug-img"><canvas id="augC2" width="120" height="120"></canvas></div>
+    <div class="aug-img"><canvas id="augC3" width="120" height="120"></canvas></div>
+    <div class="aug-img"><canvas id="augC4" width="120" height="120"></canvas></div>
+    <div class="aug-img"><canvas id="augC5" width="120" height="120"></canvas></div>
+    <div class="aug-img"><canvas id="augC6" width="120" height="120"></canvas></div>
+    <div class="aug-img"><canvas id="augC7" width="120" height="120"></canvas></div>
+  </div>
+  <p class="hint">&#128161; Toggle augmentations and click Regenerate to see new random variants</p>
+  <div class="cpanel" style="margin-top:11px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem"><input type="checkbox" id="augFlip" checked> Horizontal Flip</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem"><input type="checkbox" id="augRotate" checked> Rotation 15deg</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem"><input type="checkbox" id="augBright" checked> Brightness</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem"><input type="checkbox" id="augCrop" checked> Random Crop</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem"><input type="checkbox" id="augNoise"> Noise</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem"><input type="checkbox" id="augBlur"> Blur</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem"><input type="checkbox" id="augHue"> Hue Shift</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem"><input type="checkbox" id="augMosaic"> Mosaic</label>
+    </div>
+    <div class="bg"><button class="btn btn-blue" onclick="drawAllAug()">&#8634; Regenerate</button><div class="chip">Active transforms <span class="chip-val" id="augCountChip" style="color:var(--blue)">4</span></div><div class="chip">Recommended epochs <span class="chip-val" id="augEpochChip" style="color:var(--green)">100-150</span></div></div>
+  </div>
+  <div class="two" style="margin-top:18px">
+    <div class="example"><h3>When to Use Strong Augmentation</h3><p style="margin:0">Small datasets (&lt;5k images) benefit most from aggressive augmentation. YOLO-style training uses mosaic, random scale, HSV shifts, and flips by default. Too much augmentation on an already-large dataset can slow convergence without benefit.</p></div>
+    <div class="example"><h3>Augmentation vs Epochs</h3><p style="margin:0">More augmentation = more variety per epoch = model needs more epochs to converge. A rule of thumb: if you double augmentation strength, add 20-30% more epochs. Watch val loss - if it is still decreasing at your epoch limit, train longer.</p></div>
+  </div>
+</section>
+</div>
+<div id="tp-confusion" class="tp">
+<section class="card">
+  <div class="pill" style="background:#f3eef8;color:var(--purple)">Evaluation - Confusion Matrix</div>
+  <h2>Confusion Matrix - Where Your Model Gets Confused</h2>
+  <p>A confusion matrix shows every combination of predicted vs actual class. <strong>Rows = what the model predicted. Columns = what actually was true.</strong> The diagonal (top-left to bottom-right) is correct predictions. Everything off-diagonal is an error. Click any cell to see what it means.</p>
+  <div class="eq-panel">
+    <div class="eq-panel-title">&#128208; Binary Confusion Matrix � rows = Predicted � columns = Actual</div>
+    <div class="eq-row"><span class="eq-lbl">TP (True Pos)</span><span class="eq">Predicted Positive + Actually Positive ? correct detection ?</span></div>
+    <div class="eq-row"><span class="eq-lbl">FP (False Pos)</span><span class="eq">Predicted Positive + Actually Negative ? false alarm ?? (Type I error)</span></div>
+    <div class="eq-row"><span class="eq-lbl">FN (False Neg)</span><span class="eq">Predicted Negative + Actually Positive ? missed detection ?? (Type II error)</span></div>
+    <div class="eq-row"><span class="eq-lbl">TN (True Neg)</span><span class="eq">Predicted Negative + Actually Negative ? correct rejection ?</span></div>
+    <div class="eq-row"><span class="eq-lbl">Axis convention</span><span class="eq">Rows = what the model predicted &middot; Columns = what actually was true</span></div><div class="eq-row"><span class="eq-lbl">Selected cell</span><span class="eq-live" id="cmSelectedLive">?? Click any cell to see its meaning</span></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:16px 0">
+    <div><div style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Binary (2-class)</div><canvas id="cmBinaryC" width="340" height="300" style="cursor:pointer"></canvas><p class="hint">Click any cell for details</p></div>
+    <div><div style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Multi-class (4-class)</div><canvas id="cmMultiC" width="340" height="300"></canvas><p class="hint">Diagonal = correct - Off-diagonal = confusion</p></div>
+  </div>
+  <div class="cpanel" style="margin-top:4px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:10px">
+      <div><label>TP = <span id="tpLbl" style="color:var(--green);font-family:monospace">80</span></label><input id="tpSlider" type="range" min="0" max="100" value="80"></div>
+      <div><label>FP = <span id="fpLbl" style="color:var(--red);font-family:monospace">15</span></label><input id="fpSlider" type="range" min="0" max="100" value="15"></div>
+      <div><label>FN = <span id="fnLbl" style="color:var(--accent);font-family:monospace">20</span></label><input id="fnSlider" type="range" min="0" max="100" value="20"></div>
+      <div><label>TN = <span id="tnLbl" style="color:var(--blue);font-family:monospace">85</span></label><input id="tnSlider" type="range" min="0" max="100" value="85"></div>
+    </div>
+    <div class="bg"><div class="chip">Accuracy <span class="chip-val" id="cmAccChip" style="color:var(--green)">-</span></div><div class="chip">Precision <span class="chip-val" id="cmPrecChip" style="color:var(--blue)">-</span></div><div class="chip">Recall <span class="chip-val" id="cmRecChip" style="color:var(--accent)">-</span></div><div class="chip">F1 <span class="chip-val" id="cmF1Chip" style="color:var(--purple)">-</span></div></div>
+  </div>
+  <div class="two" style="margin-top:18px">
+    <div class="example"><h3>Reading the Matrix</h3><p style="margin:0">Each row = actual class. Each column = predicted class. A perfect model has all values on the diagonal and zeros everywhere else. Off-diagonal values reveal which classes get confused with each other.</p></div>
+    <div class="example"><h3>Normalized vs Raw Counts</h3><p style="margin:0">Raw counts show absolute errors. Normalized (row-wise) shows the rate of confusion per class - useful when classes are imbalanced.</p></div>
+  </div>
+</section>
+</div>
+<div id="tp-metrics" class="tp">
+<section class="card">
+  <div class="pill" style="background:#e3ebf6;color:var(--blue)">Evaluation Metrics</div>
+  <h2>Accuracy, Precision, Recall &amp; F1-Score</h2>
+  <p>Each metric answers a different question. Accuracy alone is misleading on imbalanced datasets. Precision and recall trade off against each other. F1 balances them.</p>
+  <div class="eq-panel">
+    <div class="eq-panel-title">&#128208; Metric Formulas - live values update with sliders</div>
+    <div class="eq-row"><span class="eq-lbl">Accuracy</span><span class="eq">(TP + TN) / (TP + FP + FN + TN)</span><span class="eq-live" id="mAccLive">-</span></div>
+    <div class="eq-row"><span class="eq-lbl" style="min-width:120px"></span><span class="eq-plain">&#128172; "I'm right a lot of the time."</span></div>
+    <div class="eq-row"><span class="eq-lbl">Precision</span><span class="eq">TP / (TP + FP) - of all predicted positives, how many are correct?</span><span class="eq-live" id="mPrecLive">-</span></div>
+    <div class="eq-row"><span class="eq-lbl" style="min-width:120px"></span><span class="eq-plain">&#128172; "When I say yes, I'm usually right."</span></div>
+    <div class="eq-row"><span class="eq-lbl">Recall</span><span class="eq">TP / (TP + FN) - of all actual positives, how many did we find?</span><span class="eq-live" id="mRecLive">-</span></div>
+    <div class="eq-row"><span class="eq-lbl" style="min-width:120px"></span><span class="eq-plain">&#128172; "I catch most of the yeses that really exist."</span></div>
+    <div class="eq-row"><span class="eq-lbl">F1-Score</span><span class="eq">2 x (Precision x Recall) / (Precision + Recall) - The model is only as "strong" as its most significant failure.</span><span class="eq-live" id="mF1Live">-</span></div>
+  </div>
+  <div class="plain-words-box">
+    <div class="pw-card" style="background:#edf6ee;border-color:#b5d9b5"><div class="pw-card-title" style="color:var(--green)">&#127919; Precision</div><div class="pw-card-quote">"When I say I found it, I'm usually right."</div></div>
+    <div class="pw-card" style="background:#fff4e6;border-color:#f5d5a0"><div class="pw-card-title" style="color:var(--accent)">&#128269; Recall</div><div class="pw-card-quote">"I catch most of the real ones."</div></div>
+    <div class="pw-card" style="background:#e8f0fd;border-color:#b8d0f5"><div class="pw-card-title" style="color:var(--blue)">&#9989; Accuracy</div><div class="pw-card-quote">"I'm right most of the time overall."</div></div>
+  </div>
+  <canvas id="metricsC" width="700" height="360"></canvas>
+  <p class="hint">&#128161; Adjust TP/FP/FN/TN to see how each metric responds - notice precision vs recall tradeoff</p>
+  <div class="cpanel" style="margin-top:11px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:10px">
+      <div><label>TP = <span id="mTpLbl" style="color:var(--green);font-family:monospace">80</span></label><input id="mTp" type="range" min="0" max="200" value="80"></div>
+      <div><label>FP = <span id="mFpLbl" style="color:var(--red);font-family:monospace">15</span></label><input id="mFp" type="range" min="0" max="200" value="15"></div>
+      <div><label>FN = <span id="mFnLbl" style="color:var(--accent);font-family:monospace">20</span></label><input id="mFn" type="range" min="0" max="200" value="20"></div>
+      <div><label>TN = <span id="mTnLbl" style="color:var(--blue);font-family:monospace">85</span></label><input id="mTn" type="range" min="0" max="200" value="85"></div>
+    </div>
+    <div class="bg"><div class="chip">Accuracy <span class="chip-val" id="mAccChip" style="color:var(--green)">-</span></div><div class="chip">Precision <span class="chip-val" id="mPrecChip" style="color:var(--blue)">-</span></div><div class="chip">Recall <span class="chip-val" id="mRecChip" style="color:var(--accent)">-</span></div><div class="chip">F1 <span class="chip-val" id="mF1Chip" style="color:var(--purple)">-</span></div></div>
+  </div>
+  <div class="two" style="margin-top:18px">
+    <div class="example"><h3>Precision vs Recall Tradeoff</h3><p style="margin:0"><strong>High precision, low recall:</strong> conservative - only fires when very confident. Good for spam filters. <strong>High recall, low precision:</strong> catches almost everything but has many false alarms. Good for cancer screening. F1 punishes extreme imbalance between the two.</p></div>
+    <div class="example"><h3>When Accuracy Lies</h3><p style="margin:0">Imagine 99% of emails are not spam. A model that always predicts "not spam" gets 99% accuracy - but 0% recall on spam. This is the accuracy paradox. On imbalanced datasets, always report precision, recall, and F1 per class.</p></div>
+  </div>
+</section>
+</div>
+<div id="tp-hyperparams" class="tp">
+<section class="card">
+  <div class="pill" style="background:#f3eef8;color:var(--purple)">Training Configuration</div>
+  <h2>Hyperparameters - The Knobs You Turn</h2>
+  <p>Parameters are the weights the model <em>learns</em> during training. Hyperparameters are the settings <em>you</em> choose before training starts - they control how learning happens, not what is learned.</p>
+  <div class="eq-panel">
+    <div class="eq-panel-title">&#128208; Parameters vs Hyperparameters</div>
+    <div class="eq-row"><span class="eq-lbl">Parameters</span><span class="eq">Weights &amp; biases - learned automatically via gradient descent during training</span></div>
+    <div class="eq-row"><span class="eq-lbl">Learning rate</span><span class="eq">How big a step to take each gradient update - too high = diverge, too low = slow</span></div>
+    <div class="eq-row"><span class="eq-lbl">Batch size</span><span class="eq">How many samples per gradient update - affects noise and memory usage</span></div>
+    <div class="eq-row"><span class="eq-lbl">Epochs</span><span class="eq">How many full passes through the training data</span></div>
+    <div class="eq-row"><span class="eq-lbl">Dropout rate</span><span class="eq">Fraction of neurons randomly zeroed each forward pass - regularization</span></div>
+    <div class="eq-row"><span class="eq-lbl">Weight decay</span><span class="eq">L2 penalty on large weights - keeps model simple, reduces overfitting</span></div>
+  </div>
+  <h3 style="margin-top:18px;color:var(--purple)">Learning Rate - How Fast Does the Model Learn?</h3>
+  <p style="margin-bottom:8px">The learning rate controls the step size during gradient descent. Too high and the loss bounces around or explodes. Too low and training crawls. The "just right" rate converges smoothly.</p>
+  <canvas id="lrC" width="700" height="280"></canvas>
+  <p class="hint">&#128161; Drag the learning rate slider - watch convergence change from diverging to crawling to smooth</p>
+  <div class="cpanel" style="margin-top:10px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+      <div><label>Learning rate = <span id="lrLbl" style="color:var(--purple);font-family:monospace">0.01</span></label><input id="lrSlider" type="range" min="1" max="100" step="1" value="30"><div style="font-size:.74rem;color:var(--muted)">left = too low - middle = just right - right = too high</div></div>
+      <div style="display:flex;align-items:center"><div class="chip" id="lrDiagChip" style="color:var(--purple)">Just right - smooth convergence</div></div>
+    </div>
+  </div>
+  <h3 style="margin-top:22px;color:var(--blue)">Batch Size - Noisy vs Smooth Gradients</h3>
+  <p style="margin-bottom:8px">Small batches give noisy gradient estimates - the loss curve is jagged but can escape local minima. Large batches give smooth, accurate gradients but may overfit and use more memory.</p>
+  <canvas id="batchC" width="700" height="220"></canvas>
+  <p class="hint">&#128161; Smaller batch = noisier curve - Larger batch = smoother but may overfit</p>
+  <div class="cpanel" style="margin-top:10px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+      <div><label>Batch size = <span id="batchLbl" style="color:var(--blue);font-family:monospace">32</span></label><input id="batchSlider" type="range" min="0" max="5" step="1" value="2"><div style="font-size:.74rem;color:var(--muted)">4 - 8 - 16 - 32 - 64 - 128</div></div>
+      <div style="display:flex;align-items:center"><div class="chip" id="batchDiagChip" style="color:var(--blue)">Moderate noise - good default</div></div>
+    </div>
+  </div>
+  <h3 style="margin-top:22px;color:var(--teal)">Dropout - Randomly Silencing Neurons</h3>
+  <p style="margin-bottom:8px">During training, dropout randomly sets a fraction of neuron outputs to zero. This prevents neurons from co-adapting and forces the network to learn redundant representations.</p>
+  <canvas id="dropoutC" width="700" height="260"></canvas>
+  <p class="hint">&#128161; Adjust dropout rate - grey neurons are dropped this forward pass</p>
+  <div class="cpanel" style="margin-top:10px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+      <div><label>Dropout rate = <span id="dropoutLbl" style="color:var(--teal);font-family:monospace">0.3</span></label><input id="dropoutSlider" type="range" min="0" max="0.9" step="0.05" value="0.3"><div style="font-size:.74rem;color:var(--muted)">0 = no dropout - 0.5 = half dropped - 0.9 = too aggressive</div></div>
+      <div><button class="btn btn-ghost" onclick="redrawDropout()">&#8634; New random drop</button></div>
+    </div>
+  </div>
+  <h3 style="margin-top:22px;color:var(--accent)">Regularization - L1, L2 &amp; Dropout</h3>
+  <div class="three" style="margin-top:10px">
+    <div class="example"><h3 style="color:var(--accent)">L1 Regularization</h3><p style="margin:0">Adds the <strong>sum of absolute values</strong> of weights to the loss. Pushes many weights to exactly zero - produces sparse models. Useful for feature selection.</p><div style="margin-top:8px;font-family:monospace;font-size:.82rem;background:#ede7da;padding:5px 9px;border-radius:6px">Loss += lambda * sum|w|</div></div>
+    <div class="example"><h3 style="color:var(--blue)">L2 Regularization (Weight Decay)</h3><p style="margin:0">Adds the <strong>sum of squared weights</strong> to the loss. Penalizes large weights, keeping them small and distributed. The most common regularizer in deep learning - often called "weight decay" in AdamW.</p><div style="margin-top:8px;font-family:monospace;font-size:.82rem;background:#ede7da;padding:5px 9px;border-radius:6px">Loss += lambda * sum(w^2)</div></div>
+    <div class="example"><h3 style="color:var(--teal)">Dropout</h3><p style="margin:0">Randomly zeros neuron outputs during training. At inference, all neurons are active but outputs are scaled. Acts like training an ensemble of many sub-networks. Typical rates: 0.2-0.5 for hidden layers.</p><div style="margin-top:8px;font-family:monospace;font-size:.82rem;background:#ede7da;padding:5px 9px;border-radius:6px">p(keep) = 1 - dropout_rate</div></div>
+  </div>
+  <h3 style="margin-top:22px;color:var(--green)">Regularization Effect on Loss Curves</h3>
+  <canvas id="regC" width="700" height="240"></canvas>
+  <p class="hint">&#128161; Adjust weight decay - see how it closes the train/val gap</p>
+  <div class="cpanel" style="margin-top:10px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+      <div><label>Weight decay (L2 lambda) = <span id="wdLbl" style="color:var(--green);font-family:monospace">0.0001</span></label><input id="wdSlider" type="range" min="0" max="8" step="1" value="2"><div style="font-size:.74rem;color:var(--muted)">0 = none - middle = good - high = underfits</div></div>
+      <div style="display:flex;align-items:center"><div class="chip" id="wdDiagChip" style="color:var(--green)">Moderate regularization</div></div>
+    </div>
+  </div>
+</section>
+</div>
+<div id="tp-map" class="tp">
+<section class="card">
+  <div class="pill" style="background:#eef6f3;color:var(--teal)">Object Detection Metrics</div>
+  <h2>mAP - Mean Average Precision</h2>
+  <p>mAP is the standard metric for object detection. It combines precision and recall across all confidence thresholds into a single number. mAP@0.5 uses IoU>=0.5 as the match criterion. mAP@0.5:0.95 averages over IoU thresholds from 0.5 to 0.95 in steps of 0.05 - much stricter.</p>
+  <div class="map-plain-box">
+    <div style="font-size:.78rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">&#128483; Plain English - What mAP Actually Means</div>
+    <div class="map-plain-step"><div class="map-plain-num">1</div><div class="map-plain-text"><strong>Precision:</strong> "When I say I found it, I'm usually right."</div></div>
+    <div class="map-plain-step"><div class="map-plain-num">2</div><div class="map-plain-text"><strong>Average Precision:</strong> "For one class, I check precision as recall changes, then average it - that's the area under the PR curve."</div></div>
+    <div class="map-plain-step"><div class="map-plain-num">3</div><div class="map-plain-text"><strong>Mean Average Precision:</strong> "Then I average that score over all classes - so every class counts equally."</div></div>
+  </div>
+  <div class="eq-panel">
+    <div class="eq-panel-title">&#128208; mAP Calculation Pipeline - mAP = many classes, average their precision curves</div>
+    <div class="eq-row"><span class="eq-lbl">Step 1</span><span class="eq">For each class: rank all detections by confidence (highest first)</span></div>
+    <div class="eq-row"><span class="eq-lbl">Step 2</span><span class="eq">For each detection: compute cumulative Precision and Recall</span></div>
+    <div class="eq-row"><span class="eq-lbl">Step 3</span><span class="eq">AP = area under the Precision-Recall curve (interpolated)</span></div>
+    <div class="eq-row"><span class="eq-lbl">Step 4</span><span class="eq">mAP = mean of AP across all classes</span></div>
+    <div class="eq-row"><span class="eq-lbl">mAP@0.5</span><span class="eq-live" id="map50Live">AP computed with IoU threshold = 0.50</span></div>
+    <div class="eq-row"><span class="eq-lbl">mAP@0.5:0.95</span><span class="eq-live" id="map5095Live">Average of AP at IoU = 0.50, 0.55, 0.60 ... 0.95 (10 thresholds)</span></div>
+  </div>
+  <div class="map-chip-callout">&#128202; mAP@0.5 = lenient (box just needs to overlap 50%) &nbsp;&middot;&nbsp; mAP@0.5:0.95 = strict (rewards tight, well-placed boxes)</div>
+  <canvas id="mapC" width="700" height="360" style="margin-top:14px"></canvas>
+  <p class="hint">&#128161; Adjust model quality and IoU threshold - see how the PR curve and AP change</p>
+  <div class="cpanel" style="margin-top:11px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px">
+      <div><label>Model quality = <span id="mapQualLbl" style="color:var(--blue);font-family:monospace">7</span></label><input id="mapQual" type="range" min="1" max="10" step="1" value="7"><div style="font-size:.74rem;color:var(--muted)">1=poor - 10=excellent</div></div>
+      <div><label>IoU threshold = <span id="mapIouLbl" style="color:var(--blue);font-family:monospace">0.50</span></label><input id="mapIou" type="range" min="0.5" max="0.95" step="0.05" value="0.5"><div style="font-size:.74rem;color:var(--muted)">0.50 (lenient) to 0.95 (strict)</div></div>
+      <div><label>Classes = <span id="mapClassLbl" style="color:var(--blue);font-family:monospace">3</span></label><input id="mapClasses" type="range" min="1" max="6" step="1" value="3"></div>
+    </div>
+    <div style="margin-top:10px" class="bg"><div class="chip">mAP@0.5 <span class="chip-val" id="map50Chip" style="color:var(--green)">-</span></div><div class="chip">mAP@0.5:0.95 <span class="chip-val" id="map5095Chip" style="color:var(--teal)">-</span></div><div class="chip">AP (current IoU) <span class="chip-val" id="mapApChip" style="color:var(--blue)">-</span></div></div>
+  </div>
+  <div class="two" style="margin-top:18px">
+    <div class="example"><h3>mAP@0.5 vs mAP@0.5:0.95</h3><p style="margin:0">mAP@0.5 is the classic PASCAL VOC metric - a detection counts as correct if IoU >= 0.5. mAP@0.5:0.95 (COCO metric) averages over 10 IoU thresholds, rewarding models that localize tightly. A model can score 0.85 mAP@0.5 but only 0.55 mAP@0.5:0.95 if its boxes are sloppy.</p></div>
+    <div class="example"><h3>What's a Good mAP?</h3><p style="margin:0">Context matters. YOLOv8n on COCO: ~37 mAP@0.5:0.95. YOLOv8x: ~53. For a custom dataset with 5 well-defined classes and 2000 images, 0.80+ mAP@0.5 is achievable. Below 0.5 usually means insufficient data, poor labeling, or class imbalance.</p></div>
+  </div>
+</section>
+</div>
+</main>
+<script>
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    r=Math.min(r,w/2,h/2);
+    this.moveTo(x+r,y);this.lineTo(x+w-r,y);this.arcTo(x+w,y,x+w,y+r,r);
+    this.lineTo(x+w,y+h-r);this.arcTo(x+w,y+h,x+w-r,y+h,r);
+    this.lineTo(x+r,y+h);this.arcTo(x,y+h,x,y+h-r,r);
+    this.lineTo(x,y+r);this.arcTo(x,y,x+r,y,r);this.closePath();return this;
+  };
+}
+function seeded(s){return()=>{s=(s*9301+49297)%233280;return s/233280;};}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function lerp(a,b,t){return a+(b-a)*t;}
+
+function openTab(id,btn){
+  document.querySelectorAll('.tp').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tp-'+id).classList.add('active');
+  btn.classList.add('active');
+  setTimeout(()=>{
+    if(id==='splits')drawSplits();
+    if(id==='fitting')drawFitting();
+    if(id==='augmentation')drawAllAug();
+    if(id==='confusion'){drawCMBinary();drawCMMulti();}
+    if(id==='metrics')drawMetrics();
+    if(id==='hyperparams'){drawLR();drawBatch();drawDropout();drawReg();}
+    if(id==='map')drawMap();
+  },15);
+}
+
+// TAB 1 - DATA SPLITS
+const splitsC=document.getElementById('splitsC');
+const splitsX=splitsC.getContext('2d');
+
+function updateSplitBar(){
+  const trainPct=parseInt(document.getElementById('trainPct').value);
+  const rem=100-trainPct;
+  const valPct=Math.round(rem/2);
+  const testPct=rem-valPct;
+  const total=parseInt(document.getElementById('totalSamp').value);
+  const trainN=Math.round(total*trainPct/100);
+  const valN=Math.round(total*valPct/100);
+  const testN=total-trainN-valN;
+  document.getElementById('trainPctLbl').textContent=trainPct;
+  document.getElementById('totalSampLbl').textContent=total.toLocaleString();
+  document.getElementById('trainChip').textContent=trainN.toLocaleString();
+  document.getElementById('valChip').textContent=valN.toLocaleString();
+  document.getElementById('testChip').textContent=testN.toLocaleString();
+  document.getElementById('splitEqLive').textContent=`${trainPct} / ${valPct} / ${testPct} - ${total} samples to ${trainN} / ${valN} / ${testN}`;
+  document.getElementById('splitTrain').style.flex=trainPct;
+  document.getElementById('splitTrain').textContent=`Train ${trainPct}%`;
+  document.getElementById('splitVal').style.flex=valPct;
+  document.getElementById('splitVal').textContent=`Val ${valPct}%`;
+  document.getElementById('splitTest').style.flex=testPct;
+  document.getElementById('splitTest').textContent=`Test ${testPct}%`;
+  return{trainPct,valPct,testPct,trainN,valN,testN,total};
+}
+
+function drawSplits(){
+  const {trainPct,valPct,testPct,trainN,valN,testN,total}=updateSplitBar();
+  const w=splitsC.width,h=splitsC.height;
+  splitsX.clearRect(0,0,w,h);
+  splitsX.fillStyle='#fff';
+  splitsX.fillRect(0,0,w,h);
+  const rng=seeded(123);
+  const dotCount=Math.min(total,300);
+  const cols=['#2f7d32','#2d6cdf','#c98a2b'];
+  const labels=['Train','Val','Test'];
+  const pcts=[trainPct,valPct,testPct];
+  const counts=[trainN,valN,testN];
+  const pad=30,dotArea={x:pad,y:20,w:w-pad*2,h:h-100};
+  let cx=dotArea.x;
+  pcts.forEach((p,i)=>{
+    const zw=dotArea.w*(p/100);
+    splitsX.fillStyle=cols[i]+'18';
+    splitsX.fillRect(cx,dotArea.y,zw,dotArea.h);
+    splitsX.strokeStyle=cols[i]+'55';
+    splitsX.lineWidth=1.5;
+    splitsX.setLineDash([4,3]);
+    splitsX.strokeRect(cx,dotArea.y,zw,dotArea.h);
+    splitsX.setLineDash([]);
+    splitsX.fillStyle=cols[i];
+    splitsX.font='bold 12px Inter';
+    splitsX.textAlign='center';
+    splitsX.textBaseline='top';
+    splitsX.fillText(`${labels[i]} (${p}%)`,cx+zw/2,dotArea.y+6);
+    splitsX.font='11px Inter';
+    splitsX.fillStyle=cols[i]+'cc';
+    splitsX.fillText(`${counts[i].toLocaleString()} samples`,cx+zw/2,dotArea.y+22);
+    cx+=zw;
+  });
+  for(let i=0;i<dotCount;i++){
+    const frac=i/dotCount;
+    let ci=frac<trainPct/100?0:frac<(trainPct+valPct)/100?1:2;
+    const x=dotArea.x+rng()*dotArea.w;
+    const y=dotArea.y+40+rng()*(dotArea.h-50);
+    splitsX.beginPath();
+    splitsX.arc(x,y,4,0,Math.PI*2);
+    splitsX.fillStyle=cols[ci]+'cc';
+    splitsX.fill();
+  }
+  const roles=[{col:'#2f7d32',text:'Learns weights via backprop'},{col:'#2d6cdf',text:'Tunes hyperparams, detects overfit'},{col:'#c98a2b',text:'Final unbiased evaluation (once!)'}];
+  let lx=pad;
+  const ly=h-52;
+  roles.forEach((r,i)=>{
+    splitsX.fillStyle=r.col+'22';
+    splitsX.beginPath();
+    splitsX.roundRect(lx,ly,(w-pad*2)/3-8,44,8);
+    splitsX.fill();
+    splitsX.strokeStyle=r.col+'66';
+    splitsX.lineWidth=1;
+    splitsX.stroke();
+    splitsX.fillStyle=r.col;
+    splitsX.font='bold 11px Inter';
+    splitsX.textAlign='center';
+    splitsX.textBaseline='middle';
+    splitsX.fillText(labels[i],lx+(w-pad*2)/3/2-4,ly+14);
+    splitsX.fillStyle='#5c6b5c';
+    splitsX.font='10px Inter';
+    splitsX.fillText(r.text,lx+(w-pad*2)/3/2-4,ly+30);
+    lx+=(w-pad*2)/3;
+  });
+}
+
+document.getElementById('trainPct').addEventListener('input',drawSplits);
+document.getElementById('totalSamp').addEventListener('input',drawSplits);
+
+// TAB 2 - FITTING
+const fittingC=document.getElementById('fittingC');
+const fittingX=fittingC.getContext('2d');
+
+function genFitCurves(complexity,epochs){
+  const rng=seeded(42+complexity*7);
+  const trainLoss=[],valLoss=[];
+  const cap=complexity/10;
+  const overfit=Math.max(0,(complexity-5)/5);
+  let tl=2.5,vl=2.6;
+  for(let e=0;e<epochs;e++){
+    const t=e/epochs;
+    tl=tl*0.94+rng()*0.04-0.02;
+    tl=Math.max(0.05+cap*0.3,tl);
+    const overfit_start=0.3+overfit*0.2;
+    if(t<overfit_start){
+      vl=vl*0.95+rng()*0.05-0.01;
+      vl=Math.max(0.15,vl);
+    } else {
+      const rise=overfit*(t-overfit_start)*3;
+      vl=vl*(1+rise*0.015)+rng()*0.04-0.01;
+      vl=Math.max(0.1,vl);
+    }
+    trainLoss.push(tl);
+    valLoss.push(vl);
+  }
+  return{trainLoss,valLoss};
+}
+
+function findBestEpoch(valLoss){
+  let best=Infinity,bestIdx=0;
+  valLoss.forEach((v,i)=>{if(v<best){best=v;bestIdx=i;}});
+  return bestIdx;
+}
+
+function findEarlyStop(valLoss,patience){
+  const best=findBestEpoch(valLoss);
+  return Math.min(valLoss.length-1,best+patience);
+}
+
+function drawFitting(){
+  const complexity=parseInt(document.getElementById('complexity').value);
+  const epochs=parseInt(document.getElementById('epochs').value);
+  const patience=parseInt(document.getElementById('patience').value);
+  document.getElementById('complexityLbl').textContent=complexity;
+  document.getElementById('epochsLbl').textContent=epochs;
+  document.getElementById('patienceLbl').textContent=patience;
+  const {trainLoss,valLoss}=genFitCurves(complexity,epochs);
+  const bestEpoch=findBestEpoch(valLoss);
+  const earlyStop=findEarlyStop(valLoss,patience);
+  const finalTrain=trainLoss[trainLoss.length-1];
+  const finalVal=valLoss[valLoss.length-1];
+  const gap=finalVal-finalTrain;
+  let diagnosis,diagColor;
+  if(finalTrain>0.8&&finalVal>0.8){diagnosis='Underfitting';diagColor='#c98a2b';}
+  else if(gap>0.4){diagnosis='Overfitting';diagColor='#b54a3a';}
+  else if(gap>0.15){diagnosis='Slight Overfit';diagColor='#c98a2b';}
+  else{diagnosis='Good Fit';diagColor='#2f7d32';}
+  document.getElementById('diagnosisChip').textContent=diagnosis;
+  document.getElementById('diagnosisChip').style.color=diagColor;
+  document.getElementById('bestEpochChip').textContent=`Epoch ${bestEpoch+1}`;
+  document.getElementById('earlyStopChip').textContent=`Epoch ${earlyStop+1}`;
+  document.getElementById('earlyStopLive').textContent=`Best val at epoch ${bestEpoch+1} - Early stop triggers at epoch ${earlyStop+1}`;
+  const w=fittingC.width,h=fittingC.height;
+  fittingX.clearRect(0,0,w,h);
+  fittingX.fillStyle='#fff';
+  fittingX.fillRect(0,0,w,h);
+  const pad={l:55,r:20,t:20,b:50};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const allVals=[...trainLoss,...valLoss];
+  const maxV=Math.max(...allVals)*1.05,minV=Math.min(...allVals)*0.95;
+  const rng2=maxV-minV||1;
+  const px=i=>pad.l+(i/(epochs-1))*cw;
+  const py=v=>pad.t+ch-(((v-minV)/rng2)*ch);
+  const underEnd=Math.floor(epochs*0.15);
+  fittingX.fillStyle='rgba(201,138,43,0.06)';
+  fittingX.fillRect(pad.l,pad.t,px(underEnd)-pad.l,ch);
+  if(bestEpoch<epochs-1){
+    fittingX.fillStyle='rgba(181,74,58,0.06)';
+    fittingX.fillRect(px(bestEpoch),pad.t,cw-(px(bestEpoch)-pad.l),ch);
+  }
+  fittingX.strokeStyle='#e8e1cf';fittingX.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+i*(ch/4);
+    fittingX.beginPath();fittingX.moveTo(pad.l,y);fittingX.lineTo(pad.l+cw,y);fittingX.stroke();
+    const v=maxV-i*(rng2/4);
+    fittingX.fillStyle='#8a9a8a';fittingX.font='9px Inter';
+    fittingX.textAlign='right';fittingX.textBaseline='middle';
+    fittingX.fillText(v.toFixed(2),pad.l-4,y);
+  }
+  fittingX.strokeStyle='#bfc8b0';fittingX.lineWidth=1.5;
+  fittingX.beginPath();fittingX.moveTo(pad.l,pad.t);fittingX.lineTo(pad.l,pad.t+ch);fittingX.stroke();
+  fittingX.beginPath();fittingX.moveTo(pad.l,pad.t+ch);fittingX.lineTo(pad.l+cw,pad.t+ch);fittingX.stroke();
+  fittingX.fillStyle='#8a9a8a';fittingX.font='10px Inter';
+  fittingX.textAlign='center';fittingX.textBaseline='top';
+  fittingX.fillText('Epoch',pad.l+cw/2,pad.t+ch+6);
+  fittingX.save();fittingX.translate(14,pad.t+ch/2);fittingX.rotate(-Math.PI/2);
+  fittingX.textAlign='center';fittingX.fillText('Loss',0,0);fittingX.restore();
+  fittingX.beginPath();
+  trainLoss.forEach((v,i)=>i===0?fittingX.moveTo(px(i),py(v)):fittingX.lineTo(px(i),py(v)));
+  fittingX.lineTo(px(epochs-1),pad.t+ch);fittingX.lineTo(pad.l,pad.t+ch);fittingX.closePath();
+  fittingX.fillStyle='rgba(47,125,50,0.08)';fittingX.fill();
+  fittingX.beginPath();
+  valLoss.forEach((v,i)=>i===0?fittingX.moveTo(px(i),py(v)):fittingX.lineTo(px(i),py(v)));
+  fittingX.lineTo(px(epochs-1),pad.t+ch);fittingX.lineTo(pad.l,pad.t+ch);fittingX.closePath();
+  fittingX.fillStyle='rgba(181,74,58,0.06)';fittingX.fill();
+  fittingX.beginPath();
+  trainLoss.forEach((v,i)=>i===0?fittingX.moveTo(px(i),py(v)):fittingX.lineTo(px(i),py(v)));
+  fittingX.strokeStyle='#2f7d32';fittingX.lineWidth=2.5;fittingX.setLineDash([]);fittingX.stroke();
+  fittingX.beginPath();
+  valLoss.forEach((v,i)=>i===0?fittingX.moveTo(px(i),py(v)):fittingX.lineTo(px(i),py(v)));
+  fittingX.strokeStyle='#b54a3a';fittingX.lineWidth=2.5;fittingX.stroke();
+  fittingX.strokeStyle='#2f7d32';fittingX.lineWidth=2;fittingX.setLineDash([6,4]);
+  fittingX.beginPath();fittingX.moveTo(px(bestEpoch),pad.t);fittingX.lineTo(px(bestEpoch),pad.t+ch);fittingX.stroke();
+  fittingX.setLineDash([]);
+  if(earlyStop<epochs-1){
+    fittingX.strokeStyle='#c98a2b';fittingX.lineWidth=2;fittingX.setLineDash([4,3]);
+    fittingX.beginPath();fittingX.moveTo(px(earlyStop),pad.t);fittingX.lineTo(px(earlyStop),pad.t+ch);fittingX.stroke();
+    fittingX.setLineDash([]);
+  }
+  const legItems=[{col:'#2f7d32',label:'Train Loss',dash:false},{col:'#b54a3a',label:'Val Loss',dash:false},{col:'#2f7d32',label:`Best Val (ep ${bestEpoch+1})`,dash:true},{col:'#c98a2b',label:`Early Stop (ep ${earlyStop+1})`,dash:true}];
+  let lx=pad.l;
+  legItems.forEach(item=>{
+    fittingX.strokeStyle=item.col;fittingX.lineWidth=2;
+    if(item.dash)fittingX.setLineDash([5,3]);else fittingX.setLineDash([]);
+    fittingX.beginPath();fittingX.moveTo(lx,pad.t+ch+30);fittingX.lineTo(lx+22,pad.t+ch+30);fittingX.stroke();
+    fittingX.setLineDash([]);
+    fittingX.fillStyle='#1f2a1f';fittingX.font='10px Inter';
+    fittingX.textAlign='left';fittingX.textBaseline='middle';
+    fittingX.fillText(item.label,lx+26,pad.t+ch+30);
+    lx+=130;
+  });
+}
+
+document.getElementById('complexity').addEventListener('input',drawFitting);
+document.getElementById('epochs').addEventListener('input',drawFitting);
+document.getElementById('patience').addEventListener('input',drawFitting);
+
+// TAB 3 - AUGMENTATION
+function drawAugCanvas(canvasId,augOpts,seed){
+  const c=document.getElementById(canvasId);
+  const ctx=c.getContext('2d');
+  const w=c.width,h=c.height;
+  const rng=seeded(seed*31+7);
+  ctx.clearRect(0,0,w,h);
+  ctx.save();
+  let sx=0,sy=0,sw=w,sh=h;
+  if(augOpts.crop&&rng()>0.4){const cr=0.1+rng()*0.15;sx=cr*w*rng();sy=cr*h*rng();sw=w*(1-cr);sh=h*(1-cr);}
+  if(augOpts.flip&&rng()>0.5){ctx.translate(w,0);ctx.scale(-1,1);}
+  let angle=0;
+  if(augOpts.rotate){angle=(rng()-0.5)*30*(Math.PI/180);}
+  ctx.translate(w/2,h/2);ctx.rotate(angle);ctx.translate(-w/2,-h/2);
+  let bright=1;
+  if(augOpts.bright){bright=0.6+rng()*0.8;}
+  let hue=0;
+  if(augOpts.hue){hue=rng()*360;}
+  ctx.fillStyle=`hsl(${200+hue%60},${Math.round(60*bright)}%,${Math.round(70*bright)}%)`;
+  ctx.fillRect(sx,sy,sw,sh*0.5);
+  ctx.fillStyle=`hsl(${100+hue%40},${Math.round(40*bright)}%,${Math.round(45*bright)}%)`;
+  ctx.fillRect(sx,sy+sh*0.5,sw,sh*0.5);
+  ctx.fillStyle=`hsl(${220+hue%30},${Math.round(70*bright)}%,${Math.round(50*bright)}%)`;
+  ctx.fillRect(sx+sw*0.15,sy+sh*0.35,sw*0.35,sh*0.25);
+  ctx.fillStyle=`hsl(${220+hue%30},${Math.round(50*bright)}%,${Math.round(35*bright)}%)`;
+  ctx.fillRect(sx+sw*0.2,sy+sh*0.28,sw*0.25,sh*0.12);
+  ctx.beginPath();
+  ctx.arc(sx+sw*0.72,sy+sh*0.38,sw*0.08,0,Math.PI*2);
+  ctx.fillStyle=`hsl(${30+hue%20},${Math.round(60*bright)}%,${Math.round(65*bright)}%)`;
+  ctx.fill();
+  ctx.fillStyle=`hsl(${30+hue%20},${Math.round(50*bright)}%,${Math.round(45*bright)}%)`;
+  ctx.fillRect(sx+sw*0.66,sy+sh*0.46,sw*0.12,sh*0.2);
+  if(augOpts.noise&&rng()>0.3){
+    const imgData=ctx.getImageData(0,0,w,h);
+    const d=imgData.data;
+    const rng2=seeded(seed*17+3);
+    for(let i=0;i<d.length;i+=4){const n=(rng2()-0.5)*60;d[i]=clamp(d[i]+n,0,255);d[i+1]=clamp(d[i+1]+n,0,255);d[i+2]=clamp(d[i+2]+n,0,255);}
+    ctx.putImageData(imgData,0,0);
+  }
+  if(augOpts.blur&&rng()>0.4){ctx.filter='blur(2px)';ctx.drawImage(c,0,0);ctx.filter='none';}
+  if(augOpts.mosaic&&seed===0){
+    ctx.restore();ctx.save();
+    const half=w/2;
+    [0,1,2,3].forEach(q=>{
+      const qx=(q%2)*half,qy=Math.floor(q/2)*half;
+      ctx.save();ctx.beginPath();ctx.rect(qx,qy,half,half);ctx.clip();
+      ctx.fillStyle=`hsl(${(q*90+hue)%360},50%,60%)`;ctx.fillRect(qx,qy,half,half);
+      ctx.fillStyle=`hsl(${(q*90+hue+120)%360},40%,40%)`;ctx.fillRect(qx,qy+half*0.5,half,half*0.5);
+      ctx.fillStyle=`hsl(${(q*90+hue+60)%360},60%,50%)`;ctx.fillRect(qx+half*0.1,qy+half*0.3,half*0.4,half*0.3);
+      ctx.restore();
+    });
+    ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(half,0);ctx.lineTo(half,h);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,half);ctx.lineTo(w,half);ctx.stroke();
+  }
+  ctx.restore();
+  ctx.fillStyle='rgba(0,0,0,0.55)';
+  ctx.fillRect(0,h-18,w,18);
+  ctx.fillStyle='#fff';
+  ctx.font='bold 9px Inter';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  const activeAugs=Object.entries(augOpts).filter(([k,v])=>v).map(([k])=>k);
+  ctx.fillText(activeAugs.length===0?'Original':activeAugs.slice(0,3).join('+'),w/2,h-9);
+}
+
+function getAugOpts(){
+  return{flip:document.getElementById('augFlip').checked,rotate:document.getElementById('augRotate').checked,bright:document.getElementById('augBright').checked,crop:document.getElementById('augCrop').checked,noise:document.getElementById('augNoise').checked,blur:document.getElementById('augBlur').checked,hue:document.getElementById('augHue').checked,mosaic:document.getElementById('augMosaic').checked};
+}
+
+function drawAllAug(){
+  const opts=getAugOpts();
+  const active=Object.values(opts).filter(Boolean).length;
+  document.getElementById('augCountChip').textContent=active;
+  document.getElementById('augEpochChip').textContent=active<=2?'50-80':active<=5?'100-150':'150-300';
+  drawAugCanvas('augC0',{},Math.floor(Math.random()*1000));
+  for(let i=1;i<8;i++){drawAugCanvas('augC'+i,opts,Math.floor(Math.random()*1000)+i*100);}
+}
+
+['augFlip','augRotate','augBright','augCrop','augNoise','augBlur','augHue','augMosaic'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',drawAllAug);
+});
+
+// TAB 4 - CONFUSION MATRIX
+const cmBinaryC=document.getElementById('cmBinaryC');
+const cmBinaryX=cmBinaryC.getContext('2d');
+const cmMultiC=document.getElementById('cmMultiC');
+const cmMultiX=cmMultiC.getContext('2d');
+let cmSelectedCell=null;
+
+const cmCellDetails=[
+  'True Positive - Model said YES, answer is YES. Correct detection. Contributes to Precision and Recall numerators.',
+  'False Positive - Model said YES, answer is NO. False alarm. Hurts Precision. Also called Type I error.',
+  'False Negative - Model said NO, answer is YES. Missed detection. Hurts Recall. Also called Type II error.',
+  'True Negative - Model said NO, answer is NO. Correct rejection. Contributes to Accuracy.'
+];
+
+cmBinaryC.addEventListener('click',function(e){
+  const rect=cmBinaryC.getBoundingClientRect();
+  const scaleX=cmBinaryC.width/rect.width;
+  const scaleY=cmBinaryC.height/rect.height;
+  const cx=(e.clientX-rect.left)*scaleX;
+  const cy=(e.clientY-rect.top)*scaleY;
+  const padL=80,padT=70;
+  const cellW=(cmBinaryC.width-padL-20)/2;
+  const cellH=(cmBinaryC.height-padT-20)/2;
+  if(cx<padL||cx>padL+cellW*2||cy<padT||cy>padT+cellH*2)return;
+  const col=cx<padL+cellW?0:1;
+  const row=cy<padT+cellH?0:1;
+  const idx=row*2+col;
+  cmSelectedCell=idx;
+  const labels=['TP','FP','FN','TN'];
+  const icons=['Correct detection','False alarm','Missed detection','Correct rejection'];
+  document.getElementById('cmSelectedLive').textContent=cmCellDetails[idx];
+  drawCMBinary();
+});
+
+function getCMValues(){
+  return{tp:parseInt(document.getElementById('tpSlider').value),fp:parseInt(document.getElementById('fpSlider').value),fn:parseInt(document.getElementById('fnSlider').value),tn:parseInt(document.getElementById('tnSlider').value)};
+}
+
+function updateCMChips(){
+  const {tp,fp,fn,tn}=getCMValues();
+  document.getElementById('tpLbl').textContent=tp;
+  document.getElementById('fpLbl').textContent=fp;
+  document.getElementById('fnLbl').textContent=fn;
+  document.getElementById('tnLbl').textContent=tn;
+  const total=tp+fp+fn+tn;
+  const acc=total>0?(tp+tn)/total:0;
+  const prec=tp+fp>0?tp/(tp+fp):0;
+  const rec=tp+fn>0?tp/(tp+fn):0;
+  const f1=prec+rec>0?2*prec*rec/(prec+rec):0;
+  document.getElementById('cmAccChip').textContent=(acc*100).toFixed(1)+'%';
+  document.getElementById('cmPrecChip').textContent=(prec*100).toFixed(1)+'%';
+  document.getElementById('cmRecChip').textContent=(rec*100).toFixed(1)+'%';
+  document.getElementById('cmF1Chip').textContent=f1.toFixed(3);
+}
+
+function drawCMBinary(){
+  updateCMChips();
+  const {tp,fp,fn,tn}=getCMValues();
+  const w=cmBinaryC.width,h=cmBinaryC.height;
+  cmBinaryX.clearRect(0,0,w,h);
+  cmBinaryX.fillStyle='#fff';
+  cmBinaryX.fillRect(0,0,w,h);
+  const cells=[
+    {val:tp,row:0,col:0,label:'TP',sublabel:'True Positive',col1:'#2f7d32',bg:'rgba(47,125,50,0.15)'},
+    {val:fp,row:0,col:1,label:'FP',sublabel:'False Positive',col1:'#b54a3a',bg:'rgba(181,74,58,0.12)'},
+    {val:fn,row:1,col:0,label:'FN',sublabel:'False Negative',col1:'#c98a2b',bg:'rgba(201,138,43,0.12)'},
+    {val:tn,row:1,col:1,label:'TN',sublabel:'True Negative',col1:'#2d6cdf',bg:'rgba(45,108,223,0.12)'},
+  ];
+  const padL=80,padT=70,cellW=(w-padL-20)/2,cellH=(h-padT-20)/2;
+  cmBinaryX.fillStyle='#2d6cdf';cmBinaryX.font='bold 11px Inter';
+  cmBinaryX.textAlign='center';cmBinaryX.textBaseline='middle';
+  cmBinaryX.fillText('ACTUAL',padL+cellW,padT/2-8);
+  cmBinaryX.font='10px Inter';
+  cmBinaryX.fillText('(Ground Truth)',padL+cellW,padT/2+6);
+  cmBinaryX.save();
+  cmBinaryX.translate(padL/2-4,padT+cellH);
+  cmBinaryX.rotate(-Math.PI/2);
+  cmBinaryX.fillStyle='#2f7d32';cmBinaryX.font='bold 11px Inter';
+  cmBinaryX.textAlign='center';cmBinaryX.textBaseline='middle';
+  cmBinaryX.fillText('PREDICTED',0,-7);
+  cmBinaryX.font='10px Inter';
+  cmBinaryX.fillText('(Model Output)',0,7);
+  cmBinaryX.restore();
+  cmBinaryX.fillStyle='#2d6cdf';cmBinaryX.font='bold 10px Inter';
+  cmBinaryX.textAlign='center';cmBinaryX.textBaseline='middle';
+  cmBinaryX.fillText('Actual Positive',padL+cellW/2,padT-9);
+  cmBinaryX.fillText('Actual Negative',padL+cellW+cellW/2,padT-9);
+  cmBinaryX.fillStyle='#2f7d32';cmBinaryX.font='bold 10px Inter';
+  cmBinaryX.textAlign='right';cmBinaryX.textBaseline='middle';
+  cmBinaryX.fillText('Pred Positive',padL-6,padT+cellH/2);
+  cmBinaryX.fillText('Pred Negative',padL-6,padT+cellH+cellH/2);
+  cmBinaryX.strokeStyle='#d9d2c2';cmBinaryX.lineWidth=1;
+  cmBinaryX.beginPath();cmBinaryX.moveTo(padL+cellW,padT);cmBinaryX.lineTo(padL+cellW,padT+cellH*2);cmBinaryX.stroke();
+  cmBinaryX.beginPath();cmBinaryX.moveTo(padL,padT+cellH);cmBinaryX.lineTo(padL+cellW*2,padT+cellH);cmBinaryX.stroke();
+  cells.forEach((cell,idx)=>{
+    const x=padL+cell.col*cellW,y=padT+cell.row*cellH;
+    const isSelected=cmSelectedCell===idx;
+    const isDiag=(cell.row===cell.col);
+    cmBinaryX.fillStyle=cell.bg;
+    cmBinaryX.beginPath();cmBinaryX.roundRect(x+3,y+3,cellW-6,cellH-6,10);cmBinaryX.fill();
+    if(isDiag){cmBinaryX.fillStyle=cell.col1+'18';cmBinaryX.beginPath();cmBinaryX.roundRect(x+3,y+3,cellW-6,cellH-6,10);cmBinaryX.fill();}    
+    if(isSelected){cmBinaryX.fillStyle='rgba(255,102,0,0.13)';cmBinaryX.beginPath();cmBinaryX.roundRect(x+3,y+3,cellW-6,cellH-6,10);cmBinaryX.fill();}    
+    cmBinaryX.strokeStyle=isSelected?'#ff6600':isDiag?cell.col1+'cc':cell.col1+'55';
+    cmBinaryX.lineWidth=isSelected?3.5:isDiag?2:1.5;
+    cmBinaryX.stroke();
+    cmBinaryX.fillStyle=cell.col1;
+    cmBinaryX.font='bold 28px "Instrument Serif",serif';
+    cmBinaryX.textAlign='center';cmBinaryX.textBaseline='middle';
+    cmBinaryX.fillText(cell.val,x+cellW/2,y+cellH/2-10);
+    cmBinaryX.font='bold 13px Inter';
+    cmBinaryX.fillText(cell.label,x+cellW/2,y+cellH/2+12);
+    cmBinaryX.fillStyle='#5c6b5c';cmBinaryX.font='9px Inter';
+    cmBinaryX.fillText(cell.sublabel,x+cellW/2,y+cellH/2+26);
+  });
+}
+
+function drawCMMulti(){
+  const w=cmMultiC.width,h=cmMultiC.height;
+  cmMultiX.clearRect(0,0,w,h);
+  cmMultiX.fillStyle='#fff';
+  cmMultiX.fillRect(0,0,w,h);
+  const classes=['Cat','Dog','Car','Bird'];
+  const n=classes.length;
+  // Rows=Predicted, Cols=Actual (transposed from original)
+  const matrix=[[85,6,1,7],[8,78,2,11],[2,3,92,1],[5,13,5,81]];
+  const maxVal=100;
+  const padL=62,padT=62,cellW=(w-padL-8)/n,cellH=(h-padT-8)/n;
+  cmMultiX.fillStyle='#2d6cdf';cmMultiX.font='bold 10px Inter';
+  cmMultiX.textAlign='center';cmMultiX.textBaseline='middle';
+  cmMultiX.fillText('ACTUAL',padL+cellW*n/2,padT/2-8);
+  cmMultiX.font='9px Inter';
+  cmMultiX.fillText('(Ground Truth)',padL+cellW*n/2,padT/2+5);
+  cmMultiX.save();
+  cmMultiX.translate(padL/2-4,padT+cellH*n/2);
+  cmMultiX.rotate(-Math.PI/2);
+  cmMultiX.fillStyle='#2f7d32';cmMultiX.font='bold 10px Inter';
+  cmMultiX.textAlign='center';cmMultiX.textBaseline='middle';
+  cmMultiX.fillText('PREDICTED',0,-6);
+  cmMultiX.font='9px Inter';
+  cmMultiX.fillText('(Model Output)',0,6);
+  cmMultiX.restore();
+  cmMultiX.fillStyle='#2d6cdf';cmMultiX.font='bold 10px Inter';
+  cmMultiX.textAlign='center';cmMultiX.textBaseline='middle';
+  classes.forEach((cls,i)=>{ cmMultiX.fillText(cls,padL+i*cellW+cellW/2,padT-8); });
+  cmMultiX.fillStyle='#2f7d32';cmMultiX.font='bold 10px Inter';
+  cmMultiX.textAlign='right';cmMultiX.textBaseline='middle';
+  classes.forEach((cls,i)=>{ cmMultiX.fillText(cls,padL-5,padT+i*cellH+cellH/2); });
+  cmMultiX.strokeStyle='rgba(217,210,194,0.7)';cmMultiX.lineWidth=1;
+  for(let i=1;i<n;i++){
+    cmMultiX.beginPath();cmMultiX.moveTo(padL+i*cellW,padT);cmMultiX.lineTo(padL+i*cellW,padT+cellH*n);cmMultiX.stroke();
+    cmMultiX.beginPath();cmMultiX.moveTo(padL,padT+i*cellH);cmMultiX.lineTo(padL+cellW*n,padT+i*cellH);cmMultiX.stroke();
+  }
+  matrix.forEach((row,ri)=>{
+    row.forEach((val,ci)=>{
+      const x=padL+ci*cellW,y=padT+ri*cellH;
+      const isDiag=ri===ci;
+      const intensity=val/maxVal;
+      const r=isDiag?lerp(230,47,intensity):lerp(250,181,intensity);
+      const g=isDiag?lerp(240,125,intensity):lerp(240,74,intensity);
+      const b=isDiag?lerp(230,50,intensity):lerp(240,58,intensity);
+      cmMultiX.fillStyle=`rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+      cmMultiX.beginPath();cmMultiX.roundRect(x+2,y+2,cellW-4,cellH-4,6);cmMultiX.fill();
+      cmMultiX.fillStyle=intensity>0.5?'#fff':'#1f2a1f';
+      cmMultiX.font=`bold ${isDiag?'14':'12'}px Inter`;
+      cmMultiX.textAlign='center';cmMultiX.textBaseline='middle';
+      cmMultiX.fillText(val,x+cellW/2,y+cellH/2);
+    });
+  });
+}
+
+['tpSlider','fpSlider','fnSlider','tnSlider'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{drawCMBinary();drawCMMulti();});
+});
+
+// TAB 5 - METRICS
+const metricsC=document.getElementById('metricsC');
+const metricsX=metricsC.getContext('2d');
+
+function computeMetrics(tp,fp,fn,tn){
+  const total=tp+fp+fn+tn;
+  const acc=total>0?(tp+tn)/total:0;
+  const prec=tp+fp>0?tp/(tp+fp):0;
+  const rec=tp+fn>0?tp/(tp+fn):0;
+  const f1=prec+rec>0?2*prec*rec/(prec+rec):0;
+  return{acc,prec,rec,f1};
+}
+
+function drawMetrics(){
+  const tp=parseInt(document.getElementById('mTp').value);
+  const fp=parseInt(document.getElementById('mFp').value);
+  const fn=parseInt(document.getElementById('mFn').value);
+  const tn=parseInt(document.getElementById('mTn').value);
+  document.getElementById('mTpLbl').textContent=tp;
+  document.getElementById('mFpLbl').textContent=fp;
+  document.getElementById('mFnLbl').textContent=fn;
+  document.getElementById('mTnLbl').textContent=tn;
+  const {acc,prec,rec,f1}=computeMetrics(tp,fp,fn,tn);
+  document.getElementById('mAccLive').textContent=(acc*100).toFixed(1)+'%';
+  document.getElementById('mPrecLive').textContent=(prec*100).toFixed(1)+'%';
+  document.getElementById('mRecLive').textContent=(rec*100).toFixed(1)+'%';
+  document.getElementById('mF1Live').textContent=f1.toFixed(3);
+  document.getElementById('mAccChip').textContent=(acc*100).toFixed(1)+'%';
+  document.getElementById('mPrecChip').textContent=(prec*100).toFixed(1)+'%';
+  document.getElementById('mRecChip').textContent=(rec*100).toFixed(1)+'%';
+  document.getElementById('mF1Chip').textContent=f1.toFixed(3);
+  const w=metricsC.width,h=metricsC.height;
+  metricsX.clearRect(0,0,w,h);
+  metricsX.fillStyle='#fff';
+  metricsX.fillRect(0,0,w,h);
+  const vx=20,vy=20,vw=280,vh=h-40;
+  const total=tp+fp+fn+tn||1;
+  const tpH=Math.max(20,(tp/total)*vh);
+  const fpH=Math.max(20,(fp/total)*vh);
+  const fnH=Math.max(20,(fn/total)*vh);
+  const tnH=Math.max(20,(tn/total)*vh);
+  const leftH=tpH+fnH,rightH=fpH+tnH;
+  const scale=vh/Math.max(leftH,rightH);
+  const bw=vw/2-4;
+  const drawBox=(x,y,bw,bh,col,label,val)=>{
+    metricsX.fillStyle=col+'22';
+    metricsX.beginPath();metricsX.roundRect(x,y,bw,bh,6);metricsX.fill();
+    metricsX.strokeStyle=col+'88';metricsX.lineWidth=1.5;metricsX.stroke();
+    metricsX.fillStyle=col;
+    metricsX.font='bold 11px Inter';metricsX.textAlign='center';metricsX.textBaseline='middle';
+    metricsX.fillText(label,x+bw/2,y+bh/2-8);
+    metricsX.font='bold 16px "Instrument Serif",serif';
+    metricsX.fillText(val,x+bw/2,y+bh/2+8);
+  };
+  let cy=vy;
+  drawBox(vx,cy,bw,tpH*scale,'#2f7d32','TP',tp);cy+=tpH*scale+4;
+  drawBox(vx,cy,bw,fnH*scale,'#c98a2b','FN',fn);
+  cy=vy;
+  drawBox(vx+bw+8,cy,bw,fpH*scale,'#b54a3a','FP',fp);cy+=fpH*scale+4;
+  drawBox(vx+bw+8,cy,bw,tnH*scale,'#2d6cdf','TN',tn);
+  metricsX.fillStyle='#5c6b5c';metricsX.font='bold 9px Inter';
+  metricsX.textAlign='center';metricsX.textBaseline='bottom';
+  metricsX.fillText('Pred POS',vx+bw/2,vy-2);
+  metricsX.fillText('Pred NEG',vx+bw+8+bw/2,vy-2);
+  const mx=320,my=30,mw=w-mx-20,mh=h-60;
+  const metrics=[{label:'Accuracy',val:acc,col:'#2f7d32',desc:'(TP+TN)/Total'},{label:'Precision',val:prec,col:'#2d6cdf',desc:'TP/(TP+FP)'},{label:'Recall',val:rec,col:'#c98a2b',desc:'TP/(TP+FN)'},{label:'F1-Score',val:f1,col:'#7b4faf',desc:'2*P*R/(P+R)'}];
+  const barH=40,barGap=(mh-metrics.length*barH)/(metrics.length+1);
+  metrics.forEach((m,i)=>{
+    const by=my+barGap+(barH+barGap)*i;
+    metricsX.fillStyle='#f0ece0';
+    metricsX.beginPath();metricsX.roundRect(mx,by,mw,barH,8);metricsX.fill();
+    metricsX.fillStyle=m.col;
+    metricsX.beginPath();metricsX.roundRect(mx,by,mw*m.val,barH,8);metricsX.fill();
+    metricsX.fillStyle='#1f2a1f';metricsX.font='bold 12px Inter';
+    metricsX.textAlign='left';metricsX.textBaseline='middle';
+    metricsX.fillText(m.label,mx+8,by+barH/2-6);
+    metricsX.fillStyle='#5c6b5c';metricsX.font='9px Inter';
+    metricsX.fillText(m.desc,mx+8,by+barH/2+8);
+    const valX=mx+mw*m.val;
+    const textX=m.val>0.15?valX-4:valX+4;
+    metricsX.fillStyle=m.val>0.15?'#fff':m.col;
+    metricsX.font='bold 13px Inter';
+    metricsX.textAlign=m.val>0.15?'right':'left';
+    metricsX.textBaseline='middle';
+    metricsX.fillText((m.val*100).toFixed(1)+'%',textX,by+barH/2);
+  });
+  const arrowY=my+mh+10;
+  metricsX.fillStyle='#8a9a8a';metricsX.font='9px Inter';
+  metricsX.textAlign='center';metricsX.textBaseline='top';
+  metricsX.fillText('Higher Precision = fewer false alarms - Higher Recall = fewer misses',mx+mw/2,arrowY);
+}
+
+['mTp','mFp','mFn','mTn'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',drawMetrics);
+});
+
+// TAB 6 - HYPERPARAMETERS
+const lrC=document.getElementById('lrC');
+const lrX=lrC.getContext('2d');
+const batchC=document.getElementById('batchC');
+const batchX=batchC.getContext('2d');
+const dropoutC=document.getElementById('dropoutC');
+const dropoutX=dropoutC.getContext('2d');
+const regC=document.getElementById('regC');
+const regX=regC.getContext('2d');
+
+function drawLR(){
+  const sliderVal=parseInt(document.getElementById('lrSlider').value);
+  const lrValues=[0.0001,0.0003,0.001,0.003,0.01,0.03,0.1,0.3,1.0,3.0,10.0];
+  const idx=Math.round((sliderVal-1)/99*10);
+  const lr=lrValues[Math.min(idx,lrValues.length-1)];
+  document.getElementById('lrLbl').textContent=lr.toFixed(4);
+  let diag,diagCol;
+  if(lr<0.001){diag='Too low - training crawls';diagCol='#2d6cdf';}
+  else if(lr>0.1){diag='Too high - loss diverges';diagCol='#b54a3a';}
+  else{diag='Just right - smooth convergence';diagCol='#2f7d32';}
+  document.getElementById('lrDiagChip').textContent=diag;
+  document.getElementById('lrDiagChip').style.color=diagCol;
+  const w=lrC.width,h=lrC.height;
+  lrX.clearRect(0,0,w,h);
+  lrX.fillStyle='#fff';
+  lrX.fillRect(0,0,w,h);
+  const pad={l:55,r:20,t:20,b:50};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const epochs=80;
+  const rng=seeded(42);
+  const losses=[];
+  let loss=2.5;
+  for(let e=0;e<epochs;e++){
+    if(lr>0.1){
+      loss=loss*(1+lr*0.3*(rng()-0.3))+rng()*0.5;
+      loss=Math.max(0.1,Math.min(10,loss));
+    } else if(lr<0.001){
+      loss=loss*(1-lr*2)-0.001+rng()*0.02;
+      loss=Math.max(0.3,loss);
+    } else {
+      loss=loss*(1-lr*3)+rng()*0.05;
+      loss=Math.max(0.05,loss);
+    }
+    losses.push(loss);
+  }
+  lrX.strokeStyle='#e8e1cf';lrX.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+i*(ch/4);
+    lrX.beginPath();lrX.moveTo(pad.l,y);lrX.lineTo(pad.l+cw,y);lrX.stroke();
+  }
+  lrX.strokeStyle='#bfc8b0';lrX.lineWidth=1.5;
+  lrX.beginPath();lrX.moveTo(pad.l,pad.t);lrX.lineTo(pad.l,pad.t+ch);lrX.stroke();
+  lrX.beginPath();lrX.moveTo(pad.l,pad.t+ch);lrX.lineTo(pad.l+cw,pad.t+ch);lrX.stroke();
+  const maxL=Math.max(...losses)*1.1,minL=Math.max(0,Math.min(...losses)*0.9);
+  const rng2=maxL-minL||1;
+  const px=i=>pad.l+(i/(epochs-1))*cw;
+  const py=v=>pad.t+ch-(((v-minL)/rng2)*ch);
+  lrX.beginPath();
+  losses.forEach((v,i)=>i===0?lrX.moveTo(px(i),py(v)):lrX.lineTo(px(i),py(v)));
+  lrX.strokeStyle=lr>0.1?'#b54a3a':lr<0.001?'#2d6cdf':'#2f7d32';
+  lrX.lineWidth=2.5;lrX.setLineDash([]);lrX.stroke();
+  lrX.fillStyle='#8a9a8a';lrX.font='10px Inter';
+  lrX.textAlign='center';lrX.textBaseline='top';
+  lrX.fillText('Epoch',pad.l+cw/2,pad.t+ch+6);
+  lrX.save();lrX.translate(14,pad.t+ch/2);lrX.rotate(-Math.PI/2);
+  lrX.textAlign='center';lrX.fillText('Loss',0,0);lrX.restore();
+  lrX.fillStyle='#1f2a1f';lrX.font='bold 11px Inter';
+  lrX.textAlign='center';lrX.textBaseline='top';
+  lrX.fillText(`LR=${lr.toFixed(4)} - ${diag}`,pad.l+cw/2,4);
+}
+
+function drawBatch(){
+  const batchSizes=[4,8,16,32,64,128];
+  const idx=parseInt(document.getElementById('batchSlider').value);
+  const bs=batchSizes[idx];
+  document.getElementById('batchLbl').textContent=bs;
+  const noise=1/(Math.sqrt(bs)*0.3);
+  let diag,diagCol;
+  if(bs<=8){diag='Very noisy - may escape local minima';diagCol='#c98a2b';}
+  else if(bs>=64){diag='Smooth gradients - may overfit';diagCol='#2d6cdf';}
+  else{diag='Moderate noise - good default';diagCol='#2f7d32';}
+  document.getElementById('batchDiagChip').textContent=diag;
+  document.getElementById('batchDiagChip').style.color=diagCol;
+  const w=batchC.width,h=batchC.height;
+  batchX.clearRect(0,0,w,h);
+  batchX.fillStyle='#fff';
+  batchX.fillRect(0,0,w,h);
+  const pad={l:55,r:20,t:20,b:40};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const epochs=60;
+  const rng=seeded(99);
+  const losses=[];
+  let loss=2.5;
+  for(let e=0;e<epochs;e++){
+    loss=loss*0.93+(rng()-0.5)*noise*0.4;
+    loss=Math.max(0.1,loss);
+    losses.push(loss);
+  }
+  batchX.strokeStyle='#e8e1cf';batchX.lineWidth=1;
+  for(let i=0;i<=3;i++){const y=pad.t+i*(ch/3);batchX.beginPath();batchX.moveTo(pad.l,y);batchX.lineTo(pad.l+cw,y);batchX.stroke();}
+  batchX.strokeStyle='#bfc8b0';batchX.lineWidth=1.5;
+  batchX.beginPath();batchX.moveTo(pad.l,pad.t);batchX.lineTo(pad.l,pad.t+ch);batchX.stroke();
+  batchX.beginPath();batchX.moveTo(pad.l,pad.t+ch);batchX.lineTo(pad.l+cw,pad.t+ch);batchX.stroke();
+  const maxL=Math.max(...losses)*1.1,minL=Math.max(0,Math.min(...losses)*0.9);
+  const rng2=maxL-minL||1;
+  const px=i=>pad.l+(i/(epochs-1))*cw;
+  const py=v=>pad.t+ch-(((v-minL)/rng2)*ch);
+  batchX.beginPath();
+  losses.forEach((v,i)=>i===0?batchX.moveTo(px(i),py(v)):batchX.lineTo(px(i),py(v)));
+  batchX.strokeStyle='#7b4faf';batchX.lineWidth=2;batchX.setLineDash([]);batchX.stroke();
+  batchX.fillStyle='#8a9a8a';batchX.font='10px Inter';
+  batchX.textAlign='center';batchX.textBaseline='top';
+  batchX.fillText('Epoch',pad.l+cw/2,pad.t+ch+6);
+  batchX.fillStyle='#1f2a1f';batchX.font='bold 11px Inter';
+  batchX.textAlign='center';batchX.textBaseline='top';
+  batchX.fillText(`Batch size=${bs} - ${diag}`,pad.l+cw/2,4);
+}
+
+let dropoutSeed=Math.floor(Math.random()*10000);
+
+function drawDropout(){
+  const rate=parseFloat(document.getElementById('dropoutSlider').value);
+  document.getElementById('dropoutLbl').textContent=rate.toFixed(2);
+  const w=dropoutC.width,h=dropoutC.height;
+  dropoutX.clearRect(0,0,w,h);
+  dropoutX.fillStyle='#fff';
+  dropoutX.fillRect(0,0,w,h);
+  const layers=[4,6,6,4,2];
+  const layerX=layers.map((_,i)=>80+i*(w-160)/(layers.length-1));
+  const rng=seeded(dropoutSeed);
+  const nodePositions=[];
+  layers.forEach((n,li)=>{
+    const positions=[];
+    for(let ni=0;ni<n;ni++){
+      const ny=h/2+(ni-(n-1)/2)*44;
+      positions.push({x:layerX[li],y:ny,dropped:li>0&&li<layers.length-1&&rng()<rate});
+    }
+    nodePositions.push(positions);
+  });
+  for(let li=0;li<layers.length-1;li++){
+    nodePositions[li].forEach(src=>{
+      nodePositions[li+1].forEach(dst=>{
+        if(src.dropped||dst.dropped)return;
+        dropoutX.beginPath();
+        dropoutX.moveTo(src.x,src.y);
+        dropoutX.lineTo(dst.x,dst.y);
+        dropoutX.strokeStyle='rgba(180,180,180,0.4)';
+        dropoutX.lineWidth=1;
+        dropoutX.stroke();
+      });
+    });
+  }
+  nodePositions.forEach((layer,li)=>{
+    layer.forEach(node=>{
+      dropoutX.beginPath();
+      dropoutX.arc(node.x,node.y,14,0,Math.PI*2);
+      if(node.dropped){
+        dropoutX.fillStyle='#e0e0e0';
+        dropoutX.fill();
+        dropoutX.strokeStyle='#bbb';
+        dropoutX.lineWidth=1.5;
+        dropoutX.stroke();
+        dropoutX.fillStyle='#aaa';
+        dropoutX.font='bold 10px Inter';
+        dropoutX.textAlign='center';
+        dropoutX.textBaseline='middle';
+        dropoutX.fillText('X',node.x,node.y);
+      } else {
+        const cols=['#2f7d32','#2d6cdf','#7b4faf','#1a7a6e','#c98a2b'];
+        dropoutX.fillStyle=cols[li%cols.length]+'cc';
+        dropoutX.fill();
+        dropoutX.strokeStyle=cols[li%cols.length];
+        dropoutX.lineWidth=2;
+        dropoutX.stroke();
+      }
+    });
+  });
+  const dropped=nodePositions.slice(1,-1).flat().filter(n=>n.dropped).length;
+  const total=nodePositions.slice(1,-1).flat().length;
+  dropoutX.fillStyle='#1f2a1f';dropoutX.font='bold 11px Inter';
+  dropoutX.textAlign='center';dropoutX.textBaseline='top';
+  dropoutX.fillText(`Dropout rate=${rate.toFixed(2)} - ${dropped}/${total} hidden neurons dropped this pass`,w/2,4);
+}
+
+function redrawDropout(){
+  dropoutSeed=Math.floor(Math.random()*10000);
+  drawDropout();
+}
+
+document.getElementById('dropoutSlider').addEventListener('input',drawDropout);
+
+function drawReg(){
+  const wdLevels=[0,0.00001,0.0001,0.001,0.01,0.1,1.0,10.0,100.0];
+  const idx=parseInt(document.getElementById('wdSlider').value);
+  const wd=wdLevels[idx];
+  document.getElementById('wdLbl').textContent=wd.toExponential(0);
+  let diag,diagCol;
+  if(wd===0){diag='No regularization - may overfit';diagCol='#b54a3a';}
+  else if(wd>0.1){diag='Too strong - underfitting';diagCol='#c98a2b';}
+  else{diag='Moderate regularization';diagCol='#2f7d32';}
+  document.getElementById('wdDiagChip').textContent=diag;
+  document.getElementById('wdDiagChip').style.color=diagCol;
+  const w=regC.width,h=regC.height;
+  regX.clearRect(0,0,w,h);
+  regX.fillStyle='#fff';
+  regX.fillRect(0,0,w,h);
+  const pad={l:55,r:20,t:20,b:50};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const epochs=80;
+  const rng=seeded(77);
+  const trainLoss=[],valLoss=[];
+  let tl=2.5,vl=2.6;
+  for(let e=0;e<epochs;e++){
+    const t=e/epochs;
+    tl=tl*(1-0.08-wd*0.5)+rng()*0.04;
+    tl=Math.max(0.05+wd*0.3,tl);
+    const overfit=Math.max(0,0.4-wd*2);
+    if(t<0.3){vl=vl*0.95+rng()*0.04;vl=Math.max(0.15,vl);}
+    else{const rise=overfit*(t-0.3)*2;vl=vl*(1+rise*0.01)+rng()*0.03;vl=Math.max(0.1,vl);}
+    trainLoss.push(tl);
+    valLoss.push(vl);
+  }
+  regX.strokeStyle='#e8e1cf';regX.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+i*(ch/4);regX.beginPath();regX.moveTo(pad.l,y);regX.lineTo(pad.l+cw,y);regX.stroke();}
+  regX.strokeStyle='#bfc8b0';regX.lineWidth=1.5;
+  regX.beginPath();regX.moveTo(pad.l,pad.t);regX.lineTo(pad.l,pad.t+ch);regX.stroke();
+  regX.beginPath();regX.moveTo(pad.l,pad.t+ch);regX.lineTo(pad.l+cw,pad.t+ch);regX.stroke();
+  const allV=[...trainLoss,...valLoss];
+  const maxV=Math.max(...allV)*1.05,minV=Math.min(...allV)*0.95;
+  const rng2=maxV-minV||1;
+  const px=i=>pad.l+(i/(epochs-1))*cw;
+  const py=v=>pad.t+ch-(((v-minV)/rng2)*ch);
+  regX.beginPath();
+  trainLoss.forEach((v,i)=>i===0?regX.moveTo(px(i),py(v)):regX.lineTo(px(i),py(v)));
+  regX.strokeStyle='#2f7d32';regX.lineWidth=2.5;regX.setLineDash([]);regX.stroke();
+  regX.beginPath();
+  valLoss.forEach((v,i)=>i===0?regX.moveTo(px(i),py(v)):regX.lineTo(px(i),py(v)));
+  regX.strokeStyle='#b54a3a';regX.lineWidth=2.5;regX.stroke();
+  regX.fillStyle='#8a9a8a';regX.font='10px Inter';
+  regX.textAlign='center';regX.textBaseline='top';
+  regX.fillText('Epoch',pad.l+cw/2,pad.t+ch+6);
+  regX.fillStyle='#1f2a1f';regX.font='bold 11px Inter';
+  regX.textAlign='center';regX.textBaseline='top';
+  regX.fillText(`Weight decay=${wd.toExponential(0)} - ${diag}`,pad.l+cw/2,4);
+  const legItems=[{col:'#2f7d32',label:'Train Loss'},{col:'#b54a3a',label:'Val Loss'}];
+  let lx=pad.l;
+  legItems.forEach(item=>{
+    regX.strokeStyle=item.col;regX.lineWidth=2;regX.setLineDash([]);
+    regX.beginPath();regX.moveTo(lx,pad.t+ch+30);regX.lineTo(lx+22,pad.t+ch+30);regX.stroke();
+    regX.fillStyle='#1f2a1f';regX.font='10px Inter';
+    regX.textAlign='left';regX.textBaseline='middle';
+    regX.fillText(item.label,lx+26,pad.t+ch+30);
+    lx+=120;
+  });
+}
+
+document.getElementById('lrSlider').addEventListener('input',drawLR);
+document.getElementById('batchSlider').addEventListener('input',drawBatch);
+document.getElementById('wdSlider').addEventListener('input',drawReg);
+
+// TAB 7 - mAP
+const mapC=document.getElementById('mapC');
+const mapX=mapC.getContext('2d');
+
+function genPRCurve(quality,iouThresh,classIdx){
+  const rng=seeded(quality*13+classIdx*7+Math.round(iouThresh*100));
+  const iouPenalty=Math.max(0,(iouThresh-0.5)/0.45);
+  const effectiveQ=(quality/10)*(1-iouPenalty*0.7);
+  const points=[];
+  const N=20;
+  let tp=0,fp=0,fn=Math.round(50+rng()*30);
+  const totalPos=fn;
+  for(let i=0;i<N;i++){
+    const newTP=Math.round(effectiveQ*(totalPos/N)*(0.8+rng()*0.4));
+    const newFP=Math.round((1-effectiveQ)*(totalPos/N)*(1+rng()*2));
+    tp=Math.min(tp+newTP,totalPos);
+    fp+=newFP;
+    fn=totalPos-tp;
+    const prec=tp+fp>0?tp/(tp+fp):1;
+    const rec=totalPos>0?tp/totalPos:0;
+    points.push({prec,rec});
+  }
+  points.unshift({prec:1,rec:0});
+  points.push({prec:0,rec:1});
+  points.sort((a,b)=>a.rec-b.rec);
+  return points;
+}
+
+function computeAP(prPoints){
+  let ap=0;
+  for(let r=0;r<=1;r+=0.1){
+    const maxPrec=prPoints.filter(p=>p.rec>=r).reduce((m,p)=>Math.max(m,p.prec),0);
+    ap+=maxPrec/11;
+  }
+  return ap;
+}
+
+function drawMap(){
+  const quality=parseInt(document.getElementById('mapQual').value);
+  const iouThresh=parseFloat(document.getElementById('mapIou').value);
+  const numClasses=parseInt(document.getElementById('mapClasses').value);
+  document.getElementById('mapQualLbl').textContent=quality;
+  document.getElementById('mapIouLbl').textContent=iouThresh.toFixed(2);
+  document.getElementById('mapClassLbl').textContent=numClasses;
+  const classColors=['#2f7d32','#2d6cdf','#b54a3a','#c98a2b','#7b4faf','#1a7a6e'];
+  const classNames=['Cat','Dog','Car','Bird','Person','Truck'];
+  const curves=[];
+  let apSum=0;
+  for(let c=0;c<numClasses;c++){
+    const pts=genPRCurve(quality,iouThresh,c);
+    const ap=computeAP(pts);
+    apSum+=ap;
+    curves.push({pts,ap,col:classColors[c],name:classNames[c]});
+  }
+  const mAP=apSum/numClasses;
+  let ap50Sum=0;
+  for(let c=0;c<numClasses;c++){const pts=genPRCurve(quality,0.5,c);ap50Sum+=computeAP(pts);}
+  const mAP50=ap50Sum/numClasses;
+  let map5095Sum=0;
+  const iouSteps=[0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95];
+  iouSteps.forEach(iou=>{let s=0;for(let c=0;c<numClasses;c++){s+=computeAP(genPRCurve(quality,iou,c));}map5095Sum+=s/numClasses;});
+  const mAP5095=map5095Sum/iouSteps.length;
+  document.getElementById('map50Chip').textContent=(mAP50*100).toFixed(1)+'%';
+  document.getElementById('map5095Chip').textContent=(mAP5095*100).toFixed(1)+'%';
+  document.getElementById('mapApChip').textContent=(mAP*100).toFixed(1)+'%';
+  document.getElementById('map50Live').textContent=`mAP@0.5 = ${(mAP50*100).toFixed(1)}% (IoU threshold = 0.50)`;
+  document.getElementById('map5095Live').textContent=`mAP@0.5:0.95 = ${(mAP5095*100).toFixed(1)}% (avg over 10 IoU thresholds)`;
+  const w=mapC.width,h=mapC.height;
+  mapX.clearRect(0,0,w,h);
+  mapX.fillStyle='#fff';
+  mapX.fillRect(0,0,w,h);
+  const pad={l:55,r:20,t:30,b:50};
+  const cw=(w/2)-pad.l-pad.r-10,ch=h-pad.t-pad.b;
+  const px=r=>pad.l+r*cw;
+  const py=p=>pad.t+ch-(p*ch);
+  mapX.strokeStyle='#e8e1cf';mapX.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const v=i/4;
+    mapX.beginPath();mapX.moveTo(pad.l,py(v));mapX.lineTo(pad.l+cw,py(v));mapX.stroke();
+    mapX.beginPath();mapX.moveTo(px(v),pad.t);mapX.lineTo(px(v),pad.t+ch);mapX.stroke();
+    mapX.fillStyle='#8a9a8a';mapX.font='9px Inter';
+    mapX.textAlign='right';mapX.textBaseline='middle';
+    mapX.fillText(v.toFixed(1),pad.l-4,py(v));
+    mapX.textAlign='center';mapX.textBaseline='top';
+    mapX.fillText(v.toFixed(1),px(v),pad.t+ch+4);
+  }
+  mapX.strokeStyle='#bfc8b0';mapX.lineWidth=1.5;
+  mapX.beginPath();mapX.moveTo(pad.l,pad.t);mapX.lineTo(pad.l,pad.t+ch);mapX.stroke();
+  mapX.beginPath();mapX.moveTo(pad.l,pad.t+ch);mapX.lineTo(pad.l+cw,pad.t+ch);mapX.stroke();
+  mapX.fillStyle='#8a9a8a';mapX.font='10px Inter';
+  mapX.textAlign='center';mapX.textBaseline='top';
+  mapX.fillText('Recall',pad.l+cw/2,pad.t+ch+18);
+  mapX.save();mapX.translate(14,pad.t+ch/2);mapX.rotate(-Math.PI/2);
+  mapX.textAlign='center';mapX.fillText('Precision',0,0);mapX.restore();
+  mapX.fillStyle='#1f2a1f';mapX.font='bold 11px Inter';
+  mapX.textAlign='center';mapX.textBaseline='top';
+  mapX.fillText(`Precision-Recall Curves (IoU=${iouThresh.toFixed(2)})`,pad.l+cw/2,4);
+  curves.forEach(curve=>{
+    mapX.beginPath();
+    curve.pts.forEach((p,i)=>{const x=pad.l+p.rec*cw,y=pad.t+ch-p.prec*ch;i===0?mapX.moveTo(x,y):mapX.lineTo(x,y);});
+    mapX.strokeStyle=curve.col;mapX.lineWidth=2;mapX.stroke();
+    mapX.beginPath();
+    curve.pts.forEach((p,i)=>{const x=pad.l+p.rec*cw,y=pad.t+ch-p.prec*ch;i===0?mapX.moveTo(x,y):mapX.lineTo(x,y);});
+    mapX.lineTo(pad.l+cw,pad.t+ch);mapX.lineTo(pad.l,pad.t+ch);mapX.closePath();
+    mapX.fillStyle=curve.col+'18';mapX.fill();
+  });
+  const bx=w/2+10,by=pad.t,bw2=w/2-30,bh=ch;
+  mapX.fillStyle='#1f2a1f';mapX.font='bold 11px Inter';
+  mapX.textAlign='center';mapX.textBaseline='top';
+  mapX.fillText(`AP per Class (IoU=${iouThresh.toFixed(2)})`,bx+bw2/2,4);
+  const barH2=Math.min(32,(bh-60)/numClasses-6);
+  const barGap=(bh-60-numClasses*barH2)/(numClasses+1);
+  curves.forEach((curve,i)=>{
+    const barY=by+barGap+(barH2+barGap)*i;
+    mapX.fillStyle='#f0ece0';
+    mapX.beginPath();mapX.roundRect(bx,barY,bw2,barH2,6);mapX.fill();
+    mapX.fillStyle=curve.col;
+    mapX.beginPath();mapX.roundRect(bx,barY,bw2*curve.ap,barH2,6);mapX.fill();
+    mapX.fillStyle='#1f2a1f';mapX.font='bold 10px Inter';
+    mapX.textAlign='left';mapX.textBaseline='middle';
+    mapX.fillText(curve.name,bx+6,barY+barH2/2);
+    mapX.fillStyle=curve.ap>0.2?'#fff':curve.col;
+    mapX.textAlign='right';
+    mapX.fillText((curve.ap*100).toFixed(1)+'%',bx+bw2*curve.ap-4,barY+barH2/2);
+  });
+  const sumY=by+bh-50;
+  const boxes=[{label:'mAP@0.5',val:mAP50,col:'#2f7d32'},{label:'mAP@0.5:0.95',val:mAP5095,col:'#1a7a6e'}];
+  boxes.forEach((box,i)=>{
+    const bxs=bx+i*(bw2/2+4),bys=sumY,bws=bw2/2-4,bhs=44;
+    mapX.fillStyle=box.col+'18';
+    mapX.beginPath();mapX.roundRect(bxs,bys,bws,bhs,8);mapX.fill();
+    mapX.strokeStyle=box.col+'66';mapX.lineWidth=1.5;mapX.stroke();
+    mapX.fillStyle=box.col;mapX.font='bold 9px Inter';
+    mapX.textAlign='center';mapX.textBaseline='top';
+    mapX.fillText(box.label,bxs+bws/2,bys+5);
+    mapX.font='bold 18px "Instrument Serif",serif';
+    mapX.textBaseline='bottom';
+    mapX.fillText((box.val*100).toFixed(1)+'%',bxs+bws/2,bys+bhs-4);
+  });
+  let lx=pad.l;
+  curves.forEach(curve=>{
+    mapX.strokeStyle=curve.col;mapX.lineWidth=2;
+    mapX.beginPath();mapX.moveTo(lx,pad.t+ch+35);mapX.lineTo(lx+18,pad.t+ch+35);mapX.stroke();
+    mapX.fillStyle='#1f2a1f';mapX.font='9px Inter';
+    mapX.textAlign='left';mapX.textBaseline='middle';
+    mapX.fillText(`${curve.name} AP=${(curve.ap*100).toFixed(0)}%`,lx+22,pad.t+ch+35);
+    lx+=90;
+  });
+}
+
+['mapQual','mapIou','mapClasses'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',drawMap);
+});
+
+// INIT
+drawSplits();
+setTimeout(()=>{
+  drawFitting();
+  drawAllAug();
+  drawCMBinary();
+  drawCMMulti();
+  drawMetrics();
+  drawMap();
+},30);
+</script>
+</body>
+</html>
